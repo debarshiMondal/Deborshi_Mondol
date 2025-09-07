@@ -19,7 +19,6 @@
   a{color:var(--blue);text-decoration:none}
   a:hover{text-decoration:underline}
 
-  /* Header */
   header{position:sticky;top:0;z-index:40;background:linear-gradient(90deg,#0b0f19,#1e40af);
          color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.18)}
   .h-inner{max-width:1100px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -45,19 +44,14 @@
   .kv .lbl{color:#111;font-weight:700}
   .kv .val{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 
-  /* KPI blocks */
   .kpis{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
   .kpi{flex:1 1 160px;border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;background:#fff}
-  .kpi .label{font-size:12px;color:var(--muted);font-weight:800} /* bold KPI labels */
+  .kpi .label{font-size:12px;color:var(--muted);font-weight:800}
   .kpi .value{margin-top:2px;font-size:24px;font-weight:900}
-  .kpi.new   {background:var(--green-quiet)}
-  .kpi.new   .value{color:var(--green)}
-  .kpi.chg   {background:var(--blue-quiet)}
-  .kpi.chg   .value{color:var(--blue)}
-  .kpi.rm    {background:var(--red-quiet)}
-  .kpi.rm    .value{color:var(--red)}
+  .kpi.new   {background:var(--green-quiet)} .kpi.new .value{color:var(--green)}
+  .kpi.chg   {background:var(--blue-quiet)}  .kpi.chg .value{color:var(--blue)}
+  .kpi.rm    {background:var(--red-quiet)}   .kpi.rm  .value{color:var(--red)}
 
-  /* Quick access & buttons */
   .list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
   .row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px}
   .row .info{display:flex;flex-direction:column}
@@ -68,27 +62,19 @@
   .btn.outline{background:#fff;border:1px solid var(--blue);color:var(--blue)}
   .btn.outline:hover{background:var(--blue);color:#fff}
 
-  /* Section accents */
   .section{margin-top:18px}
   .section .head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
   .head .bar{width:4px;height:16px;background:var(--blue-deep);border-radius:2px}
   .note{color:var(--muted);font-size:14px}
 
-  /* Changes by type columns */
   .three{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
   .col{grid-column:span 12;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
   @media(min-width:860px){.col{grid-column:span 4}}
-
-  .col h3{margin:0 0 6px;font-size:15px}
-  .col.new h3{color:var(--green)}
-  .col.chg h3{color:var(--blue)}
-  .col.rm  h3{color:var(--red)}
+  .col h3{margin:0 0 6px;font-size:15px;color:#0f172a} /* black headings */
 
   .typecounts{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:6px}
   .typecounts li{display:flex;justify-content:space-between;gap:10px;padding:6px 8px;border:1px dashed var(--line);border-radius:8px}
-  /* keep labels neutral */
   .typecounts li .t{color:#111 !important;}
-  /* numbers bold + colored per section (high specificity) */
   .typecounts li .c{font-weight:800 !important;}
   #bytype .col.new  .typecounts li .c{color:var(--green) !important;}
   #bytype .col.chg  .typecounts li .c{color:var(--blue)  !important;}
@@ -109,9 +95,8 @@
       </div>
     </div>
     <div class="brand">
-      <img src="../assets/cadence-logo.png"
-           alt="Cadence logo"
-           onerror="this.onerror=null; this.src='../assets/cadence-logo.png'">
+      <img src="{{LOGO_HREF}}" alt="Cadence logo"
+           onerror="this.onerror=null; this.src='{{LOGO_HREF}}'">
     </div>
   </div>
 </header>
@@ -126,7 +111,6 @@
 </nav>
 
 <main>
-  <!-- Summary + Quick Access -->
   <section id="summary" class="grid">
     <div class="card" style="grid-column: span 7;">
       <div class="head"><span class="bar"></span><h2>Summary</h2></div>
@@ -140,114 +124,60 @@
         <strong>Removed</strong> (present before, missing now).
       </p>
       <div class="kpis">
-        <div class="kpi new">
-          <div class="label"><strong>New Files</strong></div>
-          <div class="value">{{KPI_NEW}}</div>
-        </div>
-        <div class="kpi chg">
-          <div class="label"><strong>Changed Files</strong></div>
-          <div class="value">{{KPI_CHANGED}}</div>
-        </div>
-        <div class="kpi rm">
-          <div class="label"><strong>Removed Files</strong></div>
-          <div class="value">{{KPI_REMOVED}}</div>
-        </div>
+        <div class="kpi new"><div class="label"><strong>New Files</strong></div><div class="value">{{KPI_NEW}}</div></div>
+        <div class="kpi chg"><div class="label"><strong>Changed Files</strong></div><div class="value">{{KPI_CHANGED}}</div></div>
+        <div class="kpi rm"><div class="label"><strong>Removed Files</strong></div><div class="value">{{KPI_REMOVED}}</div></div>
       </div>
     </div>
 
     <div class="card" style="grid-column: span 5;">
       <div class="head"><span class="bar"></span><h2>Quick Access</h2></div>
       <ul class="list">
-        <li class="row">
-          <div class="info">
-            <span class="title">Previous Dump</span>
-            <span class="desc">Browse files in the earlier snapshot</span>
-          </div>
-          <div class="btns">
-            <a class="btn outline" href="{{PREVIOUS_LINK}}" target="_blank">Open</a>
-          </div>
-        </li>
-        <li class="row">
-          <div class="info">
-            <span class="title">Latest Dump</span>
-            <span class="desc">Browse files in the current snapshot</span>
-          </div>
-          <div class="btns">
-            <a class="btn outline" href="{{LATEST_LINK}}" target="_blank">Open</a>
-          </div>
-        </li>
+        <li class="row"><div class="info"><span class="title">Previous Dump</span><span class="desc">Browse files in the earlier snapshot</span></div><div class="btns"><a class="btn outline" href="{{PREVIOUS_LINK}}" target="_blank">Open</a></div></li>
+        <li class="row"><div class="info"><span class="title">Latest Dump</span><span class="desc">Browse files in the current snapshot</span></div><div class="btns"><a class="btn outline" href="{{LATEST_LINK}}" target="_blank">Open</a></div></li>
       </ul>
     </div>
   </section>
 
-  <!-- Artifacts & Downloads -->
   <section id="downloads" class="section card">
     <div class="head"><span class="bar"></span><h2>Artifacts &amp; Downloads</h2></div>
     <ul class="list">
       <li class="row">
         <div class="info">
-          <span class="title">Detailed Changes (CSV)</span>
-          <span class="desc">One row per affected file with status (<em>New File</em> or <em>Content Mismatch</em>).</span>
+          <span class="title">CSV Report Link</span>
+          <span class="desc">Open the full changes list (SharePoint).</span>
         </div>
         <div class="btns">
-          <a class="btn outline" href="{{CSV_FULL}}" download>Download CSV</a>
+          <a class="btn outline" href="{{CSV_FULL}}" target="_blank" rel="noopener">{{CSV_FULL_LABEL}}</a>
         </div>
       </li>
       <li class="row">
-        <div class="info">
-          <span class="title">New Files in Latest (CSV)</span>
-          <span class="desc">Files that did not exist in the Previous dump.</span>
-        </div>
-        <div class="btns">
-          <a class="btn outline" href="{{CSV_NEW}}" download>Download CSV</a>
-        </div>
+        <div class="info"><span class="title">New Files in Latest (CSV)</span><span class="desc">Files that did not exist in the Previous dump.</span></div>
+        <div class="btns"><a class="btn outline" href="{{CSV_NEW}}" download>Download CSV</a></div>
       </li>
       <li class="row">
-        <div class="info">
-          <span class="title">Removed Files (Missing in Latest) (CSV)</span>
-          <span class="desc">Files present in Previous but missing now.</span>
-        </div>
-        <div class="btns">
-          <a class="btn outline" href="{{CSV_REMOVED}}" download>Download CSV</a>
-        </div>
+        <div class="info"><span class="title">Removed Files (Missing in Latest) (CSV)</span><span class="desc">Files present in Previous but missing now.</span></div>
+        <div class="btns"><a class="btn outline" href="{{CSV_REMOVED}}" download>Download CSV</a></div>
       </li>
       <li class="row">
-        <div class="info">
-          <span class="title">Run Log</span>
-          <span class="desc">Execution log of this comparison.</span>
-        </div>
-        <div class="btns">
-          <a class="btn outline" href="{{RUN_LOG_LINK}}" target="_blank">Open Log</a>
-        </div>
+        <div class="info"><span class="title">Run Log</span><span class="desc">Execution log of this comparison.</span></div>
+        <div class="btns"><a class="btn outline" href="{{RUN_LOG_LINK}}" target="_blank">Open Log</a></div>
       </li>
     </ul>
   </section>
 
-  <!-- Diff Only Code Comparison Report -->
   <section id="diffonly" class="section card">
     <div class="head"><span class="bar"></span><h2>Diff Only Code Comparison Report</h2></div>
     <p class="note">Visual diff for changed items. Best for code reviewers to inspect exact changes.</p>
-    <div class="btns" style="margin-top:6px">
-      <a class="btn outline" href="{{DIFF_HTML_LINK}}" target="_blank">Open Diff Report</a>
-    </div>
+    <div class="btns" style="margin-top:6px"><a class="btn outline" href="{{DIFF_HTML_LINK}}" target="_blank">Open Diff Report</a></div>
   </section>
 
-  <!-- Changes by Type -->
   <section id="bytype" class="section">
     <div class="head"><span class="bar"></span><h2>Changes by Type</h2></div>
     <div class="three">
-      <div class="col new">
-        <h3>New (folder-wise)</h3>
-        {{TYPE_COUNTS_NEW}}
-      </div>
-      <div class="col chg">
-        <h3>Changed (folder-wise)</h3>
-        {{TYPE_COUNTS_CHANGED}}
-      </div>
-      <div class="col rm">
-        <h3>Removed (folder-wise)</h3>
-        {{TYPE_COUNTS_REMOVED}}
-      </div>
+      <div class="col new"><h3>New (folder-wise)</h3>{{TYPE_COUNTS_NEW}}</div>
+      <div class="col chg"><h3>Changed (folder-wise)</h3>{{TYPE_COUNTS_CHANGED}}</div>
+      <div class="col rm"><h3>Removed (folder-wise)</h3>{{TYPE_COUNTS_REMOVED}}</div>
     </div>
   </section>
 </main>
