@@ -3,31 +3,14 @@
 """
 SFDC Production Metadata Dump Comparison – end-to-end builder
 
-Key fixes in this version:
-- Config parsing: interpolation disabled to allow '%' in SharePoint URLs.
-- Pre-create compare output dir: <run>/<old>_vs_<new>/codecomp/ before running codecompare.posix2.sh.
-
-What it does on each run:
-1) Reads config + lastdumpcomp.date (previous dump name).
-2) Picks the latest dump from dumps_root (latest/“new”).
-3) Creates a run folder under work_root/YYYY-MM-DD and copies both dumps there.
-4) Validates top-level folder parity + required metadata folders.
-5) Optionally runs external codecompare.posix2.sh (6h job) from the run folder, passing dump NAMES.
-   (We pre-create <old>_vs_<new>/codecomp/ to satisfy the script's writes.)
-6) Generates three CSVs (full / new-only / removed-only). “File Type” = “New File” or “Content Mismatch” only.
-7) Writes a run log (run.log).
-8) Renders Detailed Report page (YYYY-MM-DD/index.html), linking:
-   - Previous & Latest dump folders within that run,
-   - The CSVs (or SharePoint link),
-   - The Diff Only Code Comparison Report (“./codecomp.html”),
-   - Folder-wise counts (“Changes by Type”).
-9) Updates / emits master index page with search + weekly/monthly grouping.
-
-Assumptions:
-- Templates in ./templates (index_template.html, detail_template.html)
-- Logo image in ./assets/cadence-logo.png (script location). The script deploys it to <work_root>/assets/.
-- Master uses:  assets/cadence-logo.png
-- Detailed uses: ../assets/cadence-logo.png
+Changes in this version:
+- Detail page: button-like section tabs, Back button, larger logo, KPI labels bold, Diff section before Types.
+- Full report now saved as XLSX: ProdDumpComparison_List_{EXEC_DATE}.xlsx (no "(Execution Date)").
+  Adds new column "DevOps Team Comment" after "PS team Comment".
+  Falls back to CSV if openpyxl is not present; link adapts to actual extension.
+- Sends a success email with Master & Detailed links (needs [links] public_base_url in setup.conf).
+- Auto-updates lastdumpcomp.date to the latest dump name after successful run.
+- Keeps all previous features (searchable master, SharePoint link pattern, required metadata, etc.).
 """
 
 import os
@@ -49,7 +32,7 @@ import smtplib
 def load_conf(p: Path) -> ConfigParser:
     if not p.exists():
         sys.exit(f"[ERROR] Missing config: {p}")
-    # Disable interpolation so '%' in URLs (e.g., %20) is allowed
+    # Allow % in URLs (e.g., %20)
     c = ConfigParser(interpolation=None)
     c.read(p)
     return c
@@ -101,23 +84,18 @@ def sync_assets(src: Path, dst: Path):
     """Deploy assets from script's assets/ to the public web assets/."""
     if not src.exists():
         return
-    dst.mkdir(parents=True, exist_ok=True)
+    dst.mkdir(parents=True, exist_ok=True
+    )
     for p in src.iterdir():
         if p.is_file():
             shutil.copy2(p, dst / p.name)
 
 # ---------- date helpers ----------
-# Examples of dump names:
-#   prod_62.0_4thSept2025_04:26:34
-#   prod_62.0_04thAug2025_01:23:45
 DATE_TOKEN_RE = re.compile(r'(\d{1,2})(?:st|nd|rd|th)?([A-Za-z]+)(\d{4})')
 MONTH_ABBR_FOR_EXEC = {1:"Jan",2:"Feb",3:"Mar",4:"Apr",5:"May",6:"Jun",7:"Jul",8:"Aug",9:"Sept",10:"Oct",11:"Nov",12:"Dec"}
 MONTH_LONG = {1:"January",2:"February",3:"March",4:"April",5:"May",6:"June",7:"July",8:"August",9:"September",10:"October",11:"November",12:"December"}
 
 def parse_dump_date_token(name: str):
-    """
-    Extract token like '4thSept2025' or '04thAug2025' from dump folder name and return a date.
-    """
     m = DATE_TOKEN_RE.search(name)
     if not m:
         return None
@@ -144,17 +122,11 @@ def display_long(d: dt.date) -> str:
     return f"{ordinal(d.day)} {MONTH_LONG[d.month]} {d.year}"
 
 def exec_date_token(d: dt.date) -> str:
-    """Return token like '8Sept2025' for SharePoint file name."""
+    """Return token like '7Sept2025' for the file name."""
     return f"{d.day}{MONTH_ABBR_FOR_EXEC[d.month]}{d.year}"
 
 # ---------- email ----------
 def send_mail(cfg: ConfigParser, subj: str, body: str):
-    """
-    Supports:
-      [mail] method = mutt | sendmail | smtp
-      [mail] to = a@b.com, c@d.com
-      [smtp] host, port, user, password, from, starttls
-    """
     rcpts = [x.strip() for x in cfg.get("mail", "to", fallback="").split(",") if x.strip()]
     if not rcpts:
         return
@@ -189,11 +161,6 @@ def send_mail(cfg: ConfigParser, subj: str, body: str):
 
 # ---------- html helpers ----------
 def counts_to_html(counter: Counter) -> str:
-    """
-    Returns folder-wise counts as:
-      <ul class="typecounts"><li><span class="t">folder</span><span class="c">N</span></li>...</ul>
-    The CSS in the template colors only .c (numbers) by section (New/Changed/Removed).
-    """
     if not counter:
         return '<div class="note">N/A</div>'
     items = []
@@ -249,21 +216,19 @@ def main():
     if not old_src.exists():
         send_mail(cfg, "[ProdvsProd] previous dump missing", f"Not found: {old_src}")
         sys.exit(1)
-
     new_src = find_latest_dump(P["dumps"])
 
-    # API version from folder name (fallback if needed)
+    # API version
     m = re.search(r"prod_([0-9.]+)_", new_src.name)
     api = m.group(1) if m else cfg.get("ui", "api_version_fallback", fallback="62.0")
 
-    # Build friendly title: "Production Dump Comparison: 10th August 2025 vs. 4th September 2025"
+    # Friendly title for master & detail
     def title_from_names(o: str, n: str) -> str:
         d_old = parse_dump_date_token(o)
         d_new = parse_dump_date_token(n)
         if d_old and d_new:
             return f"Production Dump Comparison: {display_long(d_old)} vs. {display_long(d_new)}"
         return f"Production Dump Comparison: {o} vs. {n}"
-
     title = title_from_names(old_src.name, new_src.name)
 
     # Prepare run folder
@@ -273,13 +238,13 @@ def main():
     log = run / "run.log"
     write_text(log, f"[{dt.datetime.now().isoformat(timespec='seconds')}] Run start\nOld: {old_src}\nNew: {new_src}\n\n")
 
-    # Copy dumps into the run folder (keep ORIGINAL names)
+    # Copy dumps into run folder
     prev_dir = run / old_src.name
     latest_dir = run / new_src.name
     copy_tree(old_src, prev_dir);   append_text(log, f"Copied -> {prev_dir}\n")
     copy_tree(new_src, latest_dir); append_text(log, f"Copied -> {latest_dir}\n")
 
-    # Parity check: top-level folder names/number must be identical
+    # Parity & required metadata
     tl_prev = top_level_dirs(prev_dir)
     tl_new  = top_level_dirs(latest_dir)
     if tl_prev != tl_new:
@@ -287,8 +252,6 @@ def main():
         append_text(log, "[ERROR] " + msg + "\n")
         send_mail(cfg, "[ProdvsProd] Folder name mismatch", msg)
         sys.exit(2)
-
-    # Required metadata present?
     if req:
         miss_prev = [m for m in req if m not in tl_prev]
         miss_new  = [m for m in req if m not in tl_new]
@@ -301,29 +264,27 @@ def main():
             send_mail(cfg, "[ProdvsProd] Required metadata missing in dumps", msg)
             sys.exit(3)
 
-    # Generate component.list for external compare script
+    # component.list for external compare
     write_text(P["script"] / "component.list", "\n".join(sorted(tl_prev)) + "\n")
 
-    # --- Pre-create compare output dir to satisfy codecompare.posix2.sh writes ---
+    # Pre-create compare output dir expected by codecompare script
     comp_dir = run / f"{old_src.name}_vs_{new_src.name}" / "codecomp"
     comp_dir.mkdir(parents=True, exist_ok=True)
     append_text(log, f"Prepared compare output dir: {comp_dir}\n")
 
-    # Optional external compare (heavy)
+    # Optional external compare
     if cfg.getboolean("compare", "run_external_compare", fallback=True):
         sh = P["script"] / "codecompare.posix2.sh"
         if sh.exists():
             cmd = ["bash", str(sh), "-d", "-m", "oo", "-o", old_src.name, "-o", new_src.name]
             append_text(log, f"RUN: {' '.join(cmd)} (cwd={run})\n")
-            # Run from the run folder so relative outputs land here
             subprocess.run(cmd, cwd=str(run), check=False)
         else:
             append_text(log, f"[WARN] Missing compare script: {sh}\n")
 
-    # Compute diffs (file content)
+    # Compute diffs
     prev_files   = {rel: f for rel, f in walk_files(prev_dir)}
     latest_files = {rel: f for rel, f in walk_files(latest_dir)}
-
     new_rel      = [r for r in latest_files if r not in prev_files]
     removed_rel  = [r for r in prev_files  if r not in latest_files]
     changed_rel  = []
@@ -333,51 +294,85 @@ def main():
             continue
         changed_rel.append(r)
 
-    # Folder-wise counts (by top-level folder)
+    # Folder-wise counts
     def top_folder(rel: Path) -> str:
         return rel.parts[0] if rel.parts else "(root)"
     cnt_new = Counter(top_folder(r) for r in new_rel)
     cnt_chg = Counter(top_folder(r) for r in changed_rel)
     cnt_rm  = Counter(top_folder(r) for r in removed_rel)
 
-    # CSVs — File Type column ONLY "New File" or "Content Mismatch"
+    # --- FULL REPORT as XLSX (fallback CSV if openpyxl missing) ---
     exec_date = dt.date.today()
-    token     = exec_date_token(exec_date)  # e.g., 8Sept2025
-    full_name = f"ProdDumpComparison_List_{token}(Execution Date).csv"
-    csv_full  = run / full_name
-    csv_new   = run / "new_files_only.csv"
-    csv_rm    = run / "removed_files_only.csv"
+    token     = exec_date_token(exec_date)  # e.g., 7Sept2025
+    base_name = f"ProdDumpComparison_List_{token}"
+    full_ext  = ".xlsx"
+    full_path = run / (base_name + full_ext)
 
-    cols = ["File List","File Type","Dev Team Comment","PS team Comment","Ticket Number","Ticket Resolution Date","Area (Module)","Details of Change Made"]
-    with csv_full.open("w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f); w.writerow(cols)
-        for r in sorted(new_rel):     w.writerow([str(r), "New File",         "", "", "", "", "", ""])
-        for r in sorted(changed_rel): w.writerow([str(r), "Content Mismatch", "", "", "", "", "", ""])
+    headers = [
+        "File List",
+        "File Type",                 # "New File" | "Content Mismatch"
+        "Dev Team Comment",
+        "PS team Comment",
+        "DevOps Team Comment",       # NEW
+        "Ticket Number",
+        "Ticket Resolution Date",
+        "Area (Module)",
+        "Details of Change Made",
+    ]
+
+    wrote_xlsx = False
+    try:
+        from openpyxl import Workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Comparison"
+        ws.append(headers)
+        for r in sorted(new_rel):
+            ws.append([str(r), "New File", "", "", "", "", "", "", ""])
+        for r in sorted(changed_rel):
+            ws.append([str(r), "Content Mismatch", "", "", "", "", "", "", ""])
+        wb.save(full_path)
+        wrote_xlsx = True
+        append_text(log, f"XLSX written: {full_path}\n")
+    except Exception as e:
+        append_text(log, f"[WARN] XLSX write failed ({e}); falling back to CSV.\n")
+        full_ext  = ".csv"
+        full_path = run / (base_name + full_ext)
+        with full_path.open("w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f); w.writerow(headers)
+            for r in sorted(new_rel):     w.writerow([str(r), "New File",         "", "", "", "", "", "", ""])
+            for r in sorted(changed_rel): w.writerow([str(r), "Content Mismatch", "", "", "", "", "", "", ""])
+        append_text(log, f"CSV written: {full_path}\n")
+
+    # Ancillary CSVs (these remain CSV)
+    csv_new = run / "new_files_only.csv"
     with csv_new.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f); w.writerow(["File List"])
         for r in sorted(new_rel): w.writerow([str(r)])
+    csv_rm  = run / "removed_files_only.csv"
     with csv_rm.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f); w.writerow(["File List"])
         for r in sorted(removed_rel): w.writerow([str(r)])
-    append_text(log, f"CSV written: {csv_full}, {csv_new}, {csv_rm}\n")
 
-    # CSV SharePoint href (configurable pattern). '%' now allowed without escaping.
-    sp_pattern = cfg.get("links", "csv_full_sharepoint_pattern", fallback="").strip()
+    # Link for the full report (SharePoint or local)
+    # Supports both keys for compatibility; you can set either.
+    sp_pattern = (
+        cfg.get("links", "full_report_sharepoint_pattern", fallback="").strip()
+        or cfg.get("links", "csv_full_sharepoint_pattern", fallback="").strip()
+    )
+    ext = "xlsx" if wrote_xlsx else "csv"
     if sp_pattern:
-        csv_full_href   = sp_pattern.replace("{EXEC_DATE}", token)
-        csv_full_label  = "CSV Report Link"
+        # Optional {EXEC_DATE} and {EXT} placeholders
+        full_href  = sp_pattern.replace("{EXEC_DATE}", token).replace("{EXT}", ext)
+        full_label = "CSV Report Link"  # per your wording; points to XLSX if available
     else:
-        csv_full_href   = f"./{full_name}"
-        csv_full_label  = "CSV Report Link"
+        full_href  = f"./{base_name}{'.xlsx' if wrote_xlsx else '.csv'}"
+        full_label = "CSV Report Link"
 
     # Render Detailed page
     dtpl = read_text(P["tpl"] / "detail_template.html")
     if not dtpl:
         sys.exit(f"[ERROR] Missing template: {P['tpl'] / 'detail_template.html'}")
-
-    # Display labels for summary (raw folder names in summary table)
-    prev_label = old_src.name
-    new_label  = new_src.name
 
     detail_html = render_template(
         dtpl,
@@ -385,15 +380,15 @@ def main():
         TITLE_HEADING   = title,
         API_VERSION     = api,
         REPORT_DATE     = dt.date.today().isoformat(),
-        PREVIOUS_LABEL  = prev_label,
-        LATEST_LABEL    = new_label,
+        PREVIOUS_LABEL  = old_src.name,
+        LATEST_LABEL    = new_src.name,
         PREVIOUS_LINK   = f"./{old_src.name}/",
         LATEST_LINK     = f"./{new_src.name}/",
         KPI_NEW         = len(new_rel),
         KPI_CHANGED     = len(changed_rel),
         KPI_REMOVED     = len(removed_rel),
-        CSV_FULL        = csv_full_href,
-        CSV_FULL_LABEL  = csv_full_label,
+        CSV_FULL        = full_href,
+        CSV_FULL_LABEL  = full_label,
         CSV_NEW         = "./new_files_only.csv",
         CSV_REMOVED     = "./removed_files_only.csv",
         DIFF_HTML_LINK  = "./codecomp.html",
@@ -401,18 +396,17 @@ def main():
         TYPE_COUNTS_CHANGED = counts_to_html(cnt_chg),
         TYPE_COUNTS_REMOVED = counts_to_html(cnt_rm),
         RUN_LOG_LINK    = "./run.log",
-        LOGO_HREF       = "../assets/cadence-logo.png"  # relative from YYYY-MM-DD/index.html
+        LOGO_HREF       = "../assets/cadence-logo.png"  # larger size handled by CSS in template
     )
     write_text(run / "index.html", detail_html)
 
-    # Update master database (reports.json)
+    # Update master database
     db = P["work"] / "reports.json"
     try:
         existing = json.loads(read_text(db)) if db.exists() else []
     except Exception:
         existing = []
 
-    # Pretty labels for pills (long dates)
     def pretty_label(n: str) -> str:
         d = parse_dump_date_token(n)
         return display_long(d) if d else n
@@ -420,43 +414,44 @@ def main():
     entry = {
         "runDate":      day,
         "apiVersion":   api,
-        "title":        title,  # "Production Dump Comparison: {long} vs. {long}"
+        "title":        title,
         "oldDumpLabel": pretty_label(old_src.name),
         "newDumpLabel": pretty_label(new_src.name),
         "detailHref":   f"{day}/index.html",
         "compareHref":  f"{day}/codecomp.html"
     }
     existing.append(entry)
-    # Deduplicate by detailHref, keep chronological
-    seen = set()
-    merged = []
+    seen = set(); merged = []
     for r in sorted(existing, key=lambda x: x["runDate"]):
-        if r["detailHref"] in seen:
-            continue
-        seen.add(r["detailHref"])
-        merged.append(r)
+        if r["detailHref"] in seen: continue
+        seen.add(r["detailHref"]); merged.append(r)
     write_text(db, json.dumps(merged, ensure_ascii=False, indent=2))
 
     # Render master index
     mtpl = read_text(P["tpl"] / "index_template.html")
     if not mtpl:
         sys.exit(f"[ERROR] Missing template: {P['tpl'] / 'index_template.html'}")
-
-    master_html = inject_master(
-        mtpl,
-        merged,
-        "assets/cadence-logo.png",           # relative from /ProdvsProdComp/index.html
-        chips_html(req)
-    )
+    master_html = inject_master(mtpl, merged, "assets/cadence-logo.png", chips_html(req))
     write_text(P["work"] / "index.html", master_html)
 
+    # Success email with links (requires public_base_url)
+    base_url = cfg.get("links", "public_base_url", fallback="").rstrip("/")
+    if base_url:
+        master_url  = f"{base_url}/index.html"
+        detail_url  = f"{base_url}/{day}/index.html"
+        compare_url = f"{base_url}/{day}/codecomp.html"
+        send_mail(cfg,
+            f"[ProdvsProd] Report built {day}",
+            f"Master Index: {master_url}\n"
+            f"Detailed Page: {detail_url}\n"
+            f"Diff Report:   {compare_url}\n"
+        )
+
+    # Auto-update lastdumpcomp.date to NEW dump
+    write_text(P["last"], new_src.name + "\n")
+
     append_text(log, f"[{dt.datetime.now().isoformat(timespec='seconds')}] Run end\n")
-    print(
-        f"[DONE] {run}\n"
-        f"  Detailed: {run/'index.html'}\n"
-        f"  Compare:  {run/'codecomp.html'}\n"
-        f"  Master:   {P['work']/'index.html'}"
-    )
+    print(f"[DONE] {run}\n  Detailed: {run/'index.html'}\n  Compare:  {run/'codecomp.html'}\n  Master:   {P['work']/'index.html'}")
 
 if __name__ == "__main__":
     main()
