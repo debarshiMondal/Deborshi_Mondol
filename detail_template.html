@@ -6,77 +6,88 @@
 <title>{{PAGE_TITLE}}</title>
 <style>
   :root{
-    --blue:#0b5ed7; --blue-quiet:#e9f1ff; --blue-deep:#1e3a8a;
-    --black:#0f172a; --white:#ffffff; --gray:#6b7280; --line:#e6e9ef;
-    --green:#059669; --red:#dc2626;
+    --blue:#1d4ed8; --blue-quiet:#eaf2ff; --blue-deep:#1e40af;
+    --green:#16a34a; --green-quiet:#e8f7ee;
+    --red:#dc2626;   --red-quiet:#fde8e8;
+    --ink:#0b0f19;   --muted:#6b7280; --line:#e6e9ef; --bg:#f8fafc; --white:#fff;
+    --radius:14px;
   }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:var(--white);color:var(--black)}
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+
   a{color:var(--blue);text-decoration:none}
   a:hover{text-decoration:underline}
 
-  /* Header (unchanged) */
-  header{background:var(--blue);color:var(--white);padding:16px 20px}
-  .header-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .brand img{height:40px;width:auto;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
-  .back{display:inline-flex;align-items:center;gap:6px;font-weight:700;background:rgba(255,255,255,.1);
-        border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:6px 10px;color:#fff;text-decoration:none}
+  header{position:sticky;top:0;z-index:40;background:linear-gradient(90deg,#0b0f19,#1e40af);
+         color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.18)}
+  .h-inner{max-width:1100px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .h-title{display:flex;flex-direction:column;gap:6px}
+  .h-title h1{margin:0;font-size:clamp(18px,2.2vw,24px);font-weight:900;letter-spacing:.2px}
+  .badges{display:flex;gap:8px;flex-wrap:wrap}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);
+         color:#fff;padding:4px 10px;border-radius:999px;font-size:12px}
+  .brand{display:flex;align-items:center;gap:8px}
+  .brand img{height:28px;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+  /* tiny back button on the right, next to logo */
+  .back{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:12px;
+        background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.35);
+        border-radius:999px;padding:4px 8px;color:#fff;text-decoration:none}
   .back:hover{background:rgba(255,255,255,.18);text-decoration:none}
-  h1.title{margin:8px 0 0 0;font-size:20px;font-weight:800}
 
-  /* ONLY CHANGE: anchor menu becomes button-like tabs */
-  nav.tabs{background:var(--blue-quiet);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap}
-  .tab{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;border:1px solid var(--blue);
-       background:#fff;color:var(--blue);font-weight:800;font-size:13px;text-decoration:none}
-  .tab:hover{background:var(--blue);color:#fff;text-decoration:none}
+  /* Anchor menu: render as buttons (only change requested) */
+  nav{background:#e9f1ff;border-bottom:1px solid var(--line)}
+  nav .tabs{max-width:1100px;margin:0 auto;padding:8px 18px;display:flex;gap:10px;flex-wrap:wrap}
+  nav .tabs a{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;
+              border:1px solid var(--blue);background:#fff;color:var(--blue);
+              font-weight:800;font-size:13px;text-decoration:none}
+  nav .tabs a:hover{background:var(--blue);color:#fff;text-decoration:none}
 
-  /* Page layout (unchanged) */
-  main{padding:20px;max-width:1100px;margin:0 auto}
+  main{max-width:1100px;margin:18px auto;padding:0 18px}
   .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}
-  .kv{display:grid;grid-template-columns:max(140px) 1fr;gap:8px;font-size:14px}
-  .kv div{padding:4px 0}
-  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
-  .note{color:var(--gray);font-size:14px;line-height:1.5}
 
-  /* KPIs (unchanged; numbers colored, labels bold) */
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .card h2{margin:0 0 10px;font-size:18px}
+
+  .kv{display:grid;grid-template-columns:max(160px) 1fr;gap:10px;font-size:14px}
+  .kv .lbl{color:#111;font-weight:700}
+  .kv .val{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
   .kpis{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
-  .kpi{flex:1 1 160px;border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center}
-  .kpi .label{color:#111;font-size:12px;font-weight:800}
-  .kpi .value{font-size:22px;font-weight:800;margin-top:2px}
-  .kpi.new .value{color:var(--green)}
-  .kpi.chg .value{color:#2563eb}
-  .kpi.rm  .value{color:var(--red)}
+  .kpi{flex:1 1 160px;border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;background:#fff}
+  .kpi .label{font-size:12px;color:var(--muted);font-weight:800}
+  .kpi .value{margin-top:2px;font-size:24px;font-weight:900}
+  .kpi.new   {background:var(--green-quiet)} .kpi.new .value{color:var(--green)}
+  .kpi.chg   {background:var(--blue-quiet)}  .kpi.chg .value{color:var(--blue)}
+  .kpi.rm    {background:var(--red-quiet)}   .kpi.rm  .value{color:var(--red)}
 
-  /* Section accents + spacing (unchanged) */
+  .list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px}
+  .row .info{display:flex;flex-direction:column}
+  .row .title{font-weight:800}
+  .row .desc{font-size:13px;color:var(--muted)}
+  .btns{display:flex;gap:8px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 12px;border-radius:10px;font-weight:800;font-size:13px;transition:.15s}
+  .btn.outline{background:#fff;border:1px solid var(--blue);color:var(--blue)}
+  .btn.outline:hover{background:var(--blue);color:#fff}
+
   .section{margin-top:18px}
   .section .head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
   .head .bar{width:4px;height:16px;background:var(--blue-deep);border-radius:2px}
+  .note{color:var(--muted);font-size:14px}
 
-  /* Downloads (unchanged; white buttons with blue hover) */
-  .list{list-style:none;padding:0;margin:0;display:grid;gap:12px}
-  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:10px;padding:12px}
-  .row .info{display:flex;flex-direction:column}
-  .row .title{font-weight:700}
-  .row .desc{color:var(--gray);font-size:13px}
-  .btns{display:flex;gap:8px;flex-wrap:wrap}
-  .btn{display:inline-block;text-decoration:none;border:1px solid var(--blue);color:var(--blue);
-       padding:8px 12px;border-radius:8px;font-weight:800;font-size:13px;transition:all .15s;background:#fff}
-  .btn:hover{background:var(--blue);color:#fff}
-
-  /* Changes by Type (unchanged; numbers colored, labels black) */
   .three{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
   .col{grid-column:span 12;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
   @media(min-width:860px){.col{grid-column:span 4}}
-  .col h3{margin:0 0 6px;font-size:15px;font-weight:700}
-  .col.new h3{color:var(--green)} .col.chg h3{color:#2563eb} .col.rm h3{color:var(--red)}
+  .col h3{margin:0 0 6px;font-size:15px;color:#0f172a}
+
   .typecounts{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:6px}
   .typecounts li{display:flex;justify-content:space-between;gap:10px;padding:6px 8px;border:1px dashed var(--line);border-radius:8px}
-  .typecounts .t{color:#111 !important;}
-  .typecounts .c{font-weight:800;}
-  .col.new .typecounts .c{color:var(--green) !important;}
-  .col.chg .typecounts .c{color:#2563eb !important;}
-  .col.rm  .typecounts .c{color:var(--red) !important;}
+  .typecounts li .t{color:#111 !important;}
+  .typecounts li .c{font-weight:800 !important;}
+  #bytype .col.new  .typecounts li .c{color:var(--green) !important;}
+  #bytype .col.chg  .typecounts li .c{color:var(--blue)  !important;}
+  #bytype .col.rm   .typecounts li .c{color:var(--red)   !important;}
 
   footer{background:#0f172a;color:#e2e8f0;text-align:center;padding:6px 10px;margin:24px 0 0;border-top:1px solid #0b1220;font-size:12px;line-height:1.2}
 </style>
@@ -84,110 +95,99 @@
 <body>
 
 <header>
-  <div class="header-top">
-    <a class="back" href="../index.html" title="Back to Master Index">← Back</a>
-    <div class="brand"><img src="{{LOGO_HREF}}" alt="Cadence logo"></div>
+  <div class="h-inner">
+    <div class="h-title">
+      <h1>{{TITLE_HEADING}}</h1>
+      <div class="badges">
+        <span class="badge">API Version: <strong>{{API_VERSION}}</strong></span>
+        <span class="badge">Report Date: <strong>{{REPORT_DATE}}</strong></span>
+      </div>
+    </div>
+    <div class="brand">
+      <img src="{{LOGO_HREF}}" alt="Cadence logo"
+           onerror="this.onerror=null; this.src='{{LOGO_HREF}}'">
+      <a class="back" href="../index.html" title="Back to Master">← Back</a>
+    </div>
   </div>
-  <h1 class="title">{{TITLE_HEADING}}</h1>
 </header>
 
-<!-- Only the anchor menu below is now button-like -->
-<nav class="tabs">
-  <a class="tab" href="#summary">Summary</a>
-  <a class="tab" href="#downloads">Artifacts &amp; Downloads</a>
-  <a class="tab" href="#diff">Diff Only Code Comparison Report</a>
-  <a class="tab" href="#types">Changes by Type</a>
+<nav>
+  <div class="tabs">
+    <a href="#summary">Summary</a>
+    <a href="#downloads">Artifacts &amp; Downloads</a>
+    <a href="#diffonly">Diff Only Code Comparison Report</a>
+    <a href="#bytype">Changes by Type</a>
+  </div>
 </nav>
 
 <main>
-  <!-- Summary -->
-  <section id="summary" class="card section">
-    <div class="head"><span class="bar"></span></div>
-    <div class="grid">
-      <div class="card" style="grid-column:span 12;">
-        <div class="kv">
-          <div><strong>Previous Dump</strong></div><div class="mono">{{PREVIOUS_LABEL}}</div>
-          <div><strong>Latest Dump</strong></div><div class="mono">{{LATEST_LABEL}}</div>
-        </div>
-        <p class="note" style="margin-top:10px">
-          This report compares the <strong>Latest</strong> production dump against the <strong>Previous</strong> one and classifies changes into:
-          <strong>New</strong>, <strong>Changed</strong>, and <strong>Removed</strong>.
-        </p>
-        <div class="kpis" style="margin-top:12px">
-          <div class="kpi new">
-            <div class="label">New Files</div>
-            <div class="value">{{KPI_NEW}}</div>
-          </div>
-          <div class="kpi chg">
-            <div class="label">Changed Files</div>
-            <div class="value">{{KPI_CHANGED}}</div>
-          </div>
-          <div class="kpi rm">
-            <div class="label">Removed Files</div>
-            <div class="value">{{KPI_REMOVED}}</div>
-          </div>
-        </div>
+  <section id="summary" class="grid">
+    <div class="card" style="grid-column: span 7;">
+      <div class="head"><span class="bar"></span><h2>Summary</h2></div>
+      <div class="kv">
+        <div class="lbl">Previous Dump</div><div class="val">{{PREVIOUS_LABEL}}</div>
+        <div class="lbl">Latest Dump</div><div class="val">{{LATEST_LABEL}}</div>
       </div>
+      <p class="note" style="margin-top:8px">
+        Comparison is against the <strong>Latest</strong> dump. Files are classified as
+        <strong>New</strong> (added), <strong>Changed</strong> (content differs), or
+        <strong>Removed</strong> (present before, missing now).
+      </p>
+      <div class="kpis">
+        <div class="kpi new"><div class="label"><strong>New Files</strong></div><div class="value">{{KPI_NEW}}</div></div>
+        <div class="kpi chg"><div class="label"><strong>Changed Files</strong></div><div class="value">{{KPI_CHANGED}}</div></div>
+        <div class="kpi rm"><div class="label"><strong>Removed Files</strong></div><div class="value">{{KPI_REMOVED}}</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column: span 5;">
+      <div class="head"><span class="bar"></span><h2>Quick Access</h2></div>
+      <ul class="list">
+        <li class="row"><div class="info"><span class="title">Previous Dump</span><span class="desc">Browse files in the earlier snapshot</span></div><div class="btns"><a class="btn outline" href="{{PREVIOUS_LINK}}" target="_blank">Open</a></div></li>
+        <li class="row"><div class="info"><span class="title">Latest Dump</span><span class="desc">Browse files in the current snapshot</span></div><div class="btns"><a class="btn outline" href="{{LATEST_LINK}}" target="_blank">Open</a></div></li>
+      </ul>
     </div>
   </section>
 
-  <!-- Artifacts & Downloads -->
-  <section id="downloads" class="card section">
-    <div class="head"><span class="bar"></span></div>
+  <section id="downloads" class="section card">
+    <div class="head"><span class="bar"></span><h2>Artifacts &amp; Downloads</h2></div>
     <ul class="list">
       <li class="row">
         <div class="info">
-          <span class="title">Detailed Changes (XLSX)</span>
-          <span class="desc">One row per affected file; “File Type” is <em>New File</em> or <em>Content Mismatch</em>.</span>
+          <span class="title">CSV Report Link</span>
+          <span class="desc">Open the full changes list (SharePoint).</span>
         </div>
         <div class="btns">
-          <a class="btn" href="{{CSV_FULL}}" target="_blank">{{CSV_FULL_LABEL}}</a>
+          <a class="btn outline" href="{{CSV_FULL}}" target="_blank" rel="noopener">{{CSV_FULL_LABEL}}</a>
         </div>
       </li>
       <li class="row">
-        <div class="info">
-          <span class="title">New Files in Latest Dump (CSV)</span>
-          <span class="desc">Files present only in Latest.</span>
-        </div>
-        <div class="btns">
-          <a class="btn" href="{{CSV_NEW}}" download>Download CSV</a>
-        </div>
+        <div class="info"><span class="title">New Files in Latest (CSV)</span><span class="desc">Files that did not exist in the Previous dump.</span></div>
+        <div class="btns"><a class="btn outline" href="{{CSV_NEW}}" download>Download CSV</a></div>
       </li>
       <li class="row">
-        <div class="info">
-          <span class="title">Removed Files (CSV)</span>
-          <span class="desc">Files present in Previous but missing in Latest.</span>
-        </div>
-        <div class="btns">
-          <a class="btn" href="{{CSV_REMOVED}}" download>Download CSV</a>
-        </div>
+        <div class="info"><span class="title">Removed Files (Missing in Latest) (CSV)</span><span class="desc">Files present in Previous but missing now.</span></div>
+        <div class="btns"><a class="btn outline" href="{{CSV_REMOVED}}" download>Download CSV</a></div>
+      </li>
+      <li class="row">
+        <div class="info"><span class="title">Run Log</span><span class="desc">Execution log of this comparison.</span></div>
+        <div class="btns"><a class="btn outline" href="{{RUN_LOG_LINK}}" target="_blank">Open Log</a></div>
       </li>
     </ul>
   </section>
 
-  <!-- Diff Only Code Comparison Report -->
-  <section id="diff" class="card section">
-    <div class="head"><span class="bar"></span></div>
-    <p class="note">Visual, side-by-side diffs generated by the comparison script.</p>
-    <a class="btn" href="{{DIFF_HTML_LINK}}" target="_blank">Open Diff Report</a>
+  <section id="diffonly" class="section card">
+    <div class="head"><span class="bar"></span><h2>Diff Only Code Comparison Report</h2></div>
+    <p class="note">Visual diff for changed items. Best for code reviewers to inspect exact changes.</p>
+    <div class="btns" style="margin-top:6px"><a class="btn outline" href="{{DIFF_HTML_LINK}}" target="_blank">Open Diff Report</a></div>
   </section>
 
-  <!-- Changes by Type -->
-  <section id="types" class="card section">
-    <div class="head"><span class="bar"></span></div>
-    <div class="three">
-      <div class="col new">
-        <h3>New (folder-wise)</h3>
-        {{TYPE_COUNTS_NEW}}
-      </div>
-      <div class="col chg">
-        <h3>Changed (folder-wise)</h3>
-        {{TYPE_COUNTS_CHANGED}}
-      </div>
-      <div class="col rm">
-        <h3>Removed (folder-wise)</h3>
-        {{TYPE_COUNTS_REMOVED}}
-      </div>
+  <section id="bytype" class="section">
+    <div class="head"><span class="bar"></span><h2>Changes by Type</h2></div>
+    <div class="three" id="bytype">
+      <div class="col new"><h3>New (folder-wise)</h3>{{TYPE_COUNTS_NEW}}</div>
+      <div class="col chg"><h3>Changed (folder-wise)</h3>{{TYPE_COUNTS_CHANGED}}</div>
+      <div class="col rm"><h3>Removed (folder-wise)</h3>{{TYPE_COUNTS_REMOVED}}</div>
     </div>
   </section>
 </main>
