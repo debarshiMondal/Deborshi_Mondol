@@ -1,18 +1,11 @@
 Changes:
-1. Logo is still not getting loaded.
-2. In the master index page, "Production Comparison Reports — Master Index" will be changed to "SFDC Production Metadata Dump Comparison Reports"
-3. In the master index page each card should have below header instead of the current header.
-	Example: "Comparison between 10thAug2025 04:26:34 Production Dump and 4thSept2025 04:26:34 Production Dump" should be changed to:
-		  Production Dump Comparison: 10th August 2025 vs. 4th September 2025
-4. In the detailed index page, main heading will come obviously from the master index card.
-5. Detailed Changes (CSV) Download CSV button should say CSV Report Link:
-	In the back end, comparison_full.csv name should be for example: ProdDumpComparison_List_8Sept2025(Execution Date).csv
-        By clinking on "CSV Report Link" below link should open:
-        "https://cadence-my.sharepoint.com/:x:/r/personal/somraj_global_cadence_com/Documents/Config%20Dev%20Ops/WeeklyMasterUpdate/ProdDumpComparison_List_8Sept2025(Execution Date).csv"
-        As you can understand the ProdDumpComparison_List_8Sept2025(Execution Date).csv is the variable here.
-6. "Changes by Type" section New (folder-wise), Changed (folder-wise), Removed (folder-wise) should be in black. Under this
-    content should be like below:
-    classes: 213
-    This 213 should be in color. New number in Green, Changed in Blue and Removed in Red.
-
-7. And also how are you managing the search feature in Master index page?
+Changes:
+1. In the detailed page make the followings button like.
+Summary
+Artifacts & Downloads
+Diff Only Code Comparison Report
+Changes by Type
+2. the ProdDumpComparison_List_7Sept2025(Execution Date).csv file must be a xlsx file. remove (Execution Date) portion. it was given for your understanding.
+3. In "ProdDumpComparison_List_7Sept2025(Execution Date).xlsx" file beside "PS team Comment" there should be another one column "DevOps Team Comment".
+4. Cadence logo should be a bit larger than now.
+5. Add a back button in detailed page.
