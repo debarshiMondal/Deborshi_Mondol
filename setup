@@ -1,0 +1,4 @@
+[links]
+# Optional: if set, the Detailed page "CSV Report Link" will open this SharePoint URL.
+# Use {EXEC_DATE} placeholder (e.g., 8Sept2025). Parentheses are included here.
+csv_full_sharepoint_pattern = https://cadence-my.sharepoint.com/:x:/r/personal/somraj_global_cadence_com/Documents/Config%20Dev%20Ops/WeeklyMasterUpdate/ProdDumpComparison_List_{EXEC_DATE}(Execution Date).csv
