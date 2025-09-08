@@ -1,38 +1,33 @@
 Changes:
 
-We will change the format of the report a bit. Keep once thing in your mind. I need a sophistictaed UI as it is now. Make changes as mush as less as you can.
-The detailed page:
-
-Below Buttons will come under one card: Downloads
-New Files (Green): The file count will be there (In color). When hover over the button will get highlighted and massage will op up abut this button (Files present in the latest production dump but absent in the previous one indicate new creations during this period in the SFDC production environment.). By clicking on it New File list will get downoaded as a csv.
-Changed Files (Orange): The file count will be there (In color). When hover over the button will get highlighted and massage will op up abut this button (Files present in both production dumps have undergone modifications during this period in the SFDC production environment.). By clicking on it New File list will get downoaded as a csv.
-Removed Files (Red) The file count will be there (In color). When hover over the button will get highlighted and massage will op up abut this button (Files missing from the latest production dump but present in the previous one indicate deletions made during this period in the SFDC production environment.). By clicking on it New File list will get downoaded as a csv.
-CSV Report Share Link (Blue): This is our main file. No pop up massge but a small content subsection (This sheet is to be filled out by the Development, DevOps, or PS-Support teams. It should include information for each change, as specified in the sheet's columns). This is our sharepoint link. Remember it is xlsx file. Do not let it fall back to a csv. If xlsx is not possible, through error.
-).
-Open Execution Log (Gray): It will just be a button which will open the log.
+Detailed Page:
 
 
+Previous Dump: Taken on 10th Aug 2025
 
-Quick Access Card will contaoin: Previous Dump (When hover over a massage "Production dump taken on 10th August 2025"), Latest Dump (When hover over a massage "Production dump taken on 4th September 2025"), and Code Comparison Report (No pop up massge but a small content subsection "This report compares two production dumps and highlights only the differences, categorized by metadata type. It includes a count of changes for each metadata type.".).
-All these are buttons.
+Latest Dump: Taken on 4 th Sept 2025
 
-Now the Summary card will be a elaborated one. Expalining everything about the report in details. 
+Something like above. You cretae sometung professional.
 
+Just explain the report in a great manner. Roles and Responsibilites.
 
-
-Diff Only Code Comparison Report and Changes by Type will now be deleted.
-
-
-If you do not think it is needed, remove the index anchor. It is upto you.
+Remove the New File, Changed Files, and Rempoved Files from summary card.
 
 
+Quick Access:
 
-The master index page:
-The cards heading will be example: "10th August 2025" vs. "4th September 2025"
-Remove below:
-Example:
-Previous: 10th August 2025
-Latest: 4th September 2025
+Buttons should be more button like. 
+
+Make the Dump Buttons as for example: "Open 10th August 2025 Dump"
 
 
-Now remember to keep the beatuiful asthetic same as before.
+The sub content of the Code Comparion Report is not appearing like it belongs to only this button. Do something about it.
+
+Dowlload card:
+Make the buttins smaller. Do not make Unnessecery long buttons.
+
+Remove XLSX Remove Duplicate LOG word from Open Execution Log. Aslo The sub content of the CSV Report Share Link is not appearing like it belongs to only this button. Do something about it.
+
+Make the Open Execution Log as "Open Report Preparation Execution Log"
+
+CSV Report Share Link should be "Production Modifoed File Report"
