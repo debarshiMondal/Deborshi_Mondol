@@ -10,8 +10,6 @@
   html,body{height:100%}
   body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;display:flex;flex-direction:column;min-height:100vh}
   a{color:var(--blue-700);text-decoration:none} a:hover{text-decoration:underline}
-
-  /* Header */
   .app-header{position:sticky;top:0;z-index:50;background:linear-gradient(90deg,var(--ink),var(--blue-800));color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.25)}
   .header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,4vw,32px);max-width:1200px;margin:0 auto}
   .title{font-size:clamp(18px,2.2vw,24px);font-weight:800;letter-spacing:.2px}
@@ -19,56 +17,39 @@
   .search{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);padding:8px 12px;border-radius:999px;backdrop-filter:blur(6px)}
   .search input{background:transparent;border:0;color:#fff;width:260px;outline:none;font-size:14px}
   .search input::placeholder{color:rgba(255,255,255,.85)}
-  .brand img{height:28px;width:auto;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
-
-  /* Month chips */
+  .brand img{height:40px;width:auto;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
   .subnav{background:linear-gradient(90deg,var(--blue-800),var(--blue-700));color:#fff}
   .subnav-inner{max-width:1200px;margin:0 auto;padding:8px clamp(16px,4vw,32px);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
   .chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);color:#fff;padding:5px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.24);font-size:12px}
-
   main{max-width:1200px;margin:22px auto 0;padding:0 clamp(16px,4vw,32px);flex:1}
-  .layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px}
+  .layout{display:grid;grid-template-columns:1fr 300px;gap:16px}
   @media (max-width:980px){.layout{grid-template-columns:1fr}}
-
-  html.no-reports main, body.no-reports main{max-width:100%}
-  html.no-reports .layout, body.no-reports .layout{grid-template-columns:minmax(0,1fr) 320px}
-  html.no-reports aside, body.no-reports aside{position:fixed;top:120px;right:24px;width:340px;z-index:10}
-  html.no-reports .subnav-inner, body.no-reports .subnav-inner{max-width:none}
-  html.no-reports main, body.no-reports main{padding-right:24px}
-
   .section-header{display:flex;align-items:end;justify-content:space-between;margin:18px 0 8px;border-left:4px solid #93c5fd;padding-left:10px}
   .section-header h2{margin:0;font-size:clamp(18px,2vw,22px);font-weight:900;color:#0f172a}
   .section-header .count{color:var(--muted);font-size:13px}
   .week-subhead{margin:12px 0 10px;color:#1e40af;font-size:15px;font-weight:700;letter-spacing:.2px}
-
   .grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
   .card{grid-column:span 12;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);padding:16px;position:relative;transition:var(--transition)}
   @media(min-width:700px){.card{grid-column:span 6}} @media(min-width:1024px){.card{grid-column:span 4}}
   .card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.10),0 3px 8px rgba(0,0,0,.08)}
   .card h3{margin:0 0 10px;font-size:17px;line-height:1.35;font-weight:900;color:#0f172a}
   .card h3 .tag{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;padding:2px 6px;border-radius:999px;border:1px solid #bae6fd;background:#e0f2fe;color:#075985}
-  .meta{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}
-  .pill{background:#f1f5f9;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted-2)}
   .btn-row{display:flex;gap:10px;flex-wrap:wrap}
   .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;font-weight:700;font-size:14px;border:1px solid var(--blue-700);color:#fff;background:linear-gradient(180deg,var(--blue-600),var(--blue-800));box-shadow:0 6px 16px rgba(29,78,216,.25);transition:var(--transition)}
   .btn:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(29,78,216,.35)}
-
-  aside{justify-self:end}
-  aside .card{position:sticky;top:92px}
+  aside{justify-self:end} aside .card{position:sticky;top:92px}
   .side-title{margin:0 0 10px;font-size:15px;font-weight:800;color:#0f172a}
   .chips{display:flex;flex-wrap:wrap;gap:8px} .chip.meta{background:#f1f5f9;color:#0f172a;border:1px solid var(--line)}
-
   .latest-badge{position:absolute;top:10px;right:10px;font-size:10px;letter-spacing:.3px;font-weight:800;color:#fff;padding:3px 6px;border-radius:999px;background:linear-gradient(90deg,#00c6ff,#0072ff,#00c6ff);background-size:200% 100%;box-shadow:0 2px 6px rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.6);animation:shine 1.2s linear infinite}
   @keyframes shine{to{background-position:-200% 0}}
-
-  footer{background:#0f172a;color:#e2e8f0;text-align:center;padding:6px 10px;margin-top:24px;font-size:12px;line-height:1.2;border-top:1px solid #0b1220}
+  footer{text-align:center;padding:10px;color:#e2e8f0;background:#0f172a;border-top:1px solid #0b1220;margin-top:32px;font-size:12px}
 </style>
 
 <script>
   (function(){
     var raw='{{REPORT_CARDS_JSON}}';
     var looksTemplate = raw.indexOf('{')===-1 && raw.indexOf('[')===-1;
-    if(looksTemplate){ document.documentElement.classList.add('no-reports'); document.body && document.body.classList.add('no-reports'); }
+    if(looksTemplate){ document.documentElement.classList.add('no-reports'); }
   })();
 </script>
 </head>
@@ -79,11 +60,10 @@
     <div class="rightside">
       <label class="search" for="q" title="Search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
-        <input id="q" type="search" placeholder="Search by title, API, Previous/Latest…" />
+        <input id="q" type="search" placeholder="Search by title, API, dates…" />
       </label>
       <div class="brand">
-        <img src="{{CADENCE_LOGO}}" data-fallback="assets/cadence-logo.png"
-             alt="Cadence logo"
+        <img src="{{CADENCE_LOGO}}" data-fallback="assets/cadence-logo.png" alt="Cadence logo"
              onerror="this.onerror=null; this.src=this.getAttribute('data-fallback');">
       </div>
     </div>
@@ -104,7 +84,7 @@
   </div>
 </main>
 
-<footer>This is the end of report.</footer>
+<footer><p class="end">This is the end of report.</p></footer>
 
 <script>
 (function(){
@@ -116,6 +96,7 @@
   function monthLabel(k){var a=k.split('-');var y=+a[0],m=+a[1]-1;return new Date(y,m,1).toLocaleDateString(undefined,{month:'long',year:'numeric'})}
   function getMonday(iso){var d=new Date(iso+'T00:00:00');var day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);d.setHours(0,0,0,0);return d}
   function fmtShort(d){return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}
+  function plainTitle(r){ return r.masterTitle || r.title; }
 
   var $sections=document.getElementById('sections'),
       $quickjump=document.getElementById('quickjump'),
@@ -123,9 +104,7 @@
 
   function render(list){
     var has = !!(list && list.length);
-    document.documentElement.classList.toggle('no-reports', !has);
     document.body.classList.toggle('no-reports', !has);
-
     if(!has){
       $quickjump.innerHTML='';
       $sections.innerHTML='<div style="padding:24px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">No reports yet.</div>';
@@ -156,8 +135,7 @@
           var r=L[u]
           html+='<article class="card">'
           if(r.runDate===latest){html+='<span class="latest-badge">Latest</span>'}
-          html+='<h3>'+r.title+' <span class="tag">API '+r.apiVersion+'</span></h3>'
-          html+='<div class="meta"><span class="pill">Run: '+(new Date(r.runDate+'T00:00:00').toLocaleDateString())+'</span><span class="pill">Previous: '+r.oldDumpLabel+'</span><span class="pill">Latest: '+r.newDumpLabel+'</span></div>'
+          html+='<h3>'+plainTitle(r)+' <span class="tag">API '+r.apiVersion+'</span></h3>'
           html+='<div class="btn-row"><a class="btn" target="_blank" href="'+r.detailHref+'">Open Detailed Report</a></div>'
           html+='</article>'
         }
@@ -171,7 +149,7 @@
   function doSearch(){
     var q=($search.value||'').toLowerCase().trim()
     if(!q){render(REPORTS);return}
-    var out=[]; for(var i=0;i<REPORTS.length;i++){var r=REPORTS[i], blob=(r.title+' '+r.apiVersion+' '+r.oldDumpLabel+' '+r.newDumpLabel+' '+r.runDate).toLowerCase(); if(blob.indexOf(q)!==-1) out.push(r)}
+    var out=[]; for(var i=0;i<REPORTS.length;i++){var r=REPORTS[i], blob=(plainTitle(r)+' '+r.apiVersion+' '+r.runDate).toLowerCase(); if(blob.indexOf(q)!==-1) out.push(r)}
     render(out)
   }
 

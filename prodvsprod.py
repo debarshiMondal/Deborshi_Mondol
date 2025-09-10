@@ -11,6 +11,11 @@ Changes in this version:
 - Sends a success email with Master & Detailed links (needs [links] public_base_url in setup.conf).
 - Auto-updates lastdumpcomp.date to the latest dump name after successful run.
 - Keeps all previous features (searchable master, SharePoint link pattern, required metadata, etc.).
+
+Additional changes (this commit):
+- Provide PREVIOUS_DATE_HUMAN, LATEST_DATE_HUMAN, PREVIOUS_DATE_DASH, LATEST_DATE_DASH for the detail template.
+- Produce changed_files_only.xlsx (XLSX only). If XLSX write fails or openpyxl missing, send error email and exit with error.
+- Expose CSV_CHANGED -> "./changed_files_only.xlsx" to the template.
 """
 
 import os
@@ -25,7 +30,7 @@ import datetime as dt
 from collections import Counter
 from configparser import ConfigParser
 from pathlib import Path
-from email.mime.text import MIMEText
+from email.mime_text import MIMEText
 import smtplib
 
 # ---------- utils ----------
@@ -120,6 +125,10 @@ def ordinal(n: int) -> str:
 
 def display_long(d: dt.date) -> str:
     return f"{ordinal(d.day)} {MONTH_LONG[d.month]} {d.year}"
+
+# >>> ADDED: dashed date format for buttons
+def display_dash(d: dt.date) -> str:
+    return f"{d.day:02d}-{d.month:02d}-{d.year}"
 
 def exec_date_token(d: dt.date) -> str:
     """Return token like '7Sept2025' for the file name."""
@@ -230,6 +239,14 @@ def main():
             return f"Production Dump Comparison: {display_long(d_old)} vs. {display_long(d_new)}"
         return f"Production Dump Comparison: {o} vs. {n}"
     title = title_from_names(old_src.name, new_src.name)
+
+    # >>> ADDED: derive human/dash dates for template
+    d_old = parse_dump_date_token(old_src.name)
+    d_new = parse_dump_date_token(new_src.name)
+    prev_human = display_long(d_old) if d_old else old_src.name
+    latest_human = display_long(d_new) if d_new else new_src.name
+    prev_dash = display_dash(d_old) if d_old else ""
+    latest_dash = display_dash(d_new) if d_new else ""
 
     # Prepare run folder
     day = today_iso()
@@ -344,6 +361,24 @@ def main():
             for r in sorted(changed_rel): w.writerow([str(r), "Content Mismatch", "", "", "", "", "", "", ""])
         append_text(log, f"CSV written: {full_path}\n")
 
+    # >>> ADDED: changed_files_only.xlsx (XLSX ONLY, no fallback)
+    changed_xlsx = run / "changed_files_only.xlsx"
+    try:
+        from openpyxl import Workbook
+        wb2 = Workbook()
+        ws2 = wb2.active
+        ws2.title = "Changed Files"
+        ws2.append(["File List"])
+        for r in sorted(changed_rel):
+            ws2.append([str(r)])
+        wb2.save(changed_xlsx)
+        append_text(log, f"XLSX written: {changed_xlsx}\n")
+    except Exception as e:
+        msg = f"Failed to write changed_files_only.xlsx: {e}\nRun: {run}"
+        append_text(log, "[ERROR] " + msg + "\n")
+        send_mail(cfg, "[ProdvsProd] Cannot create changed_files_only.xlsx", msg)
+        sys.exit(6)  # hard fail per requirement
+
     # Ancillary CSVs (these remain CSV)
     csv_new = run / "new_files_only.csv"
     with csv_new.open("w", newline="", encoding="utf-8") as f:
@@ -364,7 +399,7 @@ def main():
     if sp_pattern:
         # Optional {EXEC_DATE} and {EXT} placeholders
         full_href  = sp_pattern.replace("{EXEC_DATE}", token).replace("{EXT}", ext)
-        full_label = "CSV Report Link"  # per your wording; points to XLSX if available
+        full_label = "CSV Report Link"  # wording retained
     else:
         full_href  = f"./{base_name}{'.xlsx' if wrote_xlsx else '.csv'}"
         full_label = "CSV Report Link"
@@ -390,13 +425,19 @@ def main():
         CSV_FULL        = full_href,
         CSV_FULL_LABEL  = full_label,
         CSV_NEW         = "./new_files_only.csv",
+        CSV_CHANGED     = "./changed_files_only.xlsx",   # >>> ADDED for template
         CSV_REMOVED     = "./removed_files_only.csv",
         DIFF_HTML_LINK  = "./codecomp.html",
         TYPE_COUNTS_NEW = counts_to_html(cnt_new),
         TYPE_COUNTS_CHANGED = counts_to_html(cnt_chg),
         TYPE_COUNTS_REMOVED = counts_to_html(cnt_rm),
         RUN_LOG_LINK    = "./run.log",
-        LOGO_HREF       = "../assets/cadence-logo.png"  # larger size handled by CSS in template
+        LOGO_HREF       = "../assets/cadence-logo.png",
+        # >>> ADDED: date strings for Summary + Quick Access
+        PREVIOUS_DATE_HUMAN = prev_human,
+        LATEST_DATE_HUMAN   = latest_human,
+        PREVIOUS_DATE_DASH  = prev_dash,
+        LATEST_DATE_DASH    = latest_dash,
     )
     write_text(run / "index.html", detail_html)
 
