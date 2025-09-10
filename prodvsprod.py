@@ -268,7 +268,7 @@ def beautify_codecomp_report(run_dir: Path,
     # If we failed to rename, i.e., raw == orig, keep iframe src to "codecomp.html"
     iframe_src = "codecomp.raw.html" if raw.name != "codecomp.html" else "codecomp.html"
 
-            html = f"""<!DOCTYPE html>
+    html = f"""<!DOCTYPE html>
         <html lang="en">
         <head>
         <meta charset="utf-8" />
@@ -381,7 +381,7 @@ def beautify_codecomp_report(run_dir: Path,
         </body>
         </html>
         """
-            write_text(run_dir / "codecomp.html", html)
+    write_text(run_dir / "codecomp.html", html)
 
               
 
