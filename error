@@ -1,11 +1,10 @@
-error
-
+rm: cannot remove 'prod_62.0_4thSept2025_04:26:34/labels/CustomLabels.labels.flat': No such file or directory
 /software/codedev/misc_script/SFDC/BCompareScript/codecompare.posix2.sh: line 327: prod_62.0_10thAug2025_04:26:34_vs_prod_62.0_4thSept2025_04:26:34/codecomp/TIME: No such file or directory
 Traceback (most recent call last):
-  File "/software/codedev/misc_script/SFDC/ProdvsProd/prodvsprod.py", line 452, in <module>
+  File "/software/codedev/misc_script/SFDC/ProdvsProd/prodvsprod.py", line 616, in <module>
     main()
-  File "/software/codedev/misc_script/SFDC/ProdvsProd/prodvsprod.py", line 353, in main
-    sp_pattern = cfg.get("links", "csv_full_sharepoint_pattern", fallback="").strip()
+  File "/software/codedev/misc_script/SFDC/ProdvsProd/prodvsprod.py", line 535, in main
+    sp_pattern = cfg.get("links","csv_full_sharepoint_pattern",fallback="").strip()
   File "/software/miniconda3/lib/python3.9/configparser.py", line 799, in get
     return self._interpolation.before_get(self, section, option, value,
   File "/software/miniconda3/lib/python3.9/configparser.py", line 395, in before_get
