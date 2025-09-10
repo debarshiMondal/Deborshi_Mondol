@@ -6,7 +6,7 @@ prodvsprod.py
 Generates a dated run folder under /data/public/ProdvsProdComp/YYYY-MM-DD/
 containing:
   - copied Previous and Latest dump folders
-  - CSVs (full/new/removed) — full CSV named: ProdDumpComparison_List_{EXECDATE}(Execution Date).csv
+  - CSVs (full/new/removed); full CSV named: ProdDumpComparison_List_{EXECDATE}(Execution Date).csv
   - run.log
   - detailed report page (index.html) linking to:
         - Previous/Latest dump folders
@@ -24,8 +24,9 @@ Key behaviors:
   - Validates top-level folder set parity; validates configured required metadata presence
   - Optionally runs external compare shell (codecompare.posix2.sh) with folder NAMES (not full paths)
   - Titles formatted as: "Production Dump Comparison: {Long Old Date} vs. {Long New Date}"
-  - Master index card title uses the same string; sub-pills show humanized dates
+  - Master card shows execution date pill
   - One absolute logo path for both pages via [ui] logo_abs
+  - Post-processes Beyond Compare output: wraps codecomp.html with branded chrome + summary
 
 Config (setup.conf) — important keys:
 [paths]
@@ -34,7 +35,6 @@ work_root         = /data/public/ProdvsProdComp
 compare_script_dir= /softwere/codedev/misc_script/SFDC/BCompareScript
 lastdump_file     = /path/to/lastdumpcomp.date
 templates_dir     = /path/to/templates
-assets_dir        = /path/to/assets           ; (not required by this script, kept for compatibility)
 
 [ui]
 logo_abs = /ProdvsProdComp/assets/cadence-logo.png
@@ -213,7 +213,8 @@ def render_master_html_js(tpl:str, reports:list, logo_abs:str, meta_html:str)->s
     return tpl.replace("{{REPORT_CARDS_JSON}}",js)\
               .replace("{{CADENCE_LOGO}}",logo_abs)\
               .replace("{{METADATA_SIDEBAR_HTML}}",meta_html)
-              
+
+# ---------- codecomp.html beautifier ----------
 def beautify_codecomp_report(run_dir: Path,
                              prev_name: str,
                              latest_name: str,
@@ -261,129 +262,120 @@ def beautify_codecomp_report(run_dir: Path,
             f'</tr>'
         )
 
-    # Which side is which — we ran the shell with "-o old -o new"
     left_label = prev_name
     right_label = latest_name
-
-    # If we failed to rename, i.e., raw == orig, keep iframe src to "codecomp.html"
     iframe_src = "codecomp.raw.html" if raw.name != "codecomp.html" else "codecomp.html"
 
     html = f"""<!DOCTYPE html>
-        <html lang="en">
-        <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Diff Only Code Comparison Report</title>
-        <style>
-          :root {{
-            --blue:#1d4ed8; --blue-deep:#1e40af; --ink:#0b0f19; --bg:#f8fafc; --line:#e6e9ef; --white:#fff;
-            --green:#15803d; --orange:#b45309; --muted:#6b7280;
-            --shadow:0 8px 24px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);
-            --radius:14px;
-          }}
-          *,*::before,*::after{{box-sizing:border-box}}
-          html,body{{height:100%}}
-          body{{
-            margin:0;background:var(--bg);color:var(--ink);
-            font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
-            display:flex;flex-direction:column;min-height:100vh;
-          }}
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Diff Only Code Comparison Report</title>
+<style>
+  :root {{
+    --blue:#1d4ed8; --blue-deep:#1e40af; --ink:#0b0f19; --bg:#f8fafc; --line:#e6e9ef; --white:#fff;
+    --green:#15803d; --orange:#b45309; --muted:#6b7280;
+    --shadow:0 8px 24px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);
+    --radius:14px;
+  }}
+  *,*::before,*::after{{box-sizing:border-box}}
+  html,body{{height:100%}}
+  body{{
+    margin:0;background:var(--bg);color:var(--ink);
+    font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+    display:flex;flex-direction:column;min-height:100vh;
+  }}
 
-          /* Header */
-          header{{background:linear-gradient(135deg,#0b0f19 0%,var(--blue-deep) 100%);color:#fff;box-shadow:var(--shadow)}}
-          .h-inner{{max-width:1100px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}}
-          .h-title{{display:flex;flex-direction:column;gap:6px}}
-          .h-title h1{{margin:0;font-size:clamp(18px,2.2vw,24px);font-weight:900;letter-spacing:.2px}}
-          .badges{{display:flex;gap:8px;flex-wrap:wrap}}
-          .badge{{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:4px 10px;border-radius:999px;font-size:12px}}
-          .brand{{display:flex;align-items:center;gap:8px}}
-          .brand img{{height:32px;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}}
-          .back{{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:4px 8px;color:#fff;text-decoration:none}}
-          .back:hover{{background:rgba(255,255,255,.18);text-decoration:none}}
+  header{{background:linear-gradient(135deg,#0b0f19 0%,var(--blue-deep) 100%);color:#fff;box-shadow:var(--shadow)}}
+  .h-inner{{max-width:1100px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}}
+  .h-title{{display:flex;flex-direction:column;gap:6px}}
+  .h-title h1{{margin:0;font-size:clamp(18px,2.2vw,24px);font-weight:900;letter-spacing:.2px}}
+  .badges{{display:flex;gap:8px;flex-wrap:wrap}}
+  .badge{{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:4px 10px;border-radius:999px;font-size:12px}}
+  .brand{{display:flex;align-items:center;gap:8px}}
+  .brand img{{height:32px;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}}
+  .back{{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:4px 8px;color:#fff;text-decoration:none}}
+  .back:hover{{background:rgba(255,255,255,.18);text-decoration:none}}
 
-          main{{max-width:1100px;margin:18px auto;padding:0 18px;flex:1 0 auto}}
+  main{{max-width:1100px;margin:18px auto;padding:0 18px;flex:1 0 auto}}
 
-          /* Buttons row */
-          .btnrow{{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}}
-          .mtype-btn{{
-            display:inline-flex;align-items:center;gap:8px;
-            background:linear-gradient(180deg,#1d4ed8,#1e40af); color:#fff;
-            border:1px solid rgba(255,255,255,.2);
-            border-radius:999px; padding:8px 12px; font-weight:800; text-decoration:none;
-            box-shadow:0 4px 12px rgba(29,78,216,.28);
-          }}
-          .mtype-btn:hover{{filter:brightness(1.06)}}
-          .mtype-btn .cc{{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:2px 8px;font-size:12px}}
+  .btnrow{{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}}
+  .mtype-btn{{
+    display:inline-flex;align-items:center;gap:8px;
+    background:linear-gradient(180deg,#1d4ed8,#1e40af); color:#fff;
+    border:1px solid rgba(255,255,255,.2);
+    border-radius:999px; padding:8px 12px; font-weight:800; text-decoration:none;
+    box-shadow:0 4px 12px rgba(29,78,216,.28);
+  }}
+  .mtype-btn:hover{{filter:brightness(1.06)}}
+  .mtype-btn .cc{{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:2px 8px;font-size:12px}}
 
-          /* Summary table card */
-          .card{{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-top:10px}}
-          table{{width:100%;border-collapse:collapse;font-size:14px}}
-          thead th{{text-align:left;border-bottom:1px solid var(--line);padding:10px 8px;background:#f9fbff;color:#0f172a}}
-          tbody td{{border-bottom:1px dashed var(--line);padding:8px}}
-          td.t{{font-weight:800;color:#0f172a}}
-          td.tot{{color:#111;font-weight:900}}
-          td.new{{color:var(--green);font-weight:900}}
-          td.mod{{color:var(--orange);font-weight:900}}
-          .note{{color:var(--muted);font-size:13px;margin:10px 0}}
+  .card{{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-top:10px}}
+  table{{width:100%;border-collapse:collapse;font-size:14px}}
+  thead th{{text-align:left;border-bottom:1px solid var(--line);padding:10px 8px;background:#f9fbff;color:#0f172a}}
+  tbody td{{border-bottom:1px dashed var(--line);padding:8px}}
+  td.t{{font-weight:800;color:#0f172a}}
+  td.tot{{color:#111;font-weight:900}}
+  td.new{{color:var(--green);font-weight:900}}
+  td.mod{{color:var(--orange);font-weight:900}}
+  .note{{color:var(--muted);font-size:13px;margin:10px 0}}
 
-          /* Embed original diff */
-          .iframe-wrap{{margin:16px 0 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}}
-          .iframe-wrap iframe{{width:100%;height:70vh;border:0;background:#fff}}
+  .iframe-wrap{{margin:16px 0 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}}
+  .iframe-wrap iframe{{width:100%;height:70vh;border:0;background:#fff}}
 
-          footer{{background:#0b0f19;color:#fff;text-align:center;font-size:12px;padding:6px 10px;margin-top:24px}}
-        </style>
-        </head>
-        <body>
-        <header>
-          <div class="h-inner">
-            <div class="h-title">
-              <h1>Diff Only Code Comparison Report</h1>
-              <div class="badges">
-                <span class="badge">Left: <strong>{left_label}</strong></span>
-                <span class="badge">Right: <strong>{right_label}</strong></span>
-              </div>
-            </div>
-            <div class="brand">
-              <img src="{logo_href}" alt="Cadence logo" />
-              <a class="back" href="./index.html">← Back</a>
-            </div>
-          </div>
-        </header>
+  footer{{background:#0b0f19;color:#fff;text-align:center;font-size:12px;padding:6px 10px;margin-top:24px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-inner">
+    <div class="h-title">
+      <h1>Diff Only Code Comparison Report</h1>
+      <div class="badges">
+        <span class="badge">Left: <strong>{left_label}</strong></span>
+        <span class="badge">Right: <strong>{right_label}</strong></span>
+      </div>
+    </div>
+    <div class="brand">
+      <img src="{logo_href}" alt="Cadence logo" />
+      <a class="back" href="./index.html">← Back</a>
+    </div>
+  </div>
+</header>
 
-        <main>
-          <div class="note">Below buttons summarise metadata with changes (New + Modified). Click to jump to the summary table.</div>
-          <div class="btnrow">
-            {''.join(buttons) if buttons else '<span class="note">No differences detected.</span>'}
-          </div>
+<main>
+  <div class="note">Below buttons summarise metadata with changes (New + Modified). Click to jump to the summary table.</div>
+  <div class="btnrow">
+    {''.join(buttons) if buttons else '<span class="note">No differences detected.</span>'}
+  </div>
 
-          <div id="summary-table" class="card">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width:40%">Metadata Type</th>
-                  <th style="width:20%">File Changes (Total)</th>
-                  <th style="width:20%">New</th>
-                  <th style="width:20%">Modified</th>
-                </tr>
-              </thead>
-              <tbody>
-                {''.join(rows) if rows else '<tr><td colspan="4" class="note">No differences to summarise.</td></tr>'}
-              </tbody>
-            </table>
-          </div>
+  <div id="summary-table" class="card">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:40%">Metadata Type</th>
+          <th style="width:20%">File Changes (Total)</th>
+          <th style="width:20%">New</th>
+          <th style="width:20%">Modified</th>
+        </tr>
+      </thead>
+      <tbody>
+        {''.join(rows) if rows else '<tr><td colspan="4" class="note">No differences to summarise.</td></tr>'}
+      </tbody>
+    </table>
+  </div>
 
-          <div class="iframe-wrap">
-            <iframe src="{iframe_src}" title="Code comparison raw report"></iframe>
-          </div>
-        </main>
+  <div class="iframe-wrap">
+    <iframe src="{iframe_src}" title="Code comparison raw report"></iframe>
+  </div>
+</main>
 
-        <footer>This is the end of report.</footer>
-        </body>
-        </html>
-        """
+<footer>This is the end of report.</footer>
+</body>
+</html>
+"""
     write_text(run_dir / "codecomp.html", html)
-
-              
 
 # ---------- main ----------
 def main():
@@ -428,7 +420,6 @@ def main():
     if d_old and d_new:
         title = f"Production Dump Comparison: {display_long(d_old)} vs. {display_long(d_new)}"
     else:
-        # fallback: just use tokens after prod_API_
         def fallback_label(n:str)->str:
             return n.replace(f"prod_{api}_","")
         title = f"Production Dump Comparison: {fallback_label(old_src.name)} vs. {fallback_label(new_src.name)}"
@@ -508,6 +499,12 @@ def main():
     cnt_new=Counter(top_folder(r) for r in new_files)
     cnt_chg=Counter(top_folder(r) for r in changed)
     cnt_rm =Counter(top_folder(r) for r in removed)
+
+    # Beautify the Beyond Compare output page (if present)
+    try:
+        beautify_codecomp_report(run, old_src.name, new_src.name, cnt_new, cnt_chg, logo_abs)
+    except Exception as e:
+        append_text(log, f"[WARN] beautify_codecomp_report failed: {e}\n")
 
     # CSV naming + SharePoint link substitution
     exec_token = exec_date_token(run_date)  # e.g., 8Sept2025
@@ -612,16 +609,8 @@ def main():
 
     print(f"[DONE] {run}\n"
           f"  Detailed: {run/'index.html'}\n"
-          f"  Compare:  {run/'codecomp.html'} (place if importing legacy)\n"
+          f"  Compare:  {run/'codecomp.html'} (beautified)\n"
           f"  Master:   {P['work']/ 'index.html'}")
-
-    # Beautify the Beyond Compare output page (if present)
-    try:
-        beautify_codecomp_report(run, old_src.name, new_src.name, cnt_new, cnt_chg, logo_abs)
-    except Exception as e:
-    append_text(log, f"[WARN] beautify_codecomp_report failed: {e}\n")
-
-
 
 if __name__=="__main__":
     main()
