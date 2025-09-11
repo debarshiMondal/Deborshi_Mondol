@@ -116,4 +116,67 @@ def beautify_codecomp_html(codecomp_path: Path,
   table.summary thead th{{font-size:12px; color:#111; letter-spacing:.3px; border-bottom:1px solid var(--line)}}
   table.summary tbody tr{{background:#fff; border:1px solid var(--line)}}
   table.summary tbody td{{border-top:1px solid var(--line); border-bottom:1px solid var(--line)}}
-  table.summary tbody tr td:first-child{{border-left:1px solid var(--line); border-top-left-radiu
+  table.summary tbody tr td:first-child{{border-left:1px solid var(--line); border-top-left-radius:12px; border-bottom-left-radius:12px}}
+  table.summary tbody tr td:last-child{{border-right:1px solid var(--line); border-top-right-radius:12px; border-bottom-right-radius:12px}}
+
+  /* Blue pill anchor to feel clickable */
+  .meta-btn{{ background:var(--blue); color:#fff; text-decoration:none; display:inline-block;
+              border-radius:999px; padding:8px 12px; font-weight:800; box-shadow:0 2px 6px rgba(0,0,0,.12);
+              transition:transform .15s ease, box-shadow .15s ease, filter .15s ease; }}
+  .meta-btn:hover{{ transform:translateY(-1px); box-shadow:0 6px 14px rgba(0,0,0,.18); filter:brightness(1.05); }}
+
+  .num{{display:inline-block; min-width:30px; text-align:center; font-weight:900}}
+  .num.black{{color:#111}} .num.green{{color:var(--green)}} .num.orange{{color:var(--orange)}}
+  .empty{{text-align:center; color:#6b7280}}
+
+  /* Sticky footer at end */
+  footer{{background:#0b0f19; color:#fff; text-align:center; font-size:12px; padding:6px 10px; margin-top:auto}}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-inner">
+    <div class="h-title">
+      <h1>Code Comparison Report - Diff Only</h1>
+      <div class="badges">
+        <span class="badge">LHS (Previous): <strong>{html.escape(lhs_badge)}</strong></span>
+        <span class="badge">vs</span>
+        <span class="badge">RHS (Latest): <strong>{html.escape(rhs_badge)}</strong></span>
+      </div>
+    </div>
+    <div class="brand">
+      <img src="../assets/cadence-logo.png" alt="Cadence logo" />
+      <a class="back" href="./index.html">← Back</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="card">
+    <table class="summary" aria-label="Summary by Metadata Type">
+      <thead>
+        <tr>
+          <th>Metadata Type</th>
+          <th>File Changes (Total)</th>
+          <th>New</th>
+          <th>Modified</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows_html}
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<footer>This is the end of report.</footer>
+</body>
+</html>
+"""
+
+    # Write pretty page and the run-root alias (if requested)
+    codecomp_path.parent.mkdir(parents=True, exist_ok=True)
+    codecomp_path.write_text(html_doc, encoding="utf-8")
+    if out_copy_at_run_root:
+        out_copy_at_run_root.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(codecomp_path, out_copy_at_run_root)
