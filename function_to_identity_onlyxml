@@ -1,27 +1,28 @@
-# Verify: for every folder listed in SFCliMetaXMLList, any "*-meta.xml" must have its base source present.
-# If not, email a "File name | Author(s)" table via mutt and abort.
+# Verify: for each folder mentioned in ${SFCliMetaXMLList}, any "*-meta.xml" must have its paired source present.
+# If missing, email a colorful HTML table (File name | Author(s)) from ${FROM} via mutt and abort.
 VerifyMissingSourcesFromMetaList() {
   local ROOT="changeSetDeploy/force-app/main/default"
   local LIST_FILE="${SFCliMetaXMLList}"
-  local TMP="/tmp/${SFDC_ORG}.missing_sources.$$.txt"
+  local TMP_HTML="/tmp/${SFDC_ORG}.missing_sources.$$.html"
   local FOUND_ANY_DIR=0
   local HAS_MISS=0
-  local RANGE=""
   local RECIP="${MAIL_LIST:-$EMAIL_LIST}"
+  local RANGE=""
+  local NOW="$(date '+%Y-%m-%d %H:%M:%S')"
 
-  # Build git range (best-effort) for author attribution
+  # Build git range (best-effort) for author attribution on *XML META FILES*
   if [ -n "$gitlast" ] && [ -n "$gitlatest" ]; then
     RANGE="${gitlast}..${gitlatest}"
   fi
 
-  # Collect directories to check from list file (lines like "classes", "pages", "triggers", "aura", "lwc", etc.)
+  # Collect directories to scan from the list file; fall back to common Apex/web folders
   declare -a DIRS=()
   if [ -f "$LIST_FILE" ]; then
     while IFS= read -r raw; do
-      raw="${raw%%#*}"                                 # strip comments
-      raw="$(printf "%s" "$raw" | awk '{$1=$1;print}')" # trim
+      raw="${raw%%#*}"
+      raw="$(printf "%s" "$raw" | awk '{$1=$1;print}')"
       [ -z "$raw" ] && continue
-      DIRS+=("${raw%%:*}")                              # take part before ":" if present
+      DIRS+=("${raw%%:*}")
     done < "$LIST_FILE"
   else
     DIRS=(classes pages triggers aura lwc staticresources)
@@ -31,32 +32,100 @@ VerifyMissingSourcesFromMetaList() {
     mapfile -t DIRS < <(printf "%s\n" "${DIRS[@]}" | awk '!seen[$0]++')
   fi
 
+  # Helper to start HTML once
+  start_html() {
+    cat >"$TMP_HTML" <<EOF
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Deployment Aborted — Missing Sources</title>
+<style>
+  body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#0f172a;margin:0;padding:24px;color:#e5e7eb}
+  .card{max-width:980px;margin:0 auto;background:#111827;border:1px solid #1f2937;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .hdr{background:linear-gradient(135deg,#ef4444,#f59e0b);padding:20px 24px}
+  .hdr h1{margin:0;color:#fff;font-size:20px;letter-spacing:.3px}
+  .meta{padding:12px 24px;background:#0b1220;border-bottom:1px solid #1f2937;color:#9ca3af;font-size:13px}
+  .meta span{margin-right:16px}
+  table{width:100%;border-collapse:separate;border-spacing:0;margin:0}
+  thead th{font-size:13px;text-transform:uppercase;letter-spacing:.6px;background:#1d4ed8;color:#fff;padding:12px 14px;text-align:left;position:sticky;top:0}
+  tbody td{padding:12px 14px;border-top:1px solid #1f2937;background:#0f172a}
+  tbody tr:nth-child(even) td{background:#0b1220}
+  .file{font-weight:600;color:#f8fafc}
+  .auth{color:#34d399}
+  .badge{display:inline-block;background:#fde68a;color:#1f2937;padding:2px 8px;border-radius:9999px;font-size:12px;margin-left:6px}
+  .note{padding:18px 24px;background:#0b1220;border-top:1px solid #1f2937;color:#cbd5e1}
+  .muted{color:#a1a1aa}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="hdr">
+      <h1>Deployment Aborted — Meta XML present but Source Missing <span class="badge">${SFDC_ORG}</span></h1>
+    </div>
+    <div class="meta">
+      <span><strong>Org:</strong> ${SFDC_ORG}</span>
+      <span><strong>Time:</strong> ${NOW}</span>
+      <span><strong>Git Range:</strong> ${gitlast:-?} … ${gitlatest:-?}</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:70%;">File name</th>
+          <th>Author(s) (from XML meta file history)</th>
+        </tr>
+      </thead>
+      <tbody>
+EOF
+  }
+
+  append_row() {
+    local rel="$1"
+    local authors="$2"
+    cat >>"$TMP_HTML" <<EOF
+        <tr>
+          <td class="file">${rel}</td>
+          <td class="auth">${authors}</td>
+        </tr>
+EOF
+  }
+
+  end_html() {
+    cat >>"$TMP_HTML" <<'EOF'
+      </tbody>
+    </table>
+    <div class="note">
+      The XML meta files listed above changed, but their paired source files are missing from the change set.
+      Please commit the missing sources and rerun the deployment.
+      <div class="muted">Authors are derived from <code>git log</code> of the <em>XML meta files</em> in the indicated Git range.</div>
+    </div>
+  </div>
+</body>
+</html>
+EOF
+  }
+
+  # Scan the listed folders
   for d in "${DIRS[@]}"; do
     local BASE="${ROOT}/${d}"
     [ -d "$BASE" ] || continue
     FOUND_ANY_DIR=1
 
-    # Find all *-meta.xml files within this folder
+    # All *-meta.xml files (recurse for aura/lwc)
     while IFS= read -r meta; do
       [ -n "$meta" ] || continue
-      local src="${meta%-meta.xml}"   # expected source path (e.g., .cls, .page, .trigger, .cmp, .js, .resource)
+      local src="${meta%-meta.xml}"   # expected paired source path
 
       if [ ! -f "$src" ]; then
-        # First miss: write header
+        # first miss → init HTML
         if [ $HAS_MISS -eq 0 ]; then
-          {
-            echo "The following metadata XML files exist in the change set without their source files."
-            echo "Deployment is aborted. Please commit the missing source files and retry."
-            echo
-            printf "%-90s | %s\n" "File name" "Author(s)"
-            printf -- '------------------------------------------------------------------------------------------+----------------------------------------\n'
-          } > "$TMP"
+          start_html
         fi
         HAS_MISS=1
 
         local rel="${src#$ROOT/}"
 
-        # Determine authors (prefer authors in the current git range for the META file)
+        # AUTHORS from the XML META FILE (not the source)
         local authors=""
         if git rev-parse --git-dir >/dev/null 2>&1; then
           if [ -n "$RANGE" ]; then
@@ -66,7 +135,7 @@ VerifyMissingSourcesFromMetaList() {
         fi
         [ -z "$authors" ] && authors="Unknown"
 
-        printf "%-90s | %s\n" "$rel" "$authors" >> "$TMP"
+        append_row "$rel" "$authors"
       fi
     done < <(find "$BASE" -type f -name "*-meta.xml")
   done
@@ -77,29 +146,30 @@ VerifyMissingSourcesFromMetaList() {
   fi
 
   if [ $HAS_MISS -eq 1 ]; then
-    local subj="---$SFDC_ORG--- Deployment aborted: meta XMLs without sources (git ${gitlast:-?}-${gitlatest:-?})"
+    end_html
+    local subj="---${SFDC_ORG}--- Deployment aborted: meta XMLs without sources (git ${gitlast:-?}-${gitlatest:-?})"
 
     if ! command -v mutt >/dev/null 2>&1; then
-      echo "[Error] 'mutt' not found. Cannot send email. Printing the report:" | tee -a "$LOG"
-      cat "$TMP" | tee -a "$LOG"
-      rm -f "$TMP"
-      Unlock
-      exit 1
+      echo "[Error] 'mutt' not found. Cannot send email. Saving HTML report at: $TMP_HTML" | tee -a "$LOG"
+      Unlock; exit 1
     fi
     if [ -z "$RECIP" ]; then
-      echo "[Error] Recipient list (MAIL_LIST/EMAIL_LIST) is empty. Printing the report:" | tee -a "$LOG"
-      cat "$TMP" | tee -a "$LOG"
-      rm -f "$TMP"
-      Unlock
-      exit 1
+      echo "[Error] Recipient list (MAIL_LIST/EMAIL_LIST) is empty. HTML report: $TMP_HTML" | tee -a "$LOG"
+      Unlock; exit 1
     fi
 
-    # Send via mutt only
-    mutt -s "$subj" -- $RECIP < "$TMP"
+    # Build mutt command; honor FROM if provided
+    local MUTT_OPTS=(-s "$subj" -- "$RECIP")
+    local MUTT_EXEC="set content_type=text/html"
+    if [ -n "$FROM" ]; then
+      MUTT_EXEC="set use_from=yes; set envelope_from=yes; set from=${FROM}; set content_type=text/html"
+    fi
 
-    # Log and exit
-    cat "$TMP" | tee -a "$LOG"
-    rm -f "$TMP"
+    # Send inline HTML body
+    mutt -e "$MUTT_EXEC" "${MUTT_OPTS[@]}" < "$TMP_HTML"
+
+    # Log path and abort
+    echo "[Info] Missing-source HTML report sent from ${FROM:-default sender}. Copy: $TMP_HTML" | tee -a "$LOG"
     Unlock
     exit 1
   fi
