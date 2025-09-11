@@ -1,95 +1,73 @@
 from pathlib import Path
 from collections import Counter
-import shutil, re, datetime as dt
+import shutil, re, html
 
 def beautify_codecomp_html(codecomp_path: Path,
                            out_copy_at_run_root: Path,
-                           old_label: str,               # LHS (Previous) folder name
-                           new_label: str,               # RHS (Latest) folder name
-                           new_counts: Counter,          # "New" per top-level metadata (case-insensitive)
-                           modified_counts: Counter,     # "Modified" per top-level metadata (case-insensitive)
-                           prev_human: str = None,       # e.g., "10th Aug 2025"  (optional)
-                           latest_human: str = None):    # e.g., "4th Sept 2025" (optional)
+                           old_label: str,               # LHS (Previous) folder name, e.g. "prod_62.0_10thAug2025_04:26:34"
+                           new_label: str,               # RHS (Latest)   folder name, e.g. "prod_62.0_4thSept2025_04:26:34"
+                           new_counts: Counter,          # per-top-level dir "New" counts, keys like "classes", "objects", etc.
+                           modified_counts: Counter,     # per-top-level dir "Modified" counts
+                           prev_human: str = None,       # e.g. "10th Aug 2025" (optional; auto-derives from old_label if None)
+                           latest_human: str = None):    # e.g. "4th Sept 2025" (optional; auto-derives from new_label if None)
     """
-    Create a minimal, beautiful Diff-Only page:
+    Build a minimal Diff-Only page WITHOUT reading raw HTML:
+      - Header: "Code Comparison Report - Diff Only", badges:
+          LHS (Previous): <prev_human>  vs  RHS (Latest): <latest_human>, logo + Back
+      - One table: [Metadata Type | File Changes (Total) | New | Modified]
+        * Each Metadata Type links to its deterministic path:
+            If codecomp.html is inside .../_vs_/codecomp/ → "./<meta>/<meta>.html"
+            Else (run root alias)                          → "<OLD>_vs_<NEW>/codecomp/<meta>/<meta>.html"
+      - Footer stuck to end of page.
 
-      Header:
-        - Title: "Code Comparison Report - Diff Only"
-        - Badges: "LHS (Previous): <prev_human>  vs  RHS (Latest): <latest_human>"
-        - Logo + Back chip
-
-      Body:
-        - Single table: [Metadata Type | File Changes (Total) | New | Modified]
-          * Metadata Type is a blue pill anchor linking to the per-type diff page.
-          * Hrefs are parsed from the *raw* Beyond Compare HTML. If not found, fall back to codecomp_raw.html.
-
-      Footer:
-        - Stuck to end of page (flex column)
-
-    Always writes the pretty page. Preserves original raw HTML as codecomp_raw.html (same dir + run-root alias).
+    No dependency on Beyond Compare's original HTML.
     """
 
-    # --- Read & preserve raw BC HTML (if present) ---
-    raw_html = ""
-    raw_in_same_dir = codecomp_path.with_name("codecomp_raw.html")
-    raw_alias_at_root = None
-    try:
-        if codecomp_path.exists():
-            raw_html = codecomp_path.read_text(encoding="utf-8", errors="ignore")
-            # Keep raw beside pretty
-            shutil.copy2(codecomp_path, raw_in_same_dir)
-            # Also expose raw at run root (next to pretty alias)
-            if out_copy_at_run_root:
-                raw_alias_at_root = out_copy_at_run_root.parent / "codecomp_raw.html"
-                raw_alias_at_root.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(codecomp_path, raw_alias_at_root)
-    except Exception:
-        # Non-fatal; we still render pretty page
-        pass
+    # Decide base href depending on where this pretty file lives
+    if codecomp_path.parent.name == "codecomp":
+        href_base = "."  # link like ./classes/classes.html
+    else:
+        href_base = f"{old_label}_vs_{new_label}/codecomp"
 
-    # --- Parse any <a href="...">text</a> entries from raw to map metadata -> per-type page ---
-    # Example raw line: <a href="Previous_dump_vs_Latest_Dump/codecomp/classes/classes.html">classes</a><br/>
-    anchor_pairs = re.findall(r'<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', raw_html or "", flags=re.I | re.S)
-    href_by_meta_lower = {}
-    for href, label in anchor_pairs:
-        meta_txt = re.sub(r"\s+", " ", label).strip()
-        if not meta_txt:
-            continue
-        href_by_meta_lower[meta_txt.lower()] = href
+    # Normalize counts: keys are top-level folder names (e.g., "classes", "objects")
+    n_l = {str(k).strip(): int(v) for k, v in (new_counts or {}).items()}
+    m_l = {str(k).strip(): int(v) for k, v in (modified_counts or {}).items()}
+    # Union of keys; keep natural order by name
+    metas = sorted(set(n_l.keys()) | set(m_l.keys()), key=lambda s: s.lower())
 
-    # --- Build a stable set of metadata keys (union of counters and anchors) ---
-    # Normalize counters to lower keys for reliable lookup
-    n_l = {str(k).lower(): int(v) for k, v in (new_counts or {}).items()}
-    m_l = {str(k).lower(): int(v) for k, v in (modified_counts or {}).items()}
-    keys = set(n_l.keys()) | set(m_l.keys()) | set(href_by_meta_lower.keys())
-    metas_sorted = sorted(keys, key=lambda s: s.lower())
+    # Friendly date derivation if not provided
+    def _human_from_name(name: str) -> str:
+        # expect token like 10thAug2025 / 4thSept2025
+        m = re.search(r'(\d{1,2})(?:st|nd|rd|th)?([A-Za-z]+)(\d{4})', name)
+        if not m: return name
+        day = int(m.group(1))
+        mon = m.group(2).lower()
+        year= int(m.group(3))
+        mm = {"jan":"Jan","feb":"Feb","mar":"Mar","apr":"Apr","may":"May","jun":"Jun",
+              "jul":"Jul","aug":"Aug","sep":"Sept","sept":"Sept","oct":"Oct","nov":"Nov","dec":"Dec"}
+        mon_h = None
+        for key in ("sept","sep","jan","feb","mar","apr","may","jun","jul","aug","oct","nov","dec"):
+            if mon.startswith(key):
+                mon_h = "Sept" if key in ("sep","sept") else mm[key]; break
+        if not mon_h: return name
+        suf = "th" if 11 <= day % 100 <= 13 else {1:"st",2:"nd",3:"rd"}.get(day % 10,"th")
+        return f"{day}{suf} {mon_h} {year}"
 
-    # Determine how the pretty page will resolve the *fallback* raw page
-    open_target = "codecomp_raw.html" if codecomp_path.parent.name == "codecomp" else "./codecomp_raw.html"
+    lhs_badge = prev_human or _human_from_name(old_label)
+    rhs_badge = latest_human or _human_from_name(new_label)
 
-    def row(meta_key_lower: str) -> str:
-        label = meta_key_lower  # show as-is first; optionally prettify
-        # prefer the original label casing if we saw it in anchors
-        for _href, _label in anchor_pairs:
-            if _label.strip().lower() == meta_key_lower:
-                label = _label.strip()
-                break
-
-        new_n = n_l.get(meta_key_lower, 0)
-        mod_n = m_l.get(meta_key_lower, 0)
+    # Build table rows with deterministic links
+    def row(meta: str) -> str:
+        meta_dir = meta  # top-level folder name is the subdir
+        # Compose deterministic href
+        href = f"{href_base}/{meta_dir}/{meta_dir}.html"
+        new_n = n_l.get(meta, 0)
+        mod_n = m_l.get(meta, 0)
         tot_n = new_n + mod_n
-
-        # If we parsed a per-type href, use it; else fall back to opening the raw page
-        href = href_by_meta_lower.get(meta_key_lower)
-        if href:
-            meta_cell = f'<a class="meta-btn" href="{href}" target="_blank" rel="noopener">{label}</a>'
-        else:
-            # Fallback: open raw page; no deep link but at least shows the BC content
-            meta_cell = f'<a class="meta-btn" href="{open_target}" target="_blank" rel="noopener">{label}</a>'
-
+        label = html.escape(meta)  # show directory name as-is
         return (
             f"<tr>"
-            f"  <td>{meta_cell}</td>"
+            f'  <td><a class="meta-btn" href="{href}" target="_blank" rel="noopener">{label}</a></td>'
             f'  <td><span class="num black">{tot_n}</span></td>'
             f'  <td><span class="num green">{new_n}</span></td>'
             f'  <td><span class="num orange">{mod_n}</span></td>'
@@ -97,35 +75,12 @@ def beautify_codecomp_html(codecomp_path: Path,
         )
 
     rows_html = (
-        "\n".join(row(k) for k in metas_sorted)
-        if metas_sorted else '<tr><td colspan="4" class="empty">No differences detected.</td></tr>'
+        "\n".join(row(m) for m in metas)
+        if metas else '<tr><td colspan="4" class="empty">No differences detected.</td></tr>'
     )
 
-    # --- Human-friendly badges (auto-derive if not provided) ---
-    def _parse_token_to_human(name: str) -> str:
-        # fallbacks if caller didn't pass prev_human/latest_human
-        m = re.search(r'(\d{1,2})(?:st|nd|rd|th)?([A-Za-z]+)(\d{4})', name)
-        if not m:
-            return name
-        day = int(m.group(1))
-        mon = m.group(2).lower()
-        year = int(m.group(3))
-        month_map = {"jan": "Jan", "feb": "Feb", "mar": "Mar", "apr":"Apr", "may":"May",
-                     "jun":"Jun","jul":"Jul","aug":"Aug","sep":"Sept","sept":"Sept","oct":"Oct","nov":"Nov","dec":"Dec"}
-        for key in ("sept","sep","jan","feb","mar","apr","may","jun","jul","aug","oct","nov","dec"):
-            if mon.startswith(key):
-                mon_h = "Sept" if key in ("sep","sept") else month_map[key]
-                break
-        else:
-            return name
-        suffix = "th" if 11 <= day % 100 <= 13 else {1:"st",2:"nd",3:"rd"}.get(day % 10, "th")
-        return f"{day}{suffix} {mon_h} {year}"
-
-    lhs_badge = prev_human or _parse_token_to_human(old_label)
-    rhs_badge = latest_human or _parse_token_to_human(new_label)
-
-    # --- Pretty HTML with sticky footer ---
-    html = f"""<!DOCTYPE html>
+    # Page HTML (header -> single table -> sticky footer)
+    html_doc = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
@@ -161,66 +116,4 @@ def beautify_codecomp_html(codecomp_path: Path,
   table.summary thead th{{font-size:12px; color:#111; letter-spacing:.3px; border-bottom:1px solid var(--line)}}
   table.summary tbody tr{{background:#fff; border:1px solid var(--line)}}
   table.summary tbody td{{border-top:1px solid var(--line); border-bottom:1px solid var(--line)}}
-  table.summary tbody tr td:first-child{{border-left:1px solid var(--line); border-top-left-radius:12px; border-bottom-left-radius:12px}}
-  table.summary tbody tr td:last-child{{border-right:1px solid var(--line); border-top-right-radius:12px; border-bottom-right-radius:12px}}
-
-  /* Anchor styled like a button */
-  .meta-btn{{ background:var(--blue); color:#fff; text-decoration:none; display:inline-block;
-              border-radius:999px; padding:8px 12px; font-weight:800; box-shadow:0 2px 6px rgba(0,0,0,.12);
-              transition:transform .15s ease, box-shadow .15s ease, filter .15s ease; }}
-  .meta-btn:hover{{ transform:translateY(-1px); box-shadow:0 6px 14px rgba(0,0,0,.18); filter:brightness(1.05); }}
-
-  .num{{display:inline-block; min-width:30px; text-align:center; font-weight:900}}
-  .num.black{{color:#111}} .num.green{{color:var(--green)}} .num.orange{{color:var(--orange)}}
-  .empty{{text-align:center; color:#6b7280}}
-
-  footer{{background:#0b0f19; color:#fff; text-align:center; font-size:12px; padding:6px 10px; margin-top:auto}}
-</style>
-</head>
-<body>
-<header>
-  <div class="h-inner">
-    <div class="h-title">
-      <h1>Code Comparison Report - Diff Only</h1>
-      <div class="badges">
-        <span class="badge">LHS (Previous): <strong>{lhs_badge}</strong></span>
-        <span class="badge">vs</span>
-        <span class="badge">RHS (Latest): <strong>{rhs_badge}</strong></span>
-      </div>
-    </div>
-    <div class="brand">
-      <img src="../assets/cadence-logo.png" alt="Cadence logo" />
-      <a class="back" href="./index.html">← Back</a>
-    </div>
-  </div>
-</header>
-
-<main>
-  <section class="card">
-    <table class="summary" aria-label="Summary by Metadata Type">
-      <thead>
-        <tr>
-          <th>Metadata Type</th>
-          <th>File Changes (Total)</th>
-          <th>New</th>
-          <th>Modified</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows_html}
-      </tbody>
-    </table>
-  </section>
-</main>
-
-<footer>This is the end of report.</footer>
-</body>
-</html>
-"""
-
-    # --- Write pretty page and alias ---
-    codecomp_path.parent.mkdir(parents=True, exist_ok=True)
-    codecomp_path.write_text(html, encoding="utf-8")
-    if out_copy_at_run_root:
-        out_copy_at_run_root.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(codecomp_path, out_copy_at_run_root)
+  table.summary tbody tr td:first-child{{border-left:1px solid var(--line); border-top-left-radiu
