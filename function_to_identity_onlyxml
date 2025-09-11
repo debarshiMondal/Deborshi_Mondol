@@ -1,0 +1,106 @@
+# Verify: for every folder listed in SFCliMetaXMLList, any "*-meta.xml" must have its base source present.
+# If not, email a "File name | Author(s)" table via mutt and abort.
+VerifyMissingSourcesFromMetaList() {
+  local ROOT="changeSetDeploy/force-app/main/default"
+  local LIST_FILE="${SFCliMetaXMLList}"
+  local TMP="/tmp/${SFDC_ORG}.missing_sources.$$.txt"
+  local FOUND_ANY_DIR=0
+  local HAS_MISS=0
+  local RANGE=""
+  local RECIP="${MAIL_LIST:-$EMAIL_LIST}"
+
+  # Build git range (best-effort) for author attribution
+  if [ -n "$gitlast" ] && [ -n "$gitlatest" ]; then
+    RANGE="${gitlast}..${gitlatest}"
+  fi
+
+  # Collect directories to check from list file (lines like "classes", "pages", "triggers", "aura", "lwc", etc.)
+  declare -a DIRS=()
+  if [ -f "$LIST_FILE" ]; then
+    while IFS= read -r raw; do
+      raw="${raw%%#*}"                                 # strip comments
+      raw="$(printf "%s" "$raw" | awk '{$1=$1;print}')" # trim
+      [ -z "$raw" ] && continue
+      DIRS+=("${raw%%:*}")                              # take part before ":" if present
+    done < "$LIST_FILE"
+  else
+    DIRS=(classes pages triggers aura lwc staticresources)
+  fi
+  # Deduplicate
+  if [ "${#DIRS[@]}" -gt 0 ]; then
+    mapfile -t DIRS < <(printf "%s\n" "${DIRS[@]}" | awk '!seen[$0]++')
+  fi
+
+  for d in "${DIRS[@]}"; do
+    local BASE="${ROOT}/${d}"
+    [ -d "$BASE" ] || continue
+    FOUND_ANY_DIR=1
+
+    # Find all *-meta.xml files within this folder
+    while IFS= read -r meta; do
+      [ -n "$meta" ] || continue
+      local src="${meta%-meta.xml}"   # expected source path (e.g., .cls, .page, .trigger, .cmp, .js, .resource)
+
+      if [ ! -f "$src" ]; then
+        # First miss: write header
+        if [ $HAS_MISS -eq 0 ]; then
+          {
+            echo "The following metadata XML files exist in the change set without their source files."
+            echo "Deployment is aborted. Please commit the missing source files and retry."
+            echo
+            printf "%-90s | %s\n" "File name" "Author(s)"
+            printf -- '------------------------------------------------------------------------------------------+----------------------------------------\n'
+          } > "$TMP"
+        fi
+        HAS_MISS=1
+
+        local rel="${src#$ROOT/}"
+
+        # Determine authors (prefer authors in the current git range for the META file)
+        local authors=""
+        if git rev-parse --git-dir >/dev/null 2>&1; then
+          if [ -n "$RANGE" ]; then
+            authors=$(git log --format='%an <%ae>' "$RANGE" -- "$meta" 2>/dev/null | sort -u | paste -sd ', ' -)
+          fi
+          [ -z "$authors" ] && authors=$(git log -n1 --format='%an <%ae>' -- "$meta" 2>/dev/null)
+        fi
+        [ -z "$authors" ] && authors="Unknown"
+
+        printf "%-90s | %s\n" "$rel" "$authors" >> "$TMP"
+      fi
+    done < <(find "$BASE" -type f -name "*-meta.xml")
+  done
+
+  if [ $FOUND_ANY_DIR -eq 0 ]; then
+    echo "[Info] No listed metadata folders found under $ROOT; skipping missing-source check." | tee -a "$LOG"
+    return 0
+  fi
+
+  if [ $HAS_MISS -eq 1 ]; then
+    local subj="---$SFDC_ORG--- Deployment aborted: meta XMLs without sources (git ${gitlast:-?}-${gitlatest:-?})"
+
+    if ! command -v mutt >/dev/null 2>&1; then
+      echo "[Error] 'mutt' not found. Cannot send email. Printing the report:" | tee -a "$LOG"
+      cat "$TMP" | tee -a "$LOG"
+      rm -f "$TMP"
+      Unlock
+      exit 1
+    fi
+    if [ -z "$RECIP" ]; then
+      echo "[Error] Recipient list (MAIL_LIST/EMAIL_LIST) is empty. Printing the report:" | tee -a "$LOG"
+      cat "$TMP" | tee -a "$LOG"
+      rm -f "$TMP"
+      Unlock
+      exit 1
+    fi
+
+    # Send via mutt only
+    mutt -s "$subj" -- $RECIP < "$TMP"
+
+    # Log and exit
+    cat "$TMP" | tee -a "$LOG"
+    rm -f "$TMP"
+    Unlock
+    exit 1
+  fi
+}
