@@ -1,0 +1,19 @@
+def rebuild_master_only():
+    here = Path(__file__).resolve().parent
+    cfg  = load_conf(here / "setup.conf")
+    work = Path(cfg.get("paths","work_root"))
+    tpld = Path(cfg.get("paths","templates_dir"))
+    db   = work / "reports.json"
+    try:
+        reports = json.loads(read_text(db))
+    except Exception:
+        reports = []
+    mtpl = read_text(tpld / "index_template.html")
+    master_html = inject_master(mtpl, reports, "assets/cadence-logo.png",
+                                chips_html(cfg.get("metadata","current_sfdc_metadata_list_used_in_cadence",fallback="").split(",")))
+    write_text(work / "index.html", master_html)
+
+if __name__ == "__main__":
+    if "--rebuild-master" in sys.argv:
+        rebuild_master_only(); sys.exit(0)
+    main()
