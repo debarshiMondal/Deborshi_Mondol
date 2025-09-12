@@ -1,0 +1,7 @@
+sf commands
+
+sf data query --use-tooling-api \
+  --query "SELECT DelegateGroup.Name, PermissionType, SobjectType
+           FROM DelegateGroupGrant
+           ORDER BY DelegateGroup.Name, SobjectType" \
+  -r table -o <alias>
