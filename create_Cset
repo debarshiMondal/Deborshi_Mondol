@@ -146,3 +146,20 @@ fi
                  ;;
          esac
      fi
+
+done <<< "$gitDiffOutput"
+
+echo "Change set preparation completed."
+
+
+	#queue user masking
+if [ -d changeSetDeploy/force-app/main/default/queues ]
+	then
+	echo "masking users in queue"
+	sed -i "s/@cadence.com.*<\/user>/@cadence.com."${SFDC_ORG}"<\/user>/g" changeSetDeploy/force-app/main/default/queues/*
+
+else
+	echo "No queue"
+fi
+
+}
