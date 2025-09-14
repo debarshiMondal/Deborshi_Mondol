@@ -1,0 +1,148 @@
+create_Cset() 
+
+{
+
+#Start logging with directory check
+if [ -n "$deployLogFile" ]; then
+     log_dir=$(dirname "$deployLogFile")
+     mkdir -p "$log_dir"
+     echo "Build Started" >> "$deployLogFile"
+fi
+# Start tee logging (prints to both screen and file) 
+exec > >(tee -a "$deployLogFile") 2>&1
+
+
+
+# Format and display start time
+startTime=$(date +"%m/%d/%Y %I:%M:%S %p") 
+echo "Build Start Time - $startTime"
+
+# Print environment deployment
+echo "Deploying to ${SFDC_ORG} Environment."
+
+# Prepare changeset header
+echo -e "\nPreparing Changeset:"
+echo "Input - From Hash: ${gitlast}"
+echo "Input - To Hash:   ${gitlatest}"
+
+
+
+# Get and display git differences
+gitDiffOutput=$(git diff --name-only -r --diff-filter='AMR' "${gitlast}" "${gitlatest}" .)
+echo -e "\nChanged Files:"
+echo "$gitDiffOutput"
+
+
+echo "Creating Changeset Folder"
+rm -rf changeSetDeploy
+# Create base directory structure
+mkdir -p changeSetDeploy/force-app/main/default
+touch "$staticResourceFoldersFile"
+
+
+# Read lists into arrays
+IFS=$'\n' read -d '' -r -a valid_metadata_types < "$SFCliBuildList"
+IFS=$'\n' read -d '' -r -a meta_xml_types < "$SFCliMetaXMLList"
+
+# Process each file in gitDiffOutput
+while IFS= read -r file; do
+     # Skip empty lines
+     [ -z "$file" ] && continue
+
+     echo "Processing: $file"
+
+
+# Special handling for objects to preserve full subdirectory structure 
+if [[ "$file" == src/objects/* ]]; then
+     relative_path="${file#src/}"  # remove the 'src/' prefix
+     
+target_path="changeSetDeploy/force-app/main/default/${relative_path%/*}" 
+  # directory only
+     mkdir -p "$target_path"
+     cp "$file" "$target_path/"
+     continue
+fi
+
+# Special handling for objects to preserve full subdirectory structure 
+if [[ "$file" == src/email/* ]]; then
+     relative_path="${file#src/}"  # remove the 'src/' prefix
+
+target_path="changeSetDeploy/force-app/main/default/${relative_path%/*}"
+  # directory only
+     mkdir -p "$target_path"
+     cp "$file" "$target_path/"
+     continue
+fi
+
+# Special handling for LWC folder: preserve subfolder structure
+     if [[ "$file" == src/lwc/* ]]; then
+         metadata_type="lwc"
+         subfolder=$(echo "$file" | cut -d'/' -f3)
+         target_dir="changeSetDeploy/force-app/main/default/lwc/$subfolder"
+         mkdir -p "$target_dir"
+         cp "$file" "$target_dir/"
+         meta_file="${file}-meta.xml"
+         if [ -f "$meta_file" ]; then
+             cp "$meta_file" "$target_dir/"
+         fi
+         continue
+     fi
+
+     # Special handling for Aura folder: preserve subfolder structure
+     if [[ "$file" == src/aura/* ]]; then
+         metadata_type="aura"
+         subfolder=$(echo "$file" | cut -d'/' -f3)
+         target_dir="changeSetDeploy/force-app/main/default/aura/$subfolder"
+         mkdir -p "$target_dir"
+         cp "$file" "$target_dir/"
+         meta_file="${file}-meta.xml"
+         if [ -f "$meta_file" ]; then
+             cp "$meta_file" "$target_dir/"
+         fi
+         continue
+     fi
+
+
+     # Extract metadata type from path
+     if [[ "$file" == src/env/${SFDC_ORG}/* ]]; then
+         # Handle environment-specific paths
+         metadata_type=$(cut -d'/' -f4 <<< "$file")
+         env_specific=true
+     else
+         # Handle standard metadata paths
+         metadata_type=$(cut -d'/' -f2 <<< "$file")
+         env_specific=false
+     fi
+
+     # Check if metadata type should be included
+     if [[ " ${valid_metadata_types[@]} " =~ " ${metadata_type} " ]]; then
+         # Create target directory
+		 target_dir="changeSetDeploy/force-app/main/default/${metadata_type}"
+         mkdir -p "$target_dir"
+
+         # Copy main file
+         cp "$file" "$target_dir/"
+
+         # Copy meta.xml if required
+         if [[ " ${meta_xml_types[@]} " =~ " ${metadata_type} " ]]; then
+             meta_file="${file}-meta.xml"
+             if [ -f "$meta_file" ]; then
+                 cp "$meta_file" "$target_dir/"
+             fi
+         fi
+     fi
+
+     # Handle environment-specific special cases
+     if [ "$env_specific" = true ]; then
+         case $metadata_type in
+             customLabel)
+                 mkdir -p "changeSetDeploy/force-app/main/default/labels"
+                 cp "$file" "changeSetDeploy/force-app/main/default/labels/"
+		 #mv $target_dir	"changeSetDeploy/force-app/main/default/labels/"			 
+                 ;;
+             remoteSiteSettings|customMetadata)
+                 mkdir -p "changeSetDeploy/force-app/main/default/${metadata_type}"
+                 cp "$file" "changeSetDeploy/force-app/main/default/${metadata_type}/"
+                 ;;
+         esac
+     fi
