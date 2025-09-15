@@ -25,7 +25,9 @@
   .chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);color:#fff;padding:5px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.24);font-size:12px}
 
   main{max-width:1200px;margin:22px auto 0;padding:0 clamp(16px,4vw,32px);flex:1}
-  .layout{display:grid;grid-template-columns:1fr 300px;gap:16px}
+
+  /* COLLAPSED to single column (sidebar removed) */
+  .layout{display:grid;grid-template-columns:1fr;gap:16px}
   @media (max-width:980px){.layout{grid-template-columns:1fr}}
 
   .section-header{display:flex;align-items:end;justify-content:space-between;margin:18px 0 8px;border-left:4px solid #93c5fd;padding-left:10px}
@@ -33,6 +35,7 @@
   .section-header .count{color:var(--muted);font-size:13px}
   .week-subhead{margin:12px 0 10px;color:#1e40af;font-size:15px;font-weight:700;letter-spacing:.2px}
 
+  /* Cards grid */
   .grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
   .card{grid-column:span 12;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);padding:16px;position:relative;transition:var(--transition)}
   @media(min-width:700px){.card{grid-column:span 6}} @media(min-width:1024px){.card{grid-column:span 4}}
@@ -40,7 +43,6 @@
   .card h3{margin:0 0 8px;font-size:17px;line-height:1.35;font-weight:900;color:#0f172a}
   .card h3 .tag{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;padding:2px 6px;border-radius:999px;border:1px solid #bae6fd;background:#e0f2fe;color:#075985}
 
-  /* NEW: small meta row with a pill for execution date */
   .meta{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
   .pill{background:#f1f5f9;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted-2)}
 
@@ -48,14 +50,13 @@
   .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;font-weight:700;font-size:14px;border:1px solid var(--blue-700);color:#fff;background:linear-gradient(180deg,var(--blue-600),var(--blue-800));box-shadow:0 6px 16px rgba(29,78,216,.25);transition:var(--transition)}
   .btn:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(29,78,216,.35)}
 
-  aside{justify-self:end} aside .card{position:sticky;top:92px}
-  .side-title{margin:0 0 10px;font-size:15px;font-weight:800;color:#0f172a}
-  .chips{display:flex;flex-wrap:wrap;gap:8px} .chip.meta{background:#f1f5f9;color:#0f172a;border:1px solid var(--line)}
-
   .latest-badge{position:absolute;top:10px;right:10px;font-size:10px;letter-spacing:.3px;font-weight:800;color:#fff;padding:3px 6px;border-radius:999px;background:linear-gradient(90deg,#00c6ff,#0072ff,#00c6ff);background-size:200% 100%;box-shadow:0 2px 6px rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.6);animation:shine 1.2s linear infinite}
   @keyframes shine{to{background-position:-200% 0}}
 
   footer{text-align:center;padding:10px;color:#e2e8f0;background:#0f172a;border-top:1px solid #0b1220;margin-top:32px;font-size:12px}
+
+  /* Utility: week headers span across the month grid */
+  .span-all{ grid-column: 1 / -1 !important; }
 </style>
 
 <script>
@@ -88,12 +89,7 @@
 <main>
   <div class="layout">
     <section><div id="sections"></div></section>
-    <aside>
-      <div class="card">
-        <h4 class="side-title">Current SFDC metadata list used in Cadence</h4>
-        {{METADATA_SIDEBAR_HTML}}
-      </div>
-    </aside>
+    <!-- Sidebar removed as requested -->
   </div>
 </main>
 
@@ -109,7 +105,7 @@
   function monthLabel(k){var a=k.split('-');var y=+a[0],m=+a[1]-1;return new Date(y,m,1).toLocaleDateString(undefined,{month:'long',year:'numeric'})}
   function getMonday(iso){var d=new Date(iso+'T00:00:00');var day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);d.setHours(0,0,0,0);return d}
   function fmtShort(d){return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}
-  function fmtRun(iso){return new Date(iso+'T00:00:00').toLocaleDateString()}  // local-friendly run date
+  function fmtRun(iso){return new Date(iso+'T00:00:00').toLocaleDateString()}
   function plainTitle(r){ return r.masterTitle || r.title; }
 
   var $sections=document.getElementById('sections'),
@@ -125,38 +121,50 @@
       return;
     }
 
+    // newest runDate
     var latest=list[0].runDate; for(var i=1;i<list.length;i++){if(list[i].runDate>latest) latest=list[i].runDate}
     list.sort(function(a,b){return b.runDate.localeCompare(a.runDate)})
 
+    // group by month
     var groups={}, order=[]
     for(var i=0;i<list.length;i++){var k=monthKey(list[i].runDate); if(!groups[k]){groups[k]=[];order.push(k)} groups[k].push(list[i])}
 
+    // month chips
     var chips=''; for(var i=0;i<order.length;i++){var k=order[i]; chips+='<a class="chip" href="#m-'+k+'">'+monthLabel(k)+'</a>'}
     $quickjump.innerHTML=chips;
 
+    // render months
     var html=''
     for(var i=0;i<order.length;i++){
       var k=order[i], items=groups[k]
       html+='<section id="m-'+k+'"><div class="section-header"><h2>'+monthLabel(k)+'</h2><div class="count">'+items.length+' report'+(items.length!==1?'s':'')+'</div></div>'
+
+      // compute weeks inside this month
       var weeks={}, wkeys=[]
-      for(var j=0;j<items.length;j++){var mon=getMonday(items[j].runDate); var wk=mon.toISOString().slice(0,10); if(!weeks[wk]){weeks[wk]={mon:mon,list:[]}; wkeys.push(wk)} weeks[wk].list.push(items[j])}
+      for(var j=0;j<items.length;j++){
+        var mon=getMonday(items[j].runDate); var wk=mon.toISOString().slice(0,10);
+        if(!weeks[wk]){weeks[wk]={mon:mon,list:[]}; wkeys.push(wk)}
+        weeks[wk].list.push(items[j])
+      }
       wkeys.sort().reverse()
+
+      // ONE grid per MONTH. Week headers sit inside this grid and span full width.
+      html+='<div class="grid">'
       for(var t=0;t<wkeys.length;t++){
         var wk=wkeys[t], start=weeks[wk].mon, end=new Date(+start); end.setDate(end.getDate()+6)
-        html+='<h3 class="week-subhead">Week of '+fmtShort(start)+' – '+fmtShort(end)+'</h3><div class="grid">'
+        html+='<h3 class="week-subhead span-all">Week of '+fmtShort(start)+' – '+fmtShort(end)+'</h3>'
         var L=weeks[wk].list
         for(var u=0;u<L.length;u++){
           var r=L[u]
           html+='<article class="card">'
           if(r.runDate===latest){html+='<span class="latest-badge">Latest</span>'}
           html+='<h3>'+plainTitle(r)+' <span class="tag">API '+r.apiVersion+'</span></h3>'
-          /* NEW: execution date pill */
           html+='<div class="meta"><span class="pill">Run: '+fmtRun(r.runDate)+'</span></div>'
           html+='<div class="btn-row"><a class="btn" target="_blank" href="'+r.detailHref+'">Open Detailed Report</a></div>'
           html+='</article>'
         }
-        html+='</div>'
       }
+      html+='</div>'  /* end month grid */
       html+='</section>'
     }
     $sections.innerHTML=html
@@ -165,7 +173,10 @@
   function doSearch(){
     var q=($search.value||'').toLowerCase().trim()
     if(!q){render(REPORTS);return}
-    var out=[]; for(var i=0;i<REPORTS.length;i++){var r=REPORTS[i], blob=(plainTitle(r)+' '+r.apiVersion+' '+r.runDate).toLowerCase(); if(blob.indexOf(q)!==-1) out.push(r)}
+    var out=[]; for(var i=0;i<REPORTS.length;i++){
+      var r=REPORTS[i], blob=(plainTitle(r)+' '+r.apiVersion+' '+r.runDate).toLowerCase()
+      if(blob.indexOf(q)!==-1) out.push(r)
+    }
     render(out)
   }
 
