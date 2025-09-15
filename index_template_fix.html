@@ -1,0 +1,24 @@
+/* Collapse layout to single content column (sidebar effectively gone) */
+.layout { grid-template-columns: 1fr !important; }
+aside { display: none !important; }
+
+/* Make each month section the grid, and flatten per-week grids */
+section[id^="m-"] {
+  display: grid !important;
+  grid-template-columns: repeat(12, 1fr) !important;
+  gap: 16px !important;
+}
+
+/* Month header + week headers span full width inside the month grid */
+section[id^="m-"] > .section-header,
+section[id^="m-"] > .week-subhead {
+  grid-column: 1 / -1 !important;
+}
+
+/* Per-week .grid becomes layout-transparent so its children (cards) flow in the month grid */
+section[id^="m-"] > .grid { display: contents !important; }
+
+/* Existing responsive spans preserved, now applied at the month grid level */
+section[id^="m-"] .card { grid-column: span 12 !important; }
+@media (min-width: 700px)  { section[id^="m-"] .card { grid-column: span 6 !important; } }
+@media (min-width: 1024px) { section[id^="m-"] .card { grid-column: span 4 !important; } }
