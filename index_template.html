@@ -5,172 +5,245 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>SFDC Production Metadata Dump Comparison Reports</title>
 <style>
-  :root{--blue-600:#2563eb;--blue-700:#1d4ed8;--blue-800:#1e40af;--ink:#0b0f19;--bg:#f8fafc;--muted:#475569;--muted-2:#64748b;--line:#e2e8f0;--white:#fff;--radius:16px;--transition:180ms ease}
+  :root{
+    --blue:#1d4ed8; --blue-deep:#1e40af; --blue-quiet:#eaf2ff;
+    --ink:#0b0f19; --white:#fff; --bg:#f8fafc; --line:#e6e9ef; --muted:#6b7280;
+    --radius:16px; --shadow:0 10px 26px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);
+  }
   *,*::before,*::after{box-sizing:border-box}
   html,body{height:100%}
-  body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;display:flex;flex-direction:column;min-height:100vh}
-  a{color:var(--blue-700);text-decoration:none} a:hover{text-decoration:underline}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+    display:flex; flex-direction:column; min-height:100vh;
+  }
 
-  .app-header{position:sticky;top:0;z-index:50;background:linear-gradient(90deg,var(--ink),var(--blue-800));color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-  .header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,4vw,32px);max-width:1200px;margin:0 auto}
-  .title{font-size:clamp(18px,2.2vw,24px);font-weight:800;letter-spacing:.2px}
-  .rightside{display:flex;align-items:center;gap:14px}
-  .search{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);padding:8px 12px;border-radius:999px;backdrop-filter:blur(6px)}
-  .search input{background:transparent;border:0;color:#fff;width:260px;outline:none;font-size:14px}
-  .search input::placeholder{color:rgba(255,255,255,.85)}
-  .brand img{height:40px;width:auto;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+  /* Header */
+  header{
+    background:linear-gradient(135deg,#0b0f19 0%,var(--blue-deep) 100%);
+    color:#fff;
+    box-shadow:var(--shadow);
+  }
+  .h-inner{
+    max-width:1200px; margin:0 auto; padding:16px 20px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .h-title{display:flex; flex-direction:column; gap:6px}
+  .h-title h1{margin:0; font-weight:900; font-size:clamp(18px,2.3vw,24px)}
+  .search{
+    display:flex; gap:10px; align-items:center; margin-top:6px;
+  }
+  .search input{
+    width:min(520px, 76vw); padding:10px 12px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.35); background:rgba(255,255,255,.12);
+    color:#fff; outline:none;
+  }
+  .search input::placeholder{color:rgba(255,255,255,.75)}
+  .brand{display:flex; align-items:center; gap:10px}
+  .brand img{height:34px; display:block; filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
 
-  .subnav{background:linear-gradient(90deg,var(--blue-800),var(--blue-700));color:#fff}
-  .subnav-inner{max-width:1200px;margin:0 auto;padding:8px clamp(16px,4vw,32px);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-  .chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);color:#fff;padding:5px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.24);font-size:12px}
+  main{max-width:1200px; margin:20px auto; padding:0 20px; flex:1 0 auto;}
 
-  main{max-width:1200px;margin:22px auto 0;padding:0 clamp(16px,4vw,32px);flex:1}
-  .layout{display:grid;grid-template-columns:1fr 300px;gap:16px}
-  @media (max-width:980px){.layout{grid-template-columns:1fr}}
+  /* Section headings */
+  .month-heading{
+    margin:18px 0 6px 0; display:flex; align-items:center; gap:10px;
+  }
+  .month-chip{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--blue-quiet); color:var(--blue-deep);
+    border:1px solid #d9e6ff; border-radius:999px; padding:6px 12px; font-weight:800;
+  }
+  .week-heading{
+    color:var(--blue-deep); font-weight:900; margin:6px 0 10px 0;
+  }
 
-  .section-header{display:flex;align-items:end;justify-content:space-between;margin:18px 0 8px;border-left:4px solid #93c5fd;padding-left:10px}
-  .section-header h2{margin:0;font-size:clamp(18px,2vw,22px);font-weight:900;color:#0f172a}
-  .section-header .count{color:var(--muted);font-size:13px}
-  .week-subhead{margin:12px 0 10px;color:#1e40af;font-size:15px;font-weight:700;letter-spacing:.2px}
+  /* Cards grid – side-by-side */
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));
+    gap:16px;
+  }
 
-  .grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
-  .card{grid-column:span 12;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);padding:16px;position:relative;transition:var(--transition)}
-  @media(min-width:700px){.card{grid-column:span 6}} @media(min-width:1024px){.card{grid-column:span 4}}
-  .card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.10),0 3px 8px rgba(0,0,0,.08)}
-  .card h3{margin:0 0 8px;font-size:17px;line-height:1.35;font-weight:900;color:#0f172a}
-  .card h3 .tag{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;padding:2px 6px;border-radius:999px;border:1px solid #bae6fd;background:#e0f2fe;color:#075985}
+  /* Report card */
+  .card{
+    background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:16px; display:flex; flex-direction:column; gap:10px;
+  }
+  .card h3{margin:0; font-size:18px; font-weight:900; line-height:1.3}
+  .badge{display:inline-flex; align-items:center; gap:6px; font-size:12px;
+         border-radius:999px; padding:4px 10px; background:rgba(13,18,27,.06); color:#111; border:1px solid var(--line)}
+  .badge.api{background:#eef2ff; color:var(--blue-deep); border-color:#dfe7ff; font-weight:800}
+  .meta{color:var(--muted)}
+  .run{color:var(--muted)}
 
-  /* NEW: small meta row with a pill for execution date */
-  .meta{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
-  .pill{background:#f1f5f9;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted-2)}
+  /* Latest badge (shiny) */
+  .latest{
+    margin-left:8px; background:linear-gradient(90deg,#e0f2fe 0%,#fff 50%,#e0f2fe 100%);
+    background-size:200% 100%;
+    color:#0ea5e9; border:1px solid #bae6fd; font-weight:900;
+    animation:shine 2.4s linear infinite;
+  }
+  @keyframes shine{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-  .btn-row{display:flex;gap:10px;flex-wrap:wrap}
-  .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;font-weight:700;font-size:14px;border:1px solid var(--blue-700);color:#fff;background:linear-gradient(180deg,var(--blue-600),var(--blue-800));box-shadow:0 6px 16px rgba(29,78,216,.25);transition:var(--transition)}
-  .btn:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(29,78,216,.35)}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    gap:8px; padding:12px 14px; border-radius:12px; font-weight:800;
+    text-decoration:none; color:#fff; background:var(--blue);
+    border:1px solid var(--blue-deep);
+    transition:.15s ease; box-shadow:0 3px 8px rgba(0,0,0,.10);
+  }
+  .btn:hover{filter:brightness(1.06); box-shadow:0 8px 18px rgba(0,0,0,.16)}
+  .btn:active{transform:translateY(1px)}
 
-  aside{justify-self:end} aside .card{position:sticky;top:92px}
-  .side-title{margin:0 0 10px;font-size:15px;font-weight:800;color:#0f172a}
-  .chips{display:flex;flex-wrap:wrap;gap:8px} .chip.meta{background:#f1f5f9;color:#0f172a;border:1px solid var(--line)}
+  /* Divider between month groups */
+  .divider{height:1px; background:var(--line); margin:24px 0}
 
-  .latest-badge{position:absolute;top:10px;right:10px;font-size:10px;letter-spacing:.3px;font-weight:800;color:#fff;padding:3px 6px;border-radius:999px;background:linear-gradient(90deg,#00c6ff,#0072ff,#00c6ff);background-size:200% 100%;box-shadow:0 2px 6px rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.6);animation:shine 1.2s linear infinite}
-  @keyframes shine{to{background-position:-200% 0}}
-
-  footer{text-align:center;padding:10px;color:#e2e8f0;background:#0f172a;border-top:1px solid #0b1220;margin-top:32px;font-size:12px}
+  /* Footer pinned to page end */
+  footer{
+    background:#0b0f19; color:#fff; text-align:center; font-size:12px;
+    padding:6px 10px; margin-top:auto;
+  }
 </style>
-
-<script>
-  (function(){
-    var raw='{{REPORT_CARDS_JSON}}';
-    var looksTemplate = raw.indexOf('{')===-1 && raw.indexOf('[')===-1;
-    if(looksTemplate){ document.documentElement.classList.add('no-reports'); }
-  })();
-</script>
 </head>
 <body>
-<header class="app-header">
-  <div class="header-inner">
-    <div class="title">SFDC Production Metadata Dump Comparison Reports</div>
-    <div class="rightside">
-      <label class="search" for="q" title="Search">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
-        <input id="q" type="search" placeholder="Search by title, API, dates…" />
-      </label>
-      <div class="brand">
-        <img src="{{CADENCE_LOGO}}" data-fallback="assets/cadence-logo.png" alt="Cadence logo"
-             onerror="this.onerror=null; this.src=this.getAttribute('data-fallback');">
+<header>
+  <div class="h-inner">
+    <div class="h-title">
+      <h1>SFDC Production Metadata Dump Comparison Reports</h1>
+      <div class="search">
+        <input id="q" type="search" placeholder="Search title, API, dump names, or run date…" />
       </div>
+    </div>
+    <div class="brand">
+      <img src="{{CADENCE_LOGO}}" alt="Cadence logo" />
     </div>
   </div>
 </header>
 
-<nav class="subnav"><div class="subnav-inner" id="quickjump"></div></nav>
-
-<main>
-  <div class="layout">
-    <section><div id="sections"></div></section>
-    <aside>
-      <div class="card">
-        <h4 class="side-title">Current SFDC metadata list used in Cadence</h4>
-        {{METADATA_SIDEBAR_HTML}}
-      </div>
-    </aside>
-  </div>
+<main id="app">
+  <!-- Filled by JS -->
 </main>
 
-<footer><p class="end">This is the end of report.</p></footer>
+<footer>© Cadence — Production Metadata Dump Comparison</footer>
 
+<!-- Reports DB is baked at build time -->
+<script id="db" type="application/json">{{REPORT_CARDS_JSON}}</script>
 <script>
-(function(){
-  var raw='{{REPORT_CARDS_JSON}}', REPORTS=[];
-  try{ REPORTS=JSON.parse(raw); }catch(e){ REPORTS=[]; }
-  window.REPORTS=REPORTS;
+(() => {
+  /** Utilities **/
+  const $ = sel => document.querySelector(sel);
+  const app = $('#app');
+  const data = (() => {
+    try { return JSON.parse($('#db').textContent || '[]'); }
+    catch(e){ return []; }
+  })();
 
-  function monthKey(iso){var d=new Date(iso+'T00:00:00');return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)}
-  function monthLabel(k){var a=k.split('-');var y=+a[0],m=+a[1]-1;return new Date(y,m,1).toLocaleDateString(undefined,{month:'long',year:'numeric'})}
-  function getMonday(iso){var d=new Date(iso+'T00:00:00');var day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);d.setHours(0,0,0,0);return d}
-  function fmtShort(d){return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}
-  function fmtRun(iso){return new Date(iso+'T00:00:00').toLocaleDateString()}  // local-friendly run date
-  function plainTitle(r){ return r.masterTitle || r.title; }
+  // Normalize + sort newest-first
+  const parseISO = s => new Date(s+'T00:00:00');
+  data.sort((a,b) => parseISO(b.runDate) - parseISO(a.runDate));
 
-  var $sections=document.getElementById('sections'),
-      $quickjump=document.getElementById('quickjump'),
-      $search=document.getElementById('q');
+  // Mark latest (first item after sort)
+  const latestHref = data[0]?.detailHref;
 
-  function render(list){
-    var has = !!(list && list.length);
-    document.body.classList.toggle('no-reports', !has);
-    if(!has){
-      $quickjump.innerHTML='';
-      $sections.innerHTML='<div style="padding:24px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">No reports yet.</div>';
-      return;
+  // Helpers for headings
+  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const fmtMonth = d => `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+
+  // Week range (Mon–Sun)
+  function weekWindow(d){
+    const day = d.getDay(); // Sun=0
+    const diffToMon = (day+6)%7;  // 0->6,1->0,2->1,...
+    const mon = new Date(d); mon.setDate(d.getDate()-diffToMon);
+    const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+    const fmt = s => s.toLocaleString(undefined,{month:'short', day:'numeric'});
+    return {label:`Week of ${fmt(mon)} – ${fmt(sun)}`, key:`${mon.getFullYear()}-${mon.getMonth()+1}-${mon.getDate()}`};
+  }
+
+  // Filter logic
+  let query = '';
+  $('#q').addEventListener('input', e => {
+    query = (e.target.value || '').trim().toLowerCase();
+    render();
+  });
+
+  // Group by month -> week
+  function group(items){
+    const out = new Map();
+    for(const r of items){
+      const d = parseISO(r.runDate);
+      const mkey = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}`;
+      const w = weekWindow(d);
+      if(!out.has(mkey)) out.set(mkey, {date:d, monthLabel:fmtMonth(d), weeks:new Map()});
+      const month = out.get(mkey);
+      if(!month.weeks.has(w.key)) month.weeks.set(w.key, {label:w.label, rows:[]});
+      month.weeks.get(w.key).rows.push(r);
     }
-
-    var latest=list[0].runDate; for(var i=1;i<list.length;i++){if(list[i].runDate>latest) latest=list[i].runDate}
-    list.sort(function(a,b){return b.runDate.localeCompare(a.runDate)})
-
-    var groups={}, order=[]
-    for(var i=0;i<list.length;i++){var k=monthKey(list[i].runDate); if(!groups[k]){groups[k]=[];order.push(k)} groups[k].push(list[i])}
-
-    var chips=''; for(var i=0;i<order.length;i++){var k=order[i]; chips+='<a class="chip" href="#m-'+k+'">'+monthLabel(k)+'</a>'}
-    $quickjump.innerHTML=chips;
-
-    var html=''
-    for(var i=0;i<order.length;i++){
-      var k=order[i], items=groups[k]
-      html+='<section id="m-'+k+'"><div class="section-header"><h2>'+monthLabel(k)+'</h2><div class="count">'+items.length+' report'+(items.length!==1?'s':'')+'</div></div>'
-      var weeks={}, wkeys=[]
-      for(var j=0;j<items.length;j++){var mon=getMonday(items[j].runDate); var wk=mon.toISOString().slice(0,10); if(!weeks[wk]){weeks[wk]={mon:mon,list:[]}; wkeys.push(wk)} weeks[wk].list.push(items[j])}
-      wkeys.sort().reverse()
-      for(var t=0;t<wkeys.length;t++){
-        var wk=wkeys[t], start=weeks[wk].mon, end=new Date(+start); end.setDate(end.getDate()+6)
-        html+='<h3 class="week-subhead">Week of '+fmtShort(start)+' – '+fmtShort(end)+'</h3><div class="grid">'
-        var L=weeks[wk].list
-        for(var u=0;u<L.length;u++){
-          var r=L[u]
-          html+='<article class="card">'
-          if(r.runDate===latest){html+='<span class="latest-badge">Latest</span>'}
-          html+='<h3>'+plainTitle(r)+' <span class="tag">API '+r.apiVersion+'</span></h3>'
-          /* NEW: execution date pill */
-          html+='<div class="meta"><span class="pill">Run: '+fmtRun(r.runDate)+'</span></div>'
-          html+='<div class="btn-row"><a class="btn" target="_blank" href="'+r.detailHref+'">Open Detailed Report</a></div>'
-          html+='</article>'
+    // Sort months desc, weeks desc, cards desc (by runDate)
+    return [...out.values()]
+      .sort((a,b)=>b.date-a.date)
+      .map(m=>{
+        m.weeks = [...m.weeks.values()].reverse(); // most recent week last -> we’ll reverse to desc below
+        m.weeks.sort((a,b)=>{
+          const aDate = parseISO(a.rows[0].runDate);
+          const bDate = parseISO(b.rows[0].runDate);
+          return bDate - aDate;
+        });
+        for(const w of m.weeks){
+          w.rows.sort((a,b)=> parseISO(b.runDate)-parseISO(a.runDate) );
         }
-        html+='</div>'
-      }
-      html+='</section>'
-    }
-    $sections.innerHTML=html
+        return m;
+      });
   }
 
-  function doSearch(){
-    var q=($search.value||'').toLowerCase().trim()
-    if(!q){render(REPORTS);return}
-    var out=[]; for(var i=0;i<REPORTS.length;i++){var r=REPORTS[i], blob=(plainTitle(r)+' '+r.apiVersion+' '+r.runDate).toLowerCase(); if(blob.indexOf(q)!==-1) out.push(r)}
-    render(out)
+  // Card view
+  function card(r){
+    const isLatest = (r.detailHref === latestHref);
+    return `
+      <article class="card">
+        <h3>${escapeHtml(r.title)}${isLatest?` <span class="badge latest">Latest</span>`:''}</h3>
+        <div class="meta">
+          <span class="badge api">API ${escapeHtml(r.apiVersion || '')}</span>
+        </div>
+        <div class="run">Run: ${escapeHtml(r.runDate)}</div>
+        <div><a class="btn" href="${escapeAttr(r.detailHref)}">Open Detailed Report</a></div>
+      </article>
+    `;
   }
 
-  render(REPORTS); $search.addEventListener('input', doSearch)
+  // Render
+  function render(){
+    const filtered = !query ? data : data.filter(r => {
+      const hay = [
+        r.title, r.apiVersion, r.oldDumpLabel, r.newDumpLabel, r.runDate
+      ].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(query);
+    });
+
+    const groups = group(filtered);
+
+    let html = '';
+    groups.forEach((m, mi) => {
+      html += `
+        ${mi?'<div class="divider"></div>':''}
+        <div class="month-heading">
+          <div class="month-chip">${escapeHtml(m.monthLabel)}</div>
+        </div>
+      `;
+      m.weeks.forEach(w => {
+        html += `<div class="week-heading">${escapeHtml(w.label)}</div>`;
+        html += `<section class="cards">`;
+        w.rows.forEach(r => html += card(r));
+        html += `</section>`;
+      });
+    });
+
+    app.innerHTML = html || `<p style="color:#6b7280">No reports match your search.</p>`;
+  }
+
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+  function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
+
+  render();
 })();
 </script>
-</body>
 </html>
