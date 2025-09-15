@@ -34,21 +34,29 @@
   .section-header{display:flex;align-items:end;justify-content:space-between;margin:18px 0 8px;border-left:4px solid #93c5fd;padding-left:10px}
   .section-header h2{margin:0;font-size:clamp(18px,2vw,22px);font-weight:900;color:#0f172a}
   .section-header .count{color:var(--muted);font-size:13px}
-  /* .week-subhead left as-is but no longer used as a spanning row */
-  .week-subhead{margin:12px 0 10px;color:#1e40af;font-size:15px;font-weight:700;letter-spacing:.2px}
 
-  /* Cards/grid — unchanged look */
+  /* Week chips bar (new): shows all weeks in the month without breaking the grid */
+  .weeks-bar{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 10px}
+  .pill{background:#f1f5f9;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted-2)}
+
+  /* Cards/grid — same look; cards a bit more square */
   .grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
-  .card{grid-column:span 12;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);padding:16px;position:relative;transition:var(--transition)}
-  @media(min-width:700px){.card{grid-column:span 6}} @media(min-width:1024px){.card{grid-column:span 4}}
+  .card{
+    grid-column:span 12;
+    background:var(--white);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:0 8px 24px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);
+    padding:16px;position:relative;transition:var(--transition);
+    display:flex;flex-direction:column;
+    aspect-ratio:1/1; /* makes them feel square; grows if content needs more height */
+  }
+  @media(min-width:700px){.card{grid-column:span 6}}
+  @media(min-width:1024px){.card{grid-column:span 4}}
   .card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.10),0 3px 8px rgba(0,0,0,.08)}
   .card h3{margin:0 0 8px;font-size:17px;line-height:1.35;font-weight:900;color:#0f172a}
   .card h3 .tag{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;padding:2px 6px;border-radius:999px;border:1px solid #bae6fd;background:#e0f2fe;color:#075985}
 
   .meta{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
-  .pill{background:#f1f5f9;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted-2)}
-
-  .btn-row{display:flex;gap:10px;flex-wrap:wrap}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
   .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;font-weight:700;font-size:14px;border:1px solid var(--blue-700);color:#fff;background:linear-gradient(180deg,var(--blue-600),var(--blue-800));box-shadow:0 6px 16px rgba(29,78,216,.25);transition:var(--transition)}
   .btn:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(29,78,216,.35)}
 
@@ -103,6 +111,7 @@
   var RAW='{{REPORT_CARDS_JSON}}', REPORTS=[];
   try { REPORTS = JSON.parse(RAW); } catch(e) { REPORTS = []; }
 
+  /* Helpers */
   function monthKey(iso){
     if(!iso) return '0000-00';
     var d = new Date(iso+'T00:00:00');
@@ -119,7 +128,12 @@
   }
   function fmtShort(d){ return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
   function fmtRun(iso){ var d=new Date((iso||'1970-01-01')+'T00:00:00'); return isNaN(d)?'—':d.toLocaleDateString(); }
-  function titleOf(r){ return (r && (r.masterTitle || r.title)) || '—'; }
+
+  /* Drop the "Production Dump Comparison:" prefix in titles for card heading */
+  function titleOf(r){
+    var t=(r && (r.masterTitle || r.title)) || '—';
+    return t.replace(/^Production Dump Comparison:\s*/i,'').trim();
+  }
   function apiOf(r){ return (r && r.apiVersion) ? String(r.apiVersion) : '—'; }
   function hrefOf(r){ return (r && r.detailHref) ? r.detailHref : '#'; }
   function runDateOf(r){ return (r && r.runDate) ? r.runDate : '1970-01-01'; }
@@ -137,11 +151,11 @@
       return;
     }
 
-    // newest runDate for "Latest" badge
+    /* newest runDate for "Latest" */
     items.sort(function(a,b){ return String(b.runDate).localeCompare(String(a.runDate)); });
     var latest = items[0].runDate;
 
-    // group by month
+    /* group by month */
     var groups = Object.create(null), order=[];
     items.forEach(function(r){
       var k = monthKey(r.runDate);
@@ -153,12 +167,12 @@
       return B.localeCompare(A);
     });
 
-    // month chips
+    /* month chips */
     $quickjump.innerHTML = order.map(function(k){
       return '<a class="chip" href="#m-'+k+'">'+monthLabel(k)+'</a>';
     }).join('');
 
-    // build HTML
+    /* build */
     var html='';
     for(var i=0;i<order.length;i++){
       var k = order[i], monthItems = groups[k] || [];
@@ -166,7 +180,7 @@
       html+='<section id="m-'+k+'">';
       html+='<div class="section-header"><h2>'+monthLabel(k)+'</h2><div class="count">'+monthItems.length+' report'+(monthItems.length!==1?'s':'')+'</div></div>';
 
-      // build weeks (for grouping only)
+      /* compute weeks for this month → produce a chip bar (does not break the grid) */
       var weeks = Object.create(null), wkeys=[];
       monthItems.forEach(function(r){
         var mon = getMonday(r.runDate);
@@ -176,28 +190,28 @@
       });
       wkeys.sort().reverse();
 
-      // ONE grid for the WHOLE MONTH
+      /* Week chips bar */
+      var chips=[];
+      for(var t=0;t<wkeys.length;t++){
+        var start=weeks[wkeys[t]].mon, end=new Date(+start); end.setDate(end.getDate()+6);
+        chips.push('<span class="pill">Week of '+fmtShort(start)+' \u2013 '+fmtShort(end)+'</span>');
+      }
+      html+='<div class="weeks-bar">'+chips.join('')+'</div>';
+
+      /* ONE grid for the WHOLE MONTH */
       html+='<div class="grid">';
 
-      // insert CARDS (no spanning week-header rows); add week info as a pill inside each card
-      for(var t=0;t<wkeys.length;t++){
-        var wk=wkeys[t], start=weeks[wk].mon, end=new Date(+start); end.setDate(end.getDate()+6);
-        var weekLabel = 'Week of '+fmtShort(start)+' \u2013 '+fmtShort(end);
-
-        // sort runs within week newest first
-        var L = weeks[wk].list.slice().sort(function(a,b){
+      /* Insert cards (no spanning rows); sort per week newest-first for stability */
+      for(var t2=0;t2<wkeys.length;t2++){
+        var L = weeks[wkeys[t2]].list.slice().sort(function(a,b){
           return String(b.runDate).localeCompare(String(a.runDate));
         });
-
         for(var u=0;u<L.length;u++){
           var r=L[u];
           html+='<article class="card">';
           if(r.runDate===latest){ html+='<span class="latest-badge">Latest</span>'; }
           html+='<h3>'+titleOf(r)+' <span class="tag">API '+apiOf(r)+'</span></h3>';
-          html+='<div class="meta">'
-              + '<span class="pill">Run: '+fmtRun(runDateOf(r))+'</span>'
-              + '<span class="pill">'+weekLabel+'</span>'
-              + '</div>';
+          html+='<div class="meta"><span class="pill">Run: '+fmtRun(runDateOf(r))+'</span></div>';
           html+='<div class="btn-row"><a class="btn" target="_blank" href="'+hrefOf(r)+'">Open Detailed Report</a></div>';
           html+='</article>';
         }
