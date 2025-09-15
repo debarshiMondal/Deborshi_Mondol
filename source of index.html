@@ -1,0 +1,240 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SFDC Production Metadata Dump Comparison Reports</title>
+<style>
+  :root{--blue-600:#2563eb;--blue-700:#1d4ed8;--blue-800:#1e40af;--ink:#0b0f19;--bg:#f8fafc;--muted:#475569;--muted-2:#64748b;--line:#e2e8f0;--white:#fff;--radius:16px;--transition:180ms ease}
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;display:flex;flex-direction:column;min-height:100vh}
+  a{color:var(--blue-700);text-decoration:none} a:hover{text-decoration:underline}
+
+  /* Header (kept as-is stylistically) */
+  .app-header{position:sticky;top:0;z-index:50;background:linear-gradient(90deg,var(--ink),var(--blue-800));color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,4vw,32px);max-width:1200px;margin:0 auto}
+  .title{font-size:clamp(18px,2.2vw,24px);font-weight:800;letter-spacing:.2px}
+  .rightside{display:flex;align-items:center;gap:14px}
+  .search{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);padding:8px 12px;border-radius:999px;backdrop-filter:blur(6px)}
+  .search input{background:transparent;border:0;color:#fff;width:260px;outline:none;font-size:14px}
+  .search input::placeholder{color:rgba(255,255,255,.85)}
+  .brand img{height:40px;width:auto;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+
+  .subnav{background:linear-gradient(90deg,var(--blue-800),var(--blue-700));color:#fff}
+  .subnav-inner{max-width:1200px;margin:0 auto;padding:8px clamp(16px,4vw,32px);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);color:#fff;padding:5px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.24);font-size:12px}
+
+  main{max-width:1200px;margin:22px auto 0;padding:0 clamp(16px,4vw,32px);flex:1}
+
+  /* COLLAPSE layout to single column (sidebar removed) — no color changes */
+  .layout{display:grid;grid-template-columns:1fr;gap:16px}
+  @media (max-width:980px){.layout{grid-template-columns:1fr}}
+
+  .section-header{display:flex;align-items:end;justify-content:space-between;margin:18px 0 8px;border-left:4px solid #93c5fd;padding-left:10px}
+  .section-header h2{margin:0;font-size:clamp(18px,2vw,22px);font-weight:900;color:#0f172a}
+  .section-header .count{color:var(--muted);font-size:13px}
+  .week-subhead{margin:12px 0 10px;color:#1e40af;font-size:15px;font-weight:700;letter-spacing:.2px}
+
+  /* Cards/grid — unchanged look; logic fixed in JS */
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
+  .card{grid-column:span 12;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);padding:16px;position:relative;transition:var(--transition)}
+  @media(min-width:700px){.card{grid-column:span 6}} @media(min-width:1024px){.card{grid-column:span 4}}
+  .card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.10),0 3px 8px rgba(0,0,0,.08)}
+  .card h3{margin:0 0 8px;font-size:17px;line-height:1.35;font-weight:900;color:#0f172a}
+  .card h3 .tag{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;padding:2px 6px;border-radius:999px;border:1px solid #bae6fd;background:#e0f2fe;color:#075985}
+
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+  .pill{background:#f1f5f9;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted-2)}
+
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;font-weight:700;font-size:14px;border:1px solid var(--blue-700);color:#fff;background:linear-gradient(180deg,var(--blue-600),var(--blue-800));box-shadow:0 6px 16px rgba(29,78,216,.25);transition:var(--transition)}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(29,78,216,.35)}
+
+  .latest-badge{position:absolute;top:10px;right:10px;font-size:10px;letter-spacing:.3px;font-weight:800;color:#fff;padding:3px 6px;border-radius:999px;background:linear-gradient(90deg,#00c6ff,#0072ff,#00c6ff);background-size:200% 100%;box-shadow:0 2px 6px rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.6);animation:shine 1.2s linear infinite}
+  @keyframes shine{to{background-position:-200% 0}}
+
+  footer{text-align:center;padding:10px;color:#e2e8f0;background:#0f172a;border-top:1px solid #0b1220;margin-top:32px;font-size:12px}
+
+  /* Utility: let week headers span across the month grid */
+  .span-all{ grid-column: 1 / -1 !important; }
+
+  /* Safety net: if any leftover weekly grid exists, flatten it without changing visuals */
+  section[id^="m-"] > .grid { /* the per-week grid we used to open */
+    /* JS fix removes it, but if present, this keeps layout working */
+  }
+</style>
+
+<script>
+  /* keep the tiny “no reports” check */
+  (function(){
+    var raw='[{"runDate": "2025-08-13", "apiVersion": "62.0", "title": "Production Dump Comparison: 22nd July 2025 vs. 12th August 2025", "oldDumpLabel": "22nd July 2025", "newDumpLabel": "12th August 2025", "detailHref": "2025-09-12/index.html", "compareHref": "2025-09-12/codecomp.html"}, {"runDate": "2025-09-14", "apiVersion": "62.0", "title": "Production Dump Comparison: 12th August 2025 vs. 14th September 2025", "oldDumpLabel": "12th August 2025", "newDumpLabel": "14th September 2025", "detailHref": "2025-09-14/index.html", "compareHref": "2025-09-14/codecomp.html"}, {"runDate": "2025-09-15", "apiVersion": "62.0", "title": "Production Dump Comparison: 14th September 2025 vs. 15th September 2025", "oldDumpLabel": "14th September 2025", "newDumpLabel": "15th September 2025", "detailHref": "2025-09-15/index.html", "compareHref": "2025-09-15/codecomp.html"}]';
+    var looksTemplate = raw.indexOf('{')===-1 && raw.indexOf('[')===-1;
+    if(looksTemplate){ document.documentElement.classList.add('no-reports'); }
+  })();
+</script>
+</head>
+<body>
+<header class="app-header">
+  <div class="header-inner">
+    <div class="title">SFDC Production Metadata Dump Comparison Reports</div>
+    <div class="rightside">
+      <label class="search" for="q" title="Search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="q" type="search" placeholder="Search by title, API, dates…" />
+      </label>
+      <div class="brand">
+        <img src="assets/cadence-logo.png" data-fallback="assets/cadence-logo.png" alt="Cadence logo"
+             onerror="this.onerror=null; this.src=this.getAttribute('data-fallback');">
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="subnav"><div class="subnav-inner" id="quickjump"></div></nav>
+
+<main>
+  <div class="layout">
+    <!-- MAIN COLUMN ONLY (sidebar removed by design) -->
+    <section><div id="sections"></div></section>
+  </div>
+</main>
+
+<footer><p class="end">This is the end of report.</p></footer>
+
+<script>
+(function(){
+  /** Safe JSON parse */
+  var RAW='[{"runDate": "2025-08-13", "apiVersion": "62.0", "title": "Production Dump Comparison: 22nd July 2025 vs. 12th August 2025", "oldDumpLabel": "22nd July 2025", "newDumpLabel": "12th August 2025", "detailHref": "2025-09-12/index.html", "compareHref": "2025-09-12/codecomp.html"}, {"runDate": "2025-09-14", "apiVersion": "62.0", "title": "Production Dump Comparison: 12th August 2025 vs. 14th September 2025", "oldDumpLabel": "12th August 2025", "newDumpLabel": "14th September 2025", "detailHref": "2025-09-14/index.html", "compareHref": "2025-09-14/codecomp.html"}, {"runDate": "2025-09-15", "apiVersion": "62.0", "title": "Production Dump Comparison: 14th September 2025 vs. 15th September 2025", "oldDumpLabel": "14th September 2025", "newDumpLabel": "15th September 2025", "detailHref": "2025-09-15/index.html", "compareHref": "2025-09-15/codecomp.html"}]', REPORTS=[];
+  try { REPORTS = JSON.parse(RAW); } catch(e) { REPORTS = []; }
+
+  /** Helpers (unchanged visuals; robust data handling) */
+  function monthKey(iso){
+    if(!iso) return '0000-00';
+    var d = new Date(iso+'T00:00:00');
+    if(isNaN(d)) return '0000-00';
+    return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);
+  }
+  function monthLabel(k){
+    var a=(k||'0000-00').split('-'); var y=+a[0]||0, m=(+a[1]||1)-1;
+    var d=new Date(y,m,1); return d.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  }
+  function getMonday(iso){
+    var d=new Date((iso||'1970-01-01')+'T00:00:00'); if(isNaN(d)) d=new Date('1970-01-01T00:00:00');
+    var day=(d.getDay()+6)%7; d.setDate(d.getDate()-day); d.setHours(0,0,0,0); return d;
+  }
+  function fmtShort(d){ return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
+  function fmtRun(iso){ var d=new Date((iso||'1970-01-01')+'T00:00:00'); return isNaN(d)?'—':d.toLocaleDateString(); }
+  function titleOf(r){ return (r && (r.masterTitle || r.title)) || '—'; }
+  function apiOf(r){ return (r && r.apiVersion) ? String(r.apiVersion) : '—'; }
+  function hrefOf(r){ return (r && r.detailHref) ? r.detailHref : '#'; }
+  function runDateOf(r){ return (r && r.runDate) ? r.runDate : '1970-01-01'; }
+
+  var $sections=document.getElementById('sections'),
+      $quickjump=document.getElementById('quickjump'),
+      $search=document.getElementById('q');
+
+  /** Render (now: ONE grid per MONTH) */
+  function render(list){
+    var items = Array.isArray(list) ? list.slice() : [];
+    // guard against bad shapes
+    items = items.filter(function(r){ return r && r.runDate; });
+
+    if(!items.length){
+      $quickjump.innerHTML='';
+      $sections.innerHTML='<div style="padding:24px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">No reports yet.</div>';
+      return;
+    }
+
+    // newest runDate for "Latest" badge
+    items.sort(function(a,b){ return String(b.runDate).localeCompare(String(a.runDate)); });
+    var latest = items[0].runDate;
+
+    // group by month
+    var groups = Object.create(null), order=[];
+    items.forEach(function(r){
+      var k = monthKey(r.runDate);
+      if(!groups[k]){ groups[k]=[]; order.push(k); }
+      groups[k].push(r);
+    });
+    // sort months newest first by first item's runDate
+    order.sort(function(a,b){
+      var A=(groups[a][0]||{}).runDate||'', B=(groups[b][0]||{}).runDate||'';
+      return B.localeCompare(A);
+    });
+
+    // month chips
+    $quickjump.innerHTML = order.map(function(k){
+      return '<a class="chip" href="#m-'+k+'">'+monthLabel(k)+'</a>';
+    }).join('');
+
+    // build HTML
+    var html='';
+    for(var i=0;i<order.length;i++){
+      var k = order[i], monthItems = groups[k] || [];
+
+      html+='<section id="m-'+k+'">';
+      html+='<div class="section-header"><h2>'+monthLabel(k)+'</h2><div class="count">'+monthItems.length+' report'+(monthItems.length!==1?'s':'')+'</div></div>';
+
+      // build weeks (for headers only)
+      var weeks = Object.create(null), wkeys=[];
+      monthItems.forEach(function(r){
+        var mon = getMonday(r.runDate);
+        var wkKey = mon.toISOString().slice(0,10);
+        if(!weeks[wkKey]){ weeks[wkKey] = {mon:mon,list:[]}; wkeys.push(wkKey); }
+        weeks[wkKey].list.push(r);
+      });
+      wkeys.sort().reverse();
+
+      // OPEN ONE GRID for the WHOLE MONTH
+      html+='<div class="grid">';
+
+      // insert week headers + cards INSIDE the same grid
+      for(var t=0;t<wkeys.length;t++){
+        var wk=wkeys[t], start=weeks[wk].mon, end=new Date(+start); end.setDate(end.getDate()+6);
+        html+='<h3 class="week-subhead span-all">Week of '+fmtShort(start)+' – '+fmtShort(end)+'</h3>';
+
+        // sort runs within week newest first (stable visual)
+        var L = weeks[wk].list.slice().sort(function(a,b){
+          return String(b.runDate).localeCompare(String(a.runDate));
+        });
+
+        for(var u=0;u<L.length;u++){
+          var r=L[u];
+          html+='<article class="card">';
+          if(r.runDate===latest){ html+='<span class="latest-badge">Latest</span>'; }
+          html+='<h3>'+titleOf(r)+' <span class="tag">API '+apiOf(r)+'</span></h3>';
+          html+='<div class="meta"><span class="pill">Run: '+fmtRun(runDateOf(r))+'</span></div>';
+          html+='<div class="btn-row"><a class="btn" target="_blank" href="'+hrefOf(r)+'">Open Detailed Report</a></div>';
+          html+='</article>';
+        }
+      }
+
+      // CLOSE the ONE month grid
+      html+='</div>';
+      html+='</section>';
+    }
+
+    $sections.innerHTML = html;
+  }
+
+  /** Search uses the same render path (so layout stays correct) */
+  function doSearch(){
+    var q=($search.value||'').toLowerCase().trim();
+    if(!q){ render(REPORTS); return; }
+    var out=[];
+    for(var i=0;i<REPORTS.length;i++){
+      var r=REPORTS[i];
+      var blob=(titleOf(r)+' '+apiOf(r)+' '+runDateOf(r)).toLowerCase();
+      if(blob.indexOf(q)!==-1) out.push(r);
+    }
+    render(out);
+  }
+
+  render(REPORTS);
+  $search.addEventListener('input', doSearch);
+})();
+</script>
+</body>
+</html>
