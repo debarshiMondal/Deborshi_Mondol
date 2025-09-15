@@ -6,103 +6,79 @@
 <title>SFDC Production Metadata Dump Comparison Reports</title>
 <style>
   :root{
-    --blue:#1d4ed8; --blue-deep:#1e40af; --blue-quiet:#eaf2ff;
-    --ink:#0b0f19; --white:#fff; --bg:#f8fafc; --line:#e6e9ef; --muted:#6b7280;
-    --radius:16px; --shadow:0 10px 26px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);
+    --blue:#1d4ed8; --blue-deep:#1e40af;
+    --gray:#6b7280; --ink:#0b0f19; --line:#e6e9ef; --bg:#f8fafc; --white:#fff;
+    --radius:16px; --shadow:0 8px 24px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);
   }
   *,*::before,*::after{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0; background:var(--bg); color:var(--ink);
+    margin:0;background:var(--bg);color:var(--ink);
     font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
-    display:flex; flex-direction:column; min-height:100vh;
+    padding-bottom:40px; /* room for fixed footer */
   }
 
   /* Header */
-  header{
-    background:linear-gradient(135deg,#0b0f19 0%,var(--blue-deep) 100%);
-    color:#fff;
-    box-shadow:var(--shadow);
-  }
-  .h-inner{
-    max-width:1200px; margin:0 auto; padding:16px 20px;
-    display:flex; align-items:center; justify-content:space-between; gap:12px;
-  }
-  .h-title{display:flex; flex-direction:column; gap:6px}
-  .h-title h1{margin:0; font-weight:900; font-size:clamp(18px,2.3vw,24px)}
-  .search{
-    display:flex; gap:10px; align-items:center; margin-top:6px;
-  }
-  .search input{
-    width:min(520px, 76vw); padding:10px 12px; border-radius:999px;
-    border:1px solid rgba(255,255,255,.35); background:rgba(255,255,255,.12);
-    color:#fff; outline:none;
-  }
-  .search input::placeholder{color:rgba(255,255,255,.75)}
-  .brand{display:flex; align-items:center; gap:10px}
-  .brand img{height:34px; display:block; filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+  header{background:linear-gradient(135deg,#0b0f19 0%,var(--blue-deep) 100%);color:#fff}
+  .h-inner{max-width:1100px;margin:0 auto;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .h-title{display:flex;flex-direction:column;gap:6px}
+  .h-title h1{margin:0;font-size:clamp(18px,2.4vw,26px);font-weight:900;letter-spacing:.2px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand img{height:32px;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
 
-  main{max-width:1200px; margin:20px auto; padding:0 20px; flex:1 0 auto;}
+  /* Search */
+  .searchbar{max-width:1100px;margin:14px auto 0;padding:0 18px}
+  .searchbar input{
+    width:100%;background:#fff;border:1px solid var(--line);border-radius:999px;
+    padding:10px 14px;font-size:14px;outline:none;box-shadow:var(--shadow);
+  }
+  .searchbar input::placeholder{color:var(--gray)}
 
-  /* Section headings */
-  .month-heading{
-    margin:18px 0 6px 0; display:flex; align-items:center; gap:10px;
+  /* Layout: single column (no sidebar) */
+  main{max-width:1100px;margin:16px auto;padding:0 18px}
+
+  /* Section headers */
+  .month-title{
+    display:inline-flex;align-items:center;gap:10px;
+    font-weight:900;font-size:22px;margin:8px 0 6px 0;
   }
-  .month-chip{
-    display:inline-flex; align-items:center; gap:8px;
-    background:var(--blue-quiet); color:var(--blue-deep);
-    border:1px solid #d9e6ff; border-radius:999px; padding:6px 12px; font-weight:800;
-  }
-  .week-heading{
-    color:var(--blue-deep); font-weight:900; margin:6px 0 10px 0;
+  .week-title{
+    color:var(--blue-deep);font-weight:800;margin:10px 0 8px 0;
   }
 
-  /* Cards grid – side-by-side */
+  /* Cards grid (side-by-side within each week) */
   .cards{
     display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));
+    grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
     gap:16px;
   }
 
-  /* Report card */
+  /* Card */
   .card{
-    background:#fff; border:1px solid var(--line); border-radius:var(--radius);
-    box-shadow:var(--shadow); padding:16px; display:flex; flex-direction:column; gap:10px;
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:10px;
   }
-  .card h3{margin:0; font-size:18px; font-weight:900; line-height:1.3}
-  .badge{display:inline-flex; align-items:center; gap:6px; font-size:12px;
-         border-radius:999px; padding:4px 10px; background:rgba(13,18,27,.06); color:#111; border:1px solid var(--line)}
-  .badge.api{background:#eef2ff; color:var(--blue-deep); border-color:#dfe7ff; font-weight:800}
-  .meta{color:var(--muted)}
-  .run{color:var(--muted)}
-
-  /* Latest badge (shiny) */
-  .latest{
-    margin-left:8px; background:linear-gradient(90deg,#e0f2fe 0%,#fff 50%,#e0f2fe 100%);
-    background-size:200% 100%;
-    color:#0ea5e9; border:1px solid #bae6fd; font-weight:900;
-    animation:shine 2.4s linear infinite;
+  .card h3{margin:0;font-size:18px;font-weight:900;line-height:1.25}
+  .pill{
+    display:inline-block;background:rgba(29,78,216,.10);border:1px solid rgba(29,78,216,.25);
+    color:var(--blue);font-weight:800;border-radius:999px;padding:3px 8px;font-size:12px;
   }
-  @keyframes shine{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
+  .meta{color:var(--gray);font-size:12px}
   .btn{
-    display:inline-flex; align-items:center; justify-content:center;
-    gap:8px; padding:12px 14px; border-radius:12px; font-weight:800;
-    text-decoration:none; color:#fff; background:var(--blue);
-    border:1px solid var(--blue-deep);
-    transition:.15s ease; box-shadow:0 3px 8px rgba(0,0,0,.10);
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    background:linear-gradient(180deg,#3b82f6 0%, #1d4ed8 100%); color:#fff; text-decoration:none;
+    border-radius:12px; padding:12px 14px; font-weight:800; box-shadow:0 2px 6px rgba(0,0,0,.14);
+    transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
   }
-  .btn:hover{filter:brightness(1.06); box-shadow:0 8px 18px rgba(0,0,0,.16)}
-  .btn:active{transform:translateY(1px)}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.18);filter:brightness(1.03)}
+  .latest{background:#1d4ed8;color:#fff;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:900}
 
-  /* Divider between month groups */
-  .divider{height:1px; background:var(--line); margin:24px 0}
-
-  /* Footer pinned to page end */
+  /* Footer fixed at bottom */
   footer{
-    background:#0b0f19; color:#fff; text-align:center; font-size:12px;
-    padding:6px 10px; margin-top:auto;
+    position:fixed;left:0;right:0;bottom:0;
+    background:#0b0f19;color:#fff;text-align:center;font-size:12px;padding:6px 10px;
   }
+  .muted{color:var(--gray)}
 </style>
 </head>
 <body>
@@ -110,9 +86,6 @@
   <div class="h-inner">
     <div class="h-title">
       <h1>SFDC Production Metadata Dump Comparison Reports</h1>
-      <div class="search">
-        <input id="q" type="search" placeholder="Search title, API, dump names, or run date…" />
-      </div>
     </div>
     <div class="brand">
       <img src="{{CADENCE_LOGO}}" alt="Cadence logo" />
@@ -120,130 +93,148 @@
   </div>
 </header>
 
-<main id="app">
-  <!-- Filled by JS -->
+<div class="searchbar">
+  <input id="q" type="search" placeholder="Search by title, API version, or date…" />
+</div>
+
+<main id="mount">
+  <!-- JS will render month/week groups and cards here -->
 </main>
 
-<footer>© Cadence — Production Metadata Dump Comparison</footer>
+<footer>© Cadence — Master Index</footer>
 
-<!-- Reports DB is baked at build time -->
-<script id="db" type="application/json">{{REPORT_CARDS_JSON}}</script>
+<script id="reports-data" type="application/json">
+{{REPORT_CARDS_JSON}}
+</script>
 <script>
-(() => {
-  /** Utilities **/
-  const $ = sel => document.querySelector(sel);
-  const app = $('#app');
-  const data = (() => {
-    try { return JSON.parse($('#db').textContent || '[]'); }
-    catch(e){ return []; }
-  })();
-
-  // Normalize + sort newest-first
-  const parseISO = s => new Date(s+'T00:00:00');
-  data.sort((a,b) => parseISO(b.runDate) - parseISO(a.runDate));
-
-  // Mark latest (first item after sort)
-  const latestHref = data[0]?.detailHref;
-
-  // Helpers for headings
+(function(){
   const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  const fmtMonth = d => `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  const SHORT  = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-  // Week range (Mon–Sun)
-  function weekWindow(d){
-    const day = d.getDay(); // Sun=0
-    const diffToMon = (day+6)%7;  // 0->6,1->0,2->1,...
-    const mon = new Date(d); mon.setDate(d.getDate()-diffToMon);
+  /** Parse JSON injected by Python */
+  function getReports(){
+    try{
+      const raw = document.getElementById('reports-data').textContent.trim();
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ console.warn('Bad REPORT_CARDS_JSON', e); return []; }
+  }
+
+  /** Compute Monday..Sunday for a given ISO date */
+  function weekRange(iso){
+    const d = new Date(iso+"T00:00:00");
+    const day = (d.getDay()+6)%7; // 0=Mon
+    const mon = new Date(d); mon.setDate(d.getDate()-day);
     const sun = new Date(mon); sun.setDate(mon.getDate()+6);
-    const fmt = s => s.toLocaleString(undefined,{month:'short', day:'numeric'});
-    return {label:`Week of ${fmt(mon)} – ${fmt(sun)}`, key:`${mon.getFullYear()}-${mon.getMonth()+1}-${mon.getDate()}`};
+    function fmt(x){ return SHORT[x.getMonth()]+" "+x.getDate(); }
+    return {key: mon.toISOString().slice(0,10), label: `Week of ${fmt(mon)} – ${fmt(sun)}`};
   }
 
-  // Filter logic
-  let query = '';
-  $('#q').addEventListener('input', e => {
-    query = (e.target.value || '').trim().toLowerCase();
-    render();
-  });
+  /** Group reports by month then by week */
+  function groupReports(list){
+    // sort newest first
+    list.sort((a,b)=> (a.runDate < b.runDate ? 1 : -1));
+    const latestDate = list.length ? list[0].runDate : null;
 
-  // Group by month -> week
-  function group(items){
-    const out = new Map();
-    for(const r of items){
-      const d = parseISO(r.runDate);
-      const mkey = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}`;
-      const w = weekWindow(d);
-      if(!out.has(mkey)) out.set(mkey, {date:d, monthLabel:fmtMonth(d), weeks:new Map()});
-      const month = out.get(mkey);
-      if(!month.weeks.has(w.key)) month.weeks.set(w.key, {label:w.label, rows:[]});
-      month.weeks.get(w.key).rows.push(r);
+    const byMonth = new Map();
+    for(const r of list){
+      const d = new Date(r.runDate+"T00:00:00");
+      const mkey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      const w = weekRange(r.runDate);
+      if(!byMonth.has(mkey)) byMonth.set(mkey, {year:d.getFullYear(), month:d.getMonth(), weeks:new Map()});
+      const monthObj = byMonth.get(mkey);
+      if(!monthObj.weeks.has(w.key)) monthObj.weeks.set(w.key, {label:w.label, items:[]});
+      // mark latest
+      r.__isLatest = (r.runDate === latestDate);
+      monthObj.weeks.get(w.key).items.push(r);
     }
-    // Sort months desc, weeks desc, cards desc (by runDate)
-    return [...out.values()]
-      .sort((a,b)=>b.date-a.date)
-      .map(m=>{
-        m.weeks = [...m.weeks.values()].reverse(); // most recent week last -> we’ll reverse to desc below
-        m.weeks.sort((a,b)=>{
-          const aDate = parseISO(a.rows[0].runDate);
-          const bDate = parseISO(b.rows[0].runDate);
-          return bDate - aDate;
-        });
-        for(const w of m.weeks){
-          w.rows.sort((a,b)=> parseISO(b.runDate)-parseISO(a.runDate) );
-        }
-        return m;
-      });
+    return {latestDate, months:[...byMonth.entries()].sort((a,b)=> a[0]<b[0]?1:-1).map(([k,v])=>v)};
   }
 
-  // Card view
-  function card(r){
-    const isLatest = (r.detailHref === latestHref);
-    return `
-      <article class="card">
-        <h3>${escapeHtml(r.title)}${isLatest?` <span class="badge latest">Latest</span>`:''}</h3>
-        <div class="meta">
-          <span class="badge api">API ${escapeHtml(r.apiVersion || '')}</span>
-        </div>
-        <div class="run">Run: ${escapeHtml(r.runDate)}</div>
-        <div><a class="btn" href="${escapeAttr(r.detailHref)}">Open Detailed Report</a></div>
-      </article>
-    `;
-  }
-
-  // Render
+  /** Render cards */
   function render(){
-    const filtered = !query ? data : data.filter(r => {
-      const hay = [
-        r.title, r.apiVersion, r.oldDumpLabel, r.newDumpLabel, r.runDate
-      ].filter(Boolean).join(' ').toLowerCase();
-      return hay.includes(query);
-    });
+    const q = (document.getElementById('q').value || '').trim().toLowerCase();
+    const all = getReports();
+    const filtered = q ? all.filter(r=>{
+      const h = `${r.title} ${r.apiVersion} ${r.runDate}`.toLowerCase();
+      return h.includes(q);
+    }) : all;
 
-    const groups = group(filtered);
+    const {months} = groupReports(filtered);
+    const mount = document.getElementById('mount');
+    mount.innerHTML = '';
 
-    let html = '';
-    groups.forEach((m, mi) => {
-      html += `
-        ${mi?'<div class="divider"></div>':''}
-        <div class="month-heading">
-          <div class="month-chip">${escapeHtml(m.monthLabel)}</div>
-        </div>
-      `;
-      m.weeks.forEach(w => {
-        html += `<div class="week-heading">${escapeHtml(w.label)}</div>`;
-        html += `<section class="cards">`;
-        w.rows.forEach(r => html += card(r));
-        html += `</section>`;
+    if(!months.length){
+      mount.innerHTML = '<p class="muted">No reports found.</p>';
+      return;
+    }
+
+    for(const m of months){
+      const mWrap = document.createElement('section');
+      const mTitle = document.createElement('div');
+      mTitle.className = 'month-title';
+      mTitle.textContent = `${MONTHS[m.month]} ${m.year}`;
+      mWrap.appendChild(mTitle);
+
+      // Sort weeks newest first
+      const weekList = [...m.weeks.values()].sort((a,b)=>{
+        // compare Monday keys which are ISO YYYY-MM-DD
+        const ka = a.items[0]?.runDate || '0000-00-00';
+        const kb = b.items[0]?.runDate || '0000-00-00';
+        return ka < kb ? 1 : -1;
       });
-    });
 
-    app.innerHTML = html || `<p style="color:#6b7280">No reports match your search.</p>`;
+      for(const w of weekList){
+        const wTitle = document.createElement('div');
+        wTitle.className = 'week-title';
+        wTitle.textContent = w.label;
+        mWrap.appendChild(wTitle);
+
+        const grid = document.createElement('div');
+        grid.className = 'cards';
+
+        for(const r of w.items){
+          const card = document.createElement('article');
+          card.className = 'card';
+
+          const h3 = document.createElement('h3');
+          h3.textContent = r.title;
+          card.appendChild(h3);
+
+          const row = document.createElement('div');
+          row.style.display='flex'; row.style.alignItems='center'; row.style.gap='10px';
+          const api = document.createElement('span');
+          api.className='pill'; api.textContent = `API ${r.apiVersion || '—'}`;
+          row.appendChild(api);
+
+          if(r.__isLatest){
+            const latest = document.createElement('span');
+            latest.className = 'latest'; latest.textContent = 'Latest';
+            row.appendChild(latest);
+          }
+          card.appendChild(row);
+
+          const meta = document.createElement('div');
+          meta.className='meta';
+          meta.textContent = `Run: ${r.runDate}`;
+          card.appendChild(meta);
+
+          const btn = document.createElement('a');
+          btn.className='btn'; btn.href=r.detailHref; btn.textContent='Open Detailed Report';
+          card.appendChild(btn);
+
+          grid.appendChild(card);
+        }
+
+        mWrap.appendChild(grid);
+      }
+
+      mount.appendChild(mWrap);
+    }
   }
 
-  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
-  function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
-
+  document.getElementById('q').addEventListener('input', render);
   render();
 })();
 </script>
+</body>
 </html>
