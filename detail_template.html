@@ -47,16 +47,20 @@
         border-radius:999px;padding:4px 8px;color:#fff;text-decoration:none}
   .back:hover{background:rgba(255,255,255,.18);text-decoration:none}
 
-  /* Local index just below header */
-  .local-index{max-width:1100px;margin:8px auto 0;padding:0 18px}
-  .local-index .anchors{display:flex;gap:10px;flex-wrap:wrap}
-  .local-index a{
-    font-weight:800;font-size:12px;text-decoration:none;
-    background:rgba(29,78,216,.06);
-    border:1px solid var(--line);
-    border-radius:999px;padding:6px 10px;
+  /* Subheader line (same spirit as month subheader on index page) */
+  .subline-wrap{max-width:1100px;margin:8px auto 0;padding:0 18px}
+  .subline{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    margin:14px 0 6px;border-left:4px solid #93c5fd;padding-left:10px;
   }
-  .local-index a:hover{filter:brightness(1.05)}
+  .subline h2{
+    margin:0;font-size:clamp(16px,1.8vw,20px);font-weight:900;color:#0f172a;letter-spacing:.2px;
+  }
+  .subline .links{display:flex;gap:14px;flex-wrap:wrap}
+  .subline .links a{
+    font-weight:800;font-size:12px;text-decoration:none;border-bottom:1px dashed rgba(29,64,175,.35);
+  }
+  .subline .links a:hover{filter:brightness(1.06)}
 
   main{max-width:1100px;margin:12px auto 0;padding:0 18px;flex:1 0 auto;}
 
@@ -144,7 +148,7 @@
   }
   .btn.flash { animation: flashRing 1s ease; }
 
-  /* 1-second flash for whole card when using top anchors */
+  /* 1-second flash for whole card when using the subheader links */
   @keyframes cardFlash {
     0%   { box-shadow: var(--shadow); }
     20%  { box-shadow: 0 0 0 4px rgba(29,78,216,.28), 0 12px 28px rgba(0,0,0,.10); }
@@ -171,13 +175,16 @@
   </div>
 </header>
 
-<!-- Small index anchors just below header -->
-<nav class="local-index" aria-label="Section index">
-  <div class="anchors">
-    <a href="#downloads-card" data-card="#downloads-card">Downloads</a>
-    <a href="#quickaccess-card" data-card="#quickaccess-card">Quick Access</a>
+<!-- Subheader line with inline links (same spirit as month subheader) -->
+<div class="subline-wrap">
+  <div class="subline">
+    <h2>Sections</h2>
+    <div class="links">
+      <a href="#downloads-card" data-card="#downloads-card">Downloads</a>
+      <a href="#quickaccess-card" data-card="#quickaccess-card">Quick Access</a>
+    </div>
   </div>
-</nav>
+</div>
 
 <main>
   <!-- Summary (includes Roles & Responsibilities) -->
@@ -196,7 +203,7 @@
       <div class="val">{{LATEST_DATE_HUMAN}} <strong id="latestTime">{{LATEST_TIME_HUMAN}} PST</strong></div>
     </div>
 
-    <!-- Summary text with anchors (unchanged per your last request) -->
+    <!-- Summary text with anchors -->
     <p class="note" style="margin-top:10px">
       This report compares the latest SFDC production metadata dump with the previous one, enumerating all differences—<a class="inline-link" href="#anchor-new">new files</a>, <a class="inline-link" href="#anchor-changed">changed files (content mismatches)</a>, and <a class="inline-link" href="#anchor-removed">removed files</a>. A <a class="inline-link" href="#anchor-codecomp">code comparison report</a> that provides folder-wise (metadata-type) counts and a consolidated, diff-only comparison for each metadata file.
     </p>
@@ -382,7 +389,7 @@
     });
   })();
 
-  // Flash the entire card when using the top "Downloads / Quick Access" subheader
+  // Flash the entire card when using the subheader "Downloads / Quick Access" links
   (function(){
     function flashCard(sel){
       var el = document.querySelector(sel);
@@ -394,7 +401,7 @@
       }, 60);
     }
     document.addEventListener('click', function(e){
-      var a = e.target.closest('.local-index a[data-card]');
+      var a = e.target.closest('.subline .links a[data-card]');
       if(!a) return;
       var sel = a.getAttribute('data-card');
       flashCard(sel);
