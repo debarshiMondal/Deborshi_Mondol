@@ -55,16 +55,23 @@
   .kv{display:grid;grid-template-columns:260px 1fr;gap:8px 14px}
   .kv .lbl{color:#111;font-weight:800}
   .kv .val{color:#111}
+  /* added: optional time next to date (bold) */
+  .kv .time-badge{font-weight:800;color:#0f172a;margin-left:4px}
 
   /* Roles & Responsibilities (Summary sub-block) */
   .roles{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
   .roles h3{margin:0 0 10px 0;font-size:15px;font-weight:900;color:#111}
   .roles-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   @media (max-width:900px){ .roles-grid{grid-template-columns:1fr} }
-  .role{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
+  /* keep old .role styles; add colorful cards (new) */
+  .r-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.05)}
+  .r-dev{background:var(--green-quiet)}
+  .r-devops{background:var(--orange-quiet)}
+  .r-ps{background:var(--blue-quiet)}
+  .r-bsaqa{background:var(--red-quiet)}
   .r-title{font-weight:800;margin:0 0 8px 0;color:#111}
-  .role ul{margin:0;padding-left:18px}
-  .role li{margin:4px 0;color:#111}
+  .r-card ul{margin:0;padding-left:18px}
+  .r-card li{margin:4px 0;color:#111}
 
   /* Buttons - sophisticated & subtle (smaller text + tiny shadow) */
   .btns{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -148,6 +155,11 @@
     filter: brightness(1.03);
   }
   .btn.green:hover, .btn.orange:hover, .btn.red:hover, .btn.blue:hover { filter: brightness(1.10); }
+
+  /* added: summary bullets formatting */
+  .summary-points{margin:10px 0 0 0;padding-left:18px}
+  .summary-points li{margin:6px 0}
+  .summary-points b{font-weight:900}
 </style>
 </head>
 <body>
@@ -172,19 +184,72 @@
   <section class="card" style="margin-bottom:16px">
     <h2>Summary</h2>
     <div class="kv">
-      <div class="lbl">Previous production dump</div><div class="val">{{PREVIOUS_DATE_HUMAN}}</div>
-      <div class="lbl">Latest production dump</div><div class="val">{{LATEST_DATE_HUMAN}}</div>
+      <div class="lbl">Previous production dump</div>
+      <div class="val">
+        {{PREVIOUS_DATE_HUMAN}}<span class="time-badge" data-time="{{PREVIOUS_TIME_HUMAN}}"></span>
+      </div>
+      <div class="lbl">Latest production dump</div>
+      <div class="val">
+        {{LATEST_DATE_HUMAN}}<span class="time-badge" data-time="{{LATEST_TIME_HUMAN}}"></span>
+      </div>
     </div>
-    <p class="note" style="margin-top:8px">
-      This report compares the <strong>Latest</strong> production dump against the <strong>Previous</strong> one.
-      Files are classified as <strong>New</strong> (present only in Latest), <strong>Changed</strong> (present in both, but content differs),
-      and <strong>Removed</strong> (present only in Previous). Use the buttons in <em>Downloads</em> and <em>Quick Access</em> to retrieve artifacts or browse dumps.
-    </p>
 
-    <!-- Roles & Responsibilities -->
-    <div class="roles" style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px;font-size:13px;color:#111;">
-      <strong>Roles & Responsibilities:</strong>
-      Development → update XLSX with ticket info. DevOps → publish & validate reports. PS/QA → review removals, verify changes, sign off.
+    <!-- replaced: explanatory paragraph -> structured, bolded bullets -->
+    <ul class="summary-points">
+      <li><b>This report compares</b> the latest SFDC production metadata dump with the previous dump and lists <b>all differences</b>.</li>
+      <li><b>Changes are classified as:</b>
+        <ul class="summary-points">
+          <li><b>New files</b></li>
+          <li><b>Changed files</b> (content mismatches)</li>
+          <li><b>Removed files</b></li>
+        </ul>
+      </li>
+      <li><b>Folder-wise (metadata-type) counts</b> are available in the <b>Code Comparison Report</b>.</li>
+      <li>A <b>consolidated diff-only report</b> and an <b>execution log</b> document each run for audit and context.</li>
+      <li><b>Development, DevOps, and Production Support</b> must add comments to the <b>Production Modified File Report</b> (SharePoint link) with:
+        <ul class="summary-points">
+          <li><b>Ticket number (ID)</b></li>
+          <li><b>Resolution date</b></li>
+          <li><b>Affected module/area</b></li>
+          <li><b>Details of the change</b></li>
+        </ul>
+      </li>
+      <li><b>BSA and QA</b> will analyze and validate the report.</li>
+    </ul>
+
+    <!-- Roles & Responsibilities (colorful cards matching theme) -->
+    <div class="roles">
+      <h3>Roles & Responsibilities</h3>
+      <div class="roles-grid">
+        <div class="r-card r-dev">
+          <div class="r-title">Development</div>
+          <ul>
+            <li>Review <b>New</b> and <b>Changed</b> files; confirm scope & intent.</li>
+            <li>Update the <b>Production Modified File Report</b> with ticket details.</li>
+          </ul>
+        </div>
+        <div class="r-card r-devops">
+          <div class="r-title">DevOps</div>
+          <ul>
+            <li>Publish artifacts; ensure <b>verification parity</b> and <b>report integrity</b>.</li>
+            <li>Investigate <b>execution log</b> warnings/errors, rerun if needed.</li>
+          </ul>
+        </div>
+        <div class="r-card r-ps">
+          <div class="r-title">Production Support</div>
+          <ul>
+            <li>Validate <b>Removed</b> items and correctness of changes.</li>
+            <li>Coordinate with Dev/DevOps for <b>risk</b> and <b>rollback</b> inputs.</li>
+          </ul>
+        </div>
+        <div class="r-card r-bsaqa">
+          <div class="r-title">BSA & QA</div>
+          <ul>
+            <li>Analyze impact across <b>modules</b>; confirm business acceptance.</li>
+            <li>Sign off after <b>validation</b> and <b>traceability</b> checks.</li>
+          </ul>
+        </div>
+      </div>
     </div>
     <!-- /Roles & Responsibilities -->
   </section>
@@ -273,7 +338,7 @@
 <footer>This is the end of report.</footer>
 
 <script>
-  // Centered modal behavior for all info icons
+  // Centered modal behavior for all info icons + optional time rendering
   (function(){
     const mask = document.getElementById('infoMask');
     const body = document.getElementById('infoBody');
@@ -305,6 +370,12 @@
     });
     closeBtn.addEventListener('click', closeModal);
     document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeModal(); });
+
+    // NEW: append optional times (only if backend provided values)
+    document.querySelectorAll('.time-badge').forEach(function(el){
+      var t = (el.getAttribute('data-time')||'').trim();
+      if(t && t.indexOf('{{') === -1){ el.textContent = ' ' + t; }
+    });
   })();
 </script>
 </body>
