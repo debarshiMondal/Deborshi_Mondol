@@ -17,6 +17,7 @@
 
   /* Page structure: footer at end */
   html, body { height:100%; }
+  html{ scroll-behavior:smooth; }
   body{
     margin:0;background:var(--bg);color:var(--ink);
     font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
@@ -55,55 +56,51 @@
   .kv{display:grid;grid-template-columns:260px 1fr;gap:8px 14px}
   .kv .lbl{color:#111;font-weight:800}
   .kv .val{color:#111}
-  /* added: optional time next to date (bold) */
   .kv .time-badge{font-weight:800;color:#0f172a;margin-left:4px}
 
-  /* Roles & Responsibilities (Summary sub-block) */
+  /* NEW: summary link list */
+  .summary-links{margin:8px 0 0 0;padding-left:18px}
+  .summary-links li{margin:6px 0}
+  .inline-link{color:var(--blue-deep);font-weight:800;text-decoration:none}
+  .inline-link:hover{text-decoration:underline}
+
+  /* Roles – single colorful block (reddish) */
   .roles{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
   .roles h3{margin:0 0 10px 0;font-size:15px;font-weight:900;color:#111}
-  .roles-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media (max-width:900px){ .roles-grid{grid-template-columns:1fr} }
-  /* keep old .role styles; add colorful cards (new) */
-  .r-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.05)}
-  .r-dev{background:var(--green-quiet)}
-  .r-devops{background:var(--orange-quiet)}
-  .r-ps{background:var(--blue-quiet)}
-  .r-bsaqa{background:var(--red-quiet)}
-  .r-title{font-weight:800;margin:0 0 8px 0;color:#111}
-  .r-card ul{margin:0;padding-left:18px}
-  .r-card li{margin:4px 0;color:#111}
+  .roles-brief{
+    background:var(--red-quiet);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px;
+    box-shadow:0 4px 14px rgba(0,0,0,.05);
+  }
+  .roles-brief ul{margin:8px 0 0 0;padding-left:18px}
+  .roles-brief li{margin:4px 0;color:#111}
 
-  /* Buttons - sophisticated & subtle (smaller text + tiny shadow) */
+  /* Buttons */
   .btns{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
   .btn{
        display:flex;align-items:center;justify-content:space-between;gap:12px;
        padding:12px;border-radius:12px;border:1px solid var(--line);
        background:#fff;color:inherit;text-decoration:none;transition:.15s;
-       font-weight:600;font-size:12.5px; /* smaller label text */
-       box-shadow:0 1px 3px rgba(0,0,0,.05); /* tiny uplift */
+       font-weight:600;font-size:12.5px;
+       box-shadow:0 1px 3px rgba(0,0,0,.05);
   }
-  /* Hover highlight (no size/border change) */
   .btn:hover{ filter:brightness(1.06); box-shadow:0 2px 6px rgba(0,0,0,.08); }
   .btn .left{display:flex;flex-direction:column}
   .btn .left strong{font-weight:800}
-  .btn .count{
-    min-width:auto;text-align:right;padding:0;border:none;background:transparent;
-    font-weight:900;font-size:11.5px; /* smaller KPI number */
-  }
+  .btn .count{min-width:auto;text-align:right;padding:0;border:none;background:transparent;font-weight:900;font-size:11.5px}
 
-  /* Soft fills using existing colors */
-  .btn.green{  background:var(--green-quiet);  }
-  .btn.orange{ background:var(--orange-quiet); }
-  .btn.red{    background:var(--red-quiet);    }
-  .btn.blue{   background:var(--blue-quiet);   }
+  .btn.green{background:var(--green-quiet)}
+  .btn.orange{background:var(--orange-quiet)}
+  .btn.red{background:var(--red-quiet)}
+  .btn.blue{background:var(--blue-quiet)}
 
-  /* KPI counts: bright color text (no pill) */
   .btn.green  .count{ color:var(--green);  }
   .btn.orange .count{ color:var(--orange); }
   .btn.red    .count{ color:var(--red);    }
-  .btn.blue   .count{ display:none; } /* no count for PMFR */
+  .btn.blue   .count{ display:none; }
 
-  /* Info icon + modal */
   .btn-wrap{position:relative;display:flex;align-items:center;gap:8px}
   .card.action, .btns{overflow:visible;position:relative}
   .info-icon{
@@ -113,53 +110,22 @@
   }
   .info-icon:hover{background:var(--blue-quiet);color:var(--blue);border-color:var(--blue)}
 
-  .modal-mask{
-    position:fixed;inset:0;background:rgba(0,0,0,.55);
-    display:none;align-items:center;justify-content:center;z-index:9999;
-    padding:20px;
-  }
-  .modal{
-    background:#111;color:#fff;border-radius:12px;border:2px solid rgba(255,255,255,.9);
-    max-width:640px;width:min(92vw,640px);
-    padding:18px 20px; box-shadow:0 12px 28px rgba(0,0,0,.32);
-  }
+  .modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+  .modal{background:#111;color:#fff;border-radius:12px;border:2px solid rgba(255,255,255,.9);max-width:640px;width:min(92vw,640px);padding:18px 20px;box-shadow:0 12px 28px rgba(0,0,0,.32)}
   .modal h3{margin:0 0 10px 0;font-size:16px}
   .modal p{font-size:16px;font-weight:800;line-height:1.4}
   .modal .actions{display:flex;justify-content:flex-end;margin-top:14px}
-  .modal .btn-close{
-    background:#fff;border:1px solid var(--line);color:#111;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:700
-  }
+  .modal .btn-close{background:#fff;border:1px solid var(--line);color:#111;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:700}
 
-  /* Equal height for the two action cards */
   .grid .card.action{display:flex;flex-direction:column}
   .grid .card.action .btns{flex:1 1 auto;align-content:start}
 
-  /* Footer sits at page end (not sticky to viewport) */
-  footer{
-    background:#0b0f19;color:#fff;text-align:center;font-size:12px;padding:6px 10px;margin-top:24px
-  }
+  footer{background:#0b0f19;color:#fff;text-align:center;font-size:12px;padding:6px 10px;margin-top:24px}
 
-  /* --- Stronger uplift + brighter hover (from your last ask) --- */
-  .btn{
-    box-shadow: 0 2px 8px rgba(0,0,0,.10), 0 1px 3px rgba(0,0,0,.06);
-    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
-  }
-  .btn:hover{
-    transform: translateY(-2px);
-    box-shadow: 0 8px 22px rgba(0,0,0,.18), 0 4px 10px rgba(0,0,0,.10);
-    filter: brightness(1.09);
-  }
-  .btn:active{
-    transform: translateY(-1px) scale(.995);
-    box-shadow: 0 5px 14px rgba(0,0,0,.16), 0 3px 8px rgba(0,0,0,.10);
-    filter: brightness(1.03);
-  }
+  .btn{box-shadow: 0 2px 8px rgba(0,0,0,.10), 0 1px 3px rgba(0,0,0,.06);transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;}
+  .btn:hover{transform: translateY(-2px);box-shadow: 0 8px 22px rgba(0,0,0,.18), 0 4px 10px rgba(0,0,0,.10);filter: brightness(1.09);}
+  .btn:active{transform: translateY(-1px) scale(.995);box-shadow: 0 5px 14px rgba(0,0,0,.16), 0 3px 8px rgba(0,0,0,.10);filter: brightness(1.03);}
   .btn.green:hover, .btn.orange:hover, .btn.red:hover, .btn.blue:hover { filter: brightness(1.10); }
-
-  /* added: summary bullets formatting */
-  .summary-points{margin:10px 0 0 0;padding-left:18px}
-  .summary-points li{margin:6px 0}
-  .summary-points b{font-weight:900}
 </style>
 </head>
 <body>
@@ -180,80 +146,57 @@
 </header>
 
 <main>
-                  <!-- Summary -->
+  <!-- Summary -->
   <section class="card" style="margin-bottom:16px">
     <h2>Summary</h2>
+
+    <!-- Dump labels with optional time -->
     <div class="kv">
       <div class="lbl">Previous production dump</div>
-      <div class="val">
-        {{PREVIOUS_DATE_HUMAN}}<span class="time-badge" data-time="{{PREVIOUS_TIME_HUMAN}}"></span>
-      </div>
+      <div class="val">{{PREVIOUS_DATE_HUMAN}}<span class="time-badge" data-time="{{PREVIOUS_TIME_HUMAN}}"></span></div>
       <div class="lbl">Latest production dump</div>
-      <div class="val">
-        {{LATEST_DATE_HUMAN}}<span class="time-badge" data-time="{{LATEST_TIME_HUMAN}}"></span>
-      </div>
+      <div class="val">{{LATEST_DATE_HUMAN}}<span class="time-badge" data-time="{{LATEST_TIME_HUMAN}}"></span></div>
     </div>
 
-    <!-- replaced: explanatory paragraph -> structured, bolded bullets -->
-    <ul class="summary-points">
-      <li><b>This report compares</b> the latest SFDC production metadata dump with the previous dump and lists <b>all differences</b>.</li>
-      <li><b>Changes are classified as:</b>
-        <ul class="summary-points">
-          <li><b>New files</b></li>
-          <li><b>Changed files</b> (content mismatches)</li>
-          <li><b>Removed files</b></li>
-        </ul>
-      </li>
-      <li><b>Folder-wise (metadata-type) counts</b> are available in the <b>Code Comparison Report</b>.</li>
-      <li>A <b>consolidated diff-only report</b> and an <b>execution log</b> document each run for audit and context.</li>
-      <li><b>Development, DevOps, and Production Support</b> must add comments to the <b>Production Modified File Report</b> (SharePoint link) with:
-        <ul class="summary-points">
-          <li><b>Ticket number (ID)</b></li>
-          <li><b>Resolution date</b></li>
-          <li><b>Affected module/area</b></li>
-          <li><b>Details of the change</b></li>
-        </ul>
-      </li>
-      <li><b>BSA and QA</b> will analyze and validate the report.</li>
+    <!-- Added the two lines -->
+    <p class="note" style="margin-top:10px">
+      This report compares the <strong>latest SFDC production metadata dump</strong> with the <strong>previous</strong> dump and lists <strong>all differences</strong>.
+    </p>
+    <p class="note" style="margin-top:6px"><strong>Changes are classified as:</strong></p>
+    <ul class="summary-links">
+      <li><a class="inline-link" href="#anchor-new">New files</a></li>
+      <li><a class="inline-link" href="#anchor-changed">Changed files (content mismatches)</a></li>
+      <li><a class="inline-link" href="#anchor-removed">Removed files</a></li>
     </ul>
 
-    <!-- Roles & Responsibilities (colorful cards matching theme) -->
-    <div class="roles">
-      <h3>Roles & Responsibilities</h3>
-      <div class="roles-grid">
-        <div class="r-card r-dev">
-          <div class="r-title">Development</div>
-          <ul>
-            <li>Review <b>New</b> and <b>Changed</b> files; confirm scope & intent.</li>
-            <li>Update the <b>Production Modified File Report</b> with ticket details.</li>
-          </ul>
-        </div>
-        <div class="r-card r-devops">
-          <div class="r-title">DevOps</div>
-          <ul>
-            <li>Publish artifacts; ensure <b>verification parity</b> and <b>report integrity</b>.</li>
-            <li>Investigate <b>execution log</b> warnings/errors, rerun if needed.</li>
-          </ul>
-        </div>
-        <div class="r-card r-ps">
-          <div class="r-title">Production Support</div>
-          <ul>
-            <li>Validate <b>Removed</b> items and correctness of changes.</li>
-            <li>Coordinate with Dev/DevOps for <b>risk</b> and <b>rollback</b> inputs.</li>
-          </ul>
-        </div>
-        <div class="r-card r-bsaqa">
-          <div class="r-title">BSA & QA</div>
-          <ul>
-            <li>Analyze impact across <b>modules</b>; confirm business acceptance.</li>
-            <li>Sign off after <b>validation</b> and <b>traceability</b> checks.</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    <!-- /Roles & Responsibilities -->
+    <!-- Linking lines -->
+    <p class="note" style="margin-top:8px">
+      Folder-wise (metadata-type) counts are available in the
+      <a class="inline-link" href="#anchor-codecomp">Code Comparison Report</a>.
+    </p>
+    <p class="note" style="margin-top:6px">
+      A consolidated diff-only <a class="inline-link" href="#anchor-codecomp">Code Comparison Report</a> and an
+      <a class="inline-link" href="#anchor-log">Execution Log</a> document each run for audit and context.
+    </p>
   </section>
 
+  <!-- Roles & Responsibilities (single reddish block, bold group names) -->
+  <section class="card" style="margin-bottom:16px">
+    <h2>Roles & Responsibilities</h2>
+    <div class="roles-brief">
+      <p style="margin:0">
+        <strong>Development, DevOps, and Production Support</strong> must add comments to the
+        <a class="inline-link" href="#anchor-pmfr">Production Modified File Report</a> (SharePoint link) with:
+      </p>
+      <ul>
+        <li>Ticket number (ID)</li>
+        <li>Resolution date</li>
+        <li>Affected module/area</li>
+        <li>Details of the change</li>
+      </ul>
+      <p style="margin-top:6px"><strong>BSA, QA</strong> will analyze and validate the report.</p>
+    </div>
+  </section>
 
   <section class="grid" style="margin-top:16px">
     <!-- Downloads -->
@@ -261,7 +204,7 @@
       <h2>Downloads</h2>
       <div class="btns">
         <div class="btn-wrap">
-          <a class="btn green" href="{{CSV_NEW}}" download>
+          <a id="anchor-new" class="btn green" href="{{CSV_NEW}}" download>
             <span class="left"><strong>New Files</strong></span>
             <span class="count">{{KPI_NEW}}</span>
           </a>
@@ -269,7 +212,7 @@
         </div>
 
         <div class="btn-wrap">
-          <a class="btn orange" href="{{CSV_CHANGED}}" download>
+          <a id="anchor-changed" class="btn orange" href="{{CSV_CHANGED}}" download>
             <span class="left"><strong>Changed Files</strong></span>
             <span class="count">{{KPI_CHANGED}}</span>
           </a>
@@ -277,7 +220,7 @@
         </div>
 
         <div class="btn-wrap">
-          <a class="btn red" href="{{CSV_REMOVED}}" download>
+          <a id="anchor-removed" class="btn red" href="{{CSV_REMOVED}}" download>
             <span class="left"><strong>Removed Files</strong></span>
             <span class="count">{{KPI_REMOVED}}</span>
           </a>
@@ -285,9 +228,8 @@
         </div>
 
         <div class="btn-wrap">
-          <a class="btn blue" href="{{CSV_FULL}}" target="_blank" rel="noopener">
+          <a id="anchor-pmfr" class="btn blue" href="{{CSV_FULL}}" target="_blank" rel="noopener">
             <span class="left"><strong>Production Modified File Report</strong></span>
-            <!-- no count pill for PMFR -->
           </a>
           <span class="info-icon" data-info="This sheet is to be filled out by the Development, DevOps, or PS-Support teams. It should include information for each change, as specified in the sheet's columns.">ⓘ</span>
         </div>
@@ -307,15 +249,14 @@
         </a>
 
         <div class="btn-wrap">
-          <a class="btn" href="{{DIFF_HTML_LINK}}" target="_blank" rel="noopener">
+          <a id="anchor-codecomp" class="btn" href="{{DIFF_HTML_LINK}}" target="_blank" rel="noopener">
             <span class="left"><strong>Code Comparison Report</strong></span>
           </a>
           <span class="info-icon" data-info="This report compares two production dumps and highlights only the differences, categorized by metadata type. It includes a count of changes for each metadata type.">ⓘ</span>
         </div>
 
-        <!-- Execution Log WITHOUT info icon -->
         <div class="btn-wrap">
-          <a class="btn" href="{{RUN_LOG_LINK}}" target="_blank" rel="noopener">
+          <a id="anchor-log" class="btn" href="{{RUN_LOG_LINK}}" target="_blank" rel="noopener">
             <span class="left"><strong>Execution Log</strong></span>
           </a>
         </div>
@@ -324,21 +265,19 @@
   </section>
 </main>
 
-<!-- Reusable modal for info messages -->
+<!-- Reusable modal -->
 <div class="modal-mask" id="infoMask" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
     <h3 id="infoTitle">Info</h3>
     <p id="infoBody"></p>
-    <div class="actions">
-      <button class="btn-close" id="infoClose">Close</button>
-    </div>
+    <div class="actions"><button class="btn-close" id="infoClose">Close</button></div>
   </div>
 </div>
 
 <footer>This is the end of report.</footer>
 
 <script>
-  // Centered modal behavior for all info icons + optional time rendering
+  // Info modal + optional time rendering
   (function(){
     const mask = document.getElementById('infoMask');
     const body = document.getElementById('infoBody');
@@ -352,10 +291,7 @@
       mask.setAttribute('aria-hidden','false');
       closeBtn.focus();
     }
-    function closeModal(){
-      mask.style.display = 'none';
-      mask.setAttribute('aria-hidden','true');
-    }
+    function closeModal(){ mask.style.display='none'; mask.setAttribute('aria-hidden','true'); }
 
     document.addEventListener('click', function(e){
       const icon = e.target.closest('.info-icon');
@@ -371,10 +307,10 @@
     closeBtn.addEventListener('click', closeModal);
     document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeModal(); });
 
-    // NEW: append optional times (only if backend provided values)
+    // show optional times if provided
     document.querySelectorAll('.time-badge').forEach(function(el){
-      var t = (el.getAttribute('data-time')||'').trim();
-      if(t && t.indexOf('{{') === -1){ el.textContent = ' ' + t; }
+      var t=(el.getAttribute('data-time')||'').trim();
+      if(t && t.indexOf('{{')===-1){ el.textContent=' '+t; }
     });
   })();
 </script>
