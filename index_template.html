@@ -35,33 +35,57 @@
   .section-header h2{margin:0;font-size:clamp(18px,2vw,22px);font-weight:900;color:#0f172a}
   .section-header .count{color:var(--muted);font-size:13px}
 
-  /* Week chips bar (does not break the grid) */
-  .weeks-bar{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 10px}
-  .pill{background:#f1f5f9;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted-2)}
-
-  /* Cards/grid — compact sizing; style unchanged */
+  /* Cards/grid — compact & square at desktop */
   .grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
   .card{
     grid-column:span 12;
     background:var(--white);border:1px solid var(--line);border-radius:var(--radius);
     box-shadow:0 8px 24px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);
-    padding:14px; /* compact */
+    padding:14px 14px 12px 14px; /* compact */
     position:relative;transition:var(--transition);
     display:flex;flex-direction:column;
-    min-height:180px; /* compact height without forcing a big square */
+    min-height:180px; /* compact baseline */
   }
   @media(min-width:700px){.card{grid-column:span 6}}
-  @media(min-width:1024px){.card{grid-column:span 4}}
+  @media(min-width:1024px){
+    .card{
+      grid-column:span 4;
+      aspect-ratio:1/1;        /* square at desktop */
+      min-height:auto;         /* aspect controls height */
+    }
+  }
+
   .card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.10),0 3px 8px rgba(0,0,0,.08)}
-  .card h3{margin:0 0 8px;font-size:16px;line-height:1.35;font-weight:900;color:#0f172a} /* slightly smaller for compactness */
+
+  /* Week chip INSIDE each card, aligned top-left (keeps style close to old header) */
+  .week-chip{
+    position:absolute; top:10px; left:12px;
+    font-size:13px; font-weight:700; color:#1e40af; letter-spacing:.2px;
+    padding:0; background:transparent;
+  }
+
+  /* Reserve top space so title never collides with badge/chip */
+  .card h3{
+    margin:30px 0 8px;          /* 30px top = space for chip & badge */
+    font-size:16px; line-height:1.3; font-weight:900; color:#0f172a;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
   .card h3 .tag{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;padding:2px 6px;border-radius:999px;border:1px solid #bae6fd;background:#e0f2fe;color:#075985}
 
-  .meta{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 10px}
+  .pill{background:#f1f5f9;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted-2)}
+
   .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
   .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;font-weight:700;font-size:14px;border:1px solid var(--blue-700);color:#fff;background:linear-gradient(180deg,var(--blue-600),var(--blue-800));box-shadow:0 6px 16px rgba(29,78,216,.25);transition:var(--transition)}
   .btn:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(29,78,216,.35)}
 
-  .latest-badge{position:absolute;top:10px;right:10px;font-size:10px;letter-spacing:.3px;font-weight:800;color:#fff;padding:3px 6px;border-radius:999px;background:linear-gradient(90deg,#00c6ff,#0072ff,#00c6ff);background-size:200% 100%;box-shadow:0 2px 6px rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.6);animation:shine 1.2s linear infinite}
+  .latest-badge{
+    position:absolute; top:10px; right:10px;
+    font-size:10px; letter-spacing:.3px; font-weight:800; color:#fff;
+    padding:3px 6px; border-radius:999px;
+    background:linear-gradient(90deg,#00c6ff,#0072ff,#00c6ff);background-size:200% 100%;
+    box-shadow:0 2px 6px rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.6);animation:shine 1.2s linear infinite
+  }
   @keyframes shine{to{background-position:-200% 0}}
 
   footer{text-align:center;padding:10px;color:#e2e8f0;background:#0f172a;border-top:1px solid #0b1220;margin-top:32px;font-size:12px}
@@ -178,7 +202,7 @@
       html+='<section id="m-'+k+'">';
       html+='<div class="section-header"><h2>'+monthLabel(k)+'</h2><div class="count">'+monthItems.length+' report'+(monthItems.length!==1?'s':'')+'</div></div>';
 
-      /* compute weeks for this month → produce a chip bar (does not break the grid) */
+      /* compute weeks for this month */
       var weeks = Object.create(null), wkeys=[];
       monthItems.forEach(function(r){
         var mon = getMonday(r.runDate);
@@ -188,26 +212,22 @@
       });
       wkeys.sort().reverse();
 
-      /* Week chips bar */
-      var chips=[];
-      for(var t=0;t<wkeys.length;t++){
-        var start=weeks[wkeys[t]].mon, end=new Date(+start); end.setDate(end.getDate()+6);
-        chips.push('<span class="pill">Week of '+fmtShort(start)+' \u2013 '+fmtShort(end)+'</span>');
-      }
-      html+='<div class="weeks-bar">'+chips.join('')+'</div>';
-
       /* ONE grid for the WHOLE MONTH */
       html+='<div class="grid">';
 
-      /* Insert cards (no spanning rows); sort per week newest-first for stability */
+      /* Insert cards; add aligned week-chip at top-left of each card */
       for(var t2=0;t2<wkeys.length;t2++){
+        var start=weeks[wkeys[t2]].mon, end=new Date(+start); end.setDate(end.getDate()+6);
+        var weekLabel = 'Week of '+fmtShort(start)+' \u2013 '+fmtShort(end);
+
         var L = weeks[wkeys[t2]].list.slice().sort(function(a,b){
           return String(b.runDate).localeCompare(String(a.runDate));
         });
         for(var u=0;u<L.length;u++){
           var r=L[u];
           html+='<article class="card">';
-          if(r.runDate===latest){ html+='<span class="latest-badge">Latest</span>'; }
+          html+='<div class="week-chip">'+weekLabel+'</div>';         /* aligned top-left */
+          if(r.runDate===latest){ html+='<span class="latest-badge">Latest</span>'; } /* top-right */
           html+='<h3>'+titleOf(r)+' <span class="tag">API '+apiOf(r)+'</span></h3>';
           html+='<div class="meta"><span class="pill">Run: '+fmtRun(runDateOf(r))+'</span></div>';
           html+='<div class="btn-row"><a class="btn" target="_blank" href="'+hrefOf(r)+'">Open Detailed Report</a></div>';
