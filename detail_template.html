@@ -56,20 +56,13 @@
   .kv{display:grid;grid-template-columns:260px 1fr;gap:8px 14px}
   .kv .lbl{color:#111;font-weight:800}
   .kv .val{color:#111}
-  .kv .time-badge{font-weight:800;color:#0f172a;margin-left:4px}
 
-  /* NEW: summary link list */
-  .summary-links{margin:8px 0 0 0;padding-left:18px}
-  .summary-links li{margin:6px 0}
-  .inline-link{color:var(--blue-deep);font-weight:800;text-decoration:none}
-  .inline-link:hover{text-decoration:underline}
-
-  /* Roles – single colorful block (reddish) */
+  /* Roles – sepia card */
   .roles{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
-  .roles h3{margin:0 0 10px 0;font-size:15px;font-weight:900;color:#111}
+  .roles h2{margin:0 0 10px 0;font-size:18px;font-weight:900;color:#111}
   .roles-brief{
-    background:var(--red-quiet);
-    border:1px solid var(--line);
+    background:#f5efe6;            /* sepia-ish */
+    border:1px solid #e7dbc8;      /* soft sepia border */
     border-radius:12px;
     padding:14px;
     box-shadow:0 4px 14px rgba(0,0,0,.05);
@@ -150,51 +143,35 @@
   <section class="card" style="margin-bottom:16px">
     <h2>Summary</h2>
 
-    <!-- Dump labels with optional time -->
+    <!-- Dump labels with time -->
     <div class="kv">
       <div class="lbl">Previous production dump</div>
-      <div class="val">{{PREVIOUS_DATE_HUMAN}}<span class="time-badge" data-time="{{PREVIOUS_TIME_HUMAN}}"></span></div>
+      <div class="val">{{PREVIOUS_DATE_HUMAN}} <strong>{{PREVIOUS_TIME_HUMAN}} PST</strong></div>
       <div class="lbl">Latest production dump</div>
-      <div class="val">{{LATEST_DATE_HUMAN}}<span class="time-badge" data-time="{{LATEST_TIME_HUMAN}}"></span></div>
+      <div class="val">{{LATEST_DATE_HUMAN}} <strong>{{LATEST_TIME_HUMAN}} PST</strong></div>
     </div>
 
-    <!-- Added the two lines -->
+    <!-- Your new compact summary text -->
     <p class="note" style="margin-top:10px">
-      This report compares the <strong>latest SFDC production metadata dump</strong> with the <strong>previous</strong> dump and lists <strong>all differences</strong>.
-    </p>
-    <p class="note" style="margin-top:6px"><strong>Changes are classified as:</strong></p>
-    <ul class="summary-links">
-      <li><a class="inline-link" href="#anchor-new">New files</a></li>
-      <li><a class="inline-link" href="#anchor-changed">Changed files (content mismatches)</a></li>
-      <li><a class="inline-link" href="#anchor-removed">Removed files</a></li>
-    </ul>
-
-    <!-- Linking lines -->
-    <p class="note" style="margin-top:8px">
-      Folder-wise (metadata-type) counts are available in the
-      <a class="inline-link" href="#anchor-codecomp">Code Comparison Report</a>.
-    </p>
-    <p class="note" style="margin-top:6px">
-      A consolidated diff-only <a class="inline-link" href="#anchor-codecomp">Code Comparison Report</a> and an
-      <a class="inline-link" href="#anchor-log">Execution Log</a> document each run for audit and context.
+      This report compares the latest SFDC production metadata dump with the previous one, enumerating all differences—<strong>new files</strong>, <strong>changed files</strong> (content mismatches), and <strong>removed files</strong>.
+      The <strong>Code Comparison Report</strong> provides folder-wise (metadata-type) counts and a consolidated, diff-only comparison for each metadata file.
     </p>
   </section>
 
-  <!-- Roles & Responsibilities (single reddish block, bold group names) -->
-  <section class="card" style="margin-bottom:16px">
+  <!-- Roles & Responsibilities (sepia) -->
+  <section class="card roles" style="margin-bottom:16px">
     <h2>Roles & Responsibilities</h2>
     <div class="roles-brief">
       <p style="margin:0">
-        <strong>Development, DevOps, and Production Support</strong> must add comments to the
-        <a class="inline-link" href="#anchor-pmfr">Production Modified File Report</a> (SharePoint link) with:
+        <strong>Development, DevOps,</strong> and <strong>Production Support must fill out the following columns in the
+        <strong>Production Modified File Report</strong> (SharePoint link):
       </p>
       <ul>
         <li>Ticket number (ID)</li>
         <li>Resolution date</li>
-        <li>Affected module/area</li>
+        <li>Module/Area</li>
         <li>Details of the change</li>
       </ul>
-      <p style="margin-top:6px"><strong>BSA, QA</strong> will analyze and validate the report.</p>
     </div>
   </section>
 
@@ -277,7 +254,7 @@
 <footer>This is the end of report.</footer>
 
 <script>
-  // Info modal + optional time rendering
+  // Info modal + safety for optional time vars (we now render time inline, but keep this harmless)
   (function(){
     const mask = document.getElementById('infoMask');
     const body = document.getElementById('infoBody');
@@ -306,12 +283,6 @@
     });
     closeBtn.addEventListener('click', closeModal);
     document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeModal(); });
-
-    // show optional times if provided
-    document.querySelectorAll('.time-badge').forEach(function(el){
-      var t=(el.getAttribute('data-time')||'').trim();
-      if(t && t.indexOf('{{')===-1){ el.textContent=' '+t; }
-    });
   })();
 </script>
 </body>
