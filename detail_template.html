@@ -15,7 +15,6 @@
   }
   *,*::before,*::after{box-sizing:border-box}
 
-  /* Page structure: footer at end */
   html, body { height:100%; }
   html{ scroll-behavior:smooth; }
   body{
@@ -47,23 +46,22 @@
         border-radius:999px;padding:4px 8px;color:#fff;text-decoration:none}
   .back:hover{background:rgba(255,255,255,.18);text-decoration:none}
 
-/* Subheader line (match month subheader) */
-.subline-wrap{max-width:1100px;margin:8px auto 0;padding:0 18px}
-.subline{
-  display:flex;align-items:center;justify-content:space-between;
-  margin:14px 0 6px;border-left:4px solid #93c5fd;padding-left:10px;
-}
-.subline h2{
-  margin:0 18px 0 0;               /* space between title and links */
-  font-size:clamp(16px,1.8vw,20px);
-  font-weight:900;color:#0f172a;letter-spacing:.2px;
-}
-.subline .links{display:flex;gap:14px;flex-wrap:wrap}
-.subline .links a{
-  font-weight:800;font-size:12px;text-decoration:none; /* remove dashed underline */
-}
-.subline .links a:hover{filter:brightness(1.06)}
-
+  /* Subheader line (match the “month” subheader vibe) */
+  .subline-wrap{max-width:1100px;margin:8px auto 0;padding:0 18px}
+  .subline{
+    display:flex;align-items:center;justify-content:space-between;
+    margin:14px 0 6px;border-left:4px solid #93c5fd;padding-left:10px;
+  }
+  .subline h2{
+    margin:0 18px 0 0; line-height:1;
+    font-size:clamp(16px,1.8vw,20px);font-weight:900;color:#0f172a;letter-spacing:.2px;
+  }
+  .subline .links{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  /* force-remove dashed underline if any previous rule lingers */
+  .subline .links a{
+    font-weight:800;font-size:12px;text-decoration:none !important;border-bottom:none !important;
+  }
+  .subline .links a:hover{filter:brightness(1.06)}
 
   main{max-width:1100px;margin:12px auto 0;padding:0 18px;flex:1 0 auto;}
 
@@ -78,12 +76,8 @@
 
   /* Roles – sepia block INSIDE Summary */
   .roles-brief{
-    background:#f5efe6;            /* sepia */
-    border:1px solid #e7dbc8;
-    border-radius:12px;
-    padding:14px;
-    box-shadow:0 4px 14px rgba(0,0,0,.05);
-    margin-top:12px;
+    background:#f5efe6; border:1px solid #e7dbc8; border-radius:12px;
+    padding:14px; box-shadow:0 4px 14px rgba(0,0,0,.05); margin-top:12px;
   }
   .roles-brief ul{margin:8px 0 0 0;padding-left:18px}
   .roles-brief li{margin:4px 0;color:#111}
@@ -110,7 +104,6 @@
   .btn.orange{background:var(--orange-quiet)}
   .btn.red{background:var(--red-quiet)}
   .btn.blue{background:var(--blue-quiet)}
-
   .btn.green  .count{ color:var(--green);  }
   .btn.orange .count{ color:var(--orange); }
   .btn.red    .count{ color:var(--red);    }
@@ -178,7 +171,7 @@
   </div>
 </header>
 
-<!-- Subheader line with inline links (same spirit as month subheader) -->
+<!-- Subheader line with inline links -->
 <div class="subline-wrap">
   <div class="subline">
     <h2>Sections</h2>
@@ -206,7 +199,6 @@
       <div class="val">{{LATEST_DATE_HUMAN}} <strong id="latestTime">{{LATEST_TIME_HUMAN}} PST</strong></div>
     </div>
 
-    <!-- Summary text with anchors -->
     <p class="note" style="margin-top:10px">
       This report compares the latest SFDC production metadata dump with the previous one, enumerating all differences—<a class="inline-link" href="#anchor-new">new files</a>, <a class="inline-link" href="#anchor-changed">changed files (content mismatches)</a>, and <a class="inline-link" href="#anchor-removed">removed files</a>. A <a class="inline-link" href="#anchor-codecomp">code comparison report</a> that provides folder-wise (metadata-type) counts and a consolidated, diff-only comparison for each metadata file.
     </p>
@@ -305,7 +297,7 @@
 <footer>This is the end of report.</footer>
 
 <script>
-  // Info modal (unchanged)
+  // Info modal
   (function(){
     const mask = document.getElementById('infoMask');
     const body = document.getElementById('infoBody');
@@ -373,7 +365,7 @@
       try{
         var el = document.querySelector(id);
         if(!el) return;
-        el.classList.remove('flash'); // reset if already flashing
+        el.classList.remove('flash');
         setTimeout(function(){
           el.classList.add('flash');
           setTimeout(function(){ el.classList.remove('flash'); }, 1000);
@@ -392,7 +384,7 @@
     });
   })();
 
-  // Flash the entire card when using the subheader "Downloads / Quick Access" links
+  // Flash entire card when using the subheader links
   (function(){
     function flashCard(sel){
       var el = document.querySelector(sel);
@@ -409,7 +401,6 @@
       var sel = a.getAttribute('data-card');
       flashCard(sel);
     });
-    // If someone lands with hash to a card id, flash it once as well
     window.addEventListener('DOMContentLoaded', function(){
       if(location.hash==="#downloads-card"||location.hash==="#quickaccess-card"){
         flashCard(location.hash);
@@ -424,4 +415,3 @@
 </script>
 </body>
 </html>
-
