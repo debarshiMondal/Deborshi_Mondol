@@ -57,18 +57,21 @@
   .kv .lbl{color:#111;font-weight:800}
   .kv .val{color:#111}
 
-  /* Roles – sepia card */
-  .roles{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
-  .roles h2{margin:0 0 10px 0;font-size:18px;font-weight:900;color:#111}
+  /* Roles – sepia block INSIDE Summary */
   .roles-brief{
-    background:#f5efe6;            /* sepia-ish */
-    border:1px solid #e7dbc8;      /* soft sepia border */
+    background:#f5efe6;            /* sepia */
+    border:1px solid #e7dbc8;
     border-radius:12px;
     padding:14px;
     box-shadow:0 4px 14px rgba(0,0,0,.05);
+    margin-top:12px;
   }
   .roles-brief ul{margin:8px 0 0 0;padding-left:18px}
   .roles-brief li{margin:4px 0;color:#111}
+
+  /* Inline anchor style used in summary/roles */
+  .inline-link{color:var(--blue-deep);font-weight:800;text-decoration:none}
+  .inline-link:hover{text-decoration:underline}
 
   /* Buttons */
   .btns{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -139,7 +142,7 @@
 </header>
 
 <main>
-  <!-- Summary -->
+  <!-- Summary (includes Roles & Responsibilities) -->
   <section class="card" style="margin-bottom:16px">
     <h2>Summary</h2>
 
@@ -151,20 +154,16 @@
       <div class="val">{{LATEST_DATE_HUMAN}} <strong>{{LATEST_TIME_HUMAN}} PST</strong></div>
     </div>
 
-    <!-- Your new compact summary text -->
+    <!-- Your summary text with anchors on three phrases -->
     <p class="note" style="margin-top:10px">
-      This report compares the latest SFDC production metadata dump with the previous one, enumerating all differences—<strong>new files</strong>, <strong>changed files</strong> (content mismatches), and <strong>removed files</strong>.
-      The <strong>Code Comparison Report</strong> provides folder-wise (metadata-type) counts and a consolidated, diff-only comparison for each metadata file.
+      This report compares the latest SFDC production metadata dump with the previous one, enumerating all differences—<a class="inline-link" href="#anchor-new">new files</a>, <a class="inline-link" href="#anchor-changed">changed files (content mismatches)</a>, and <a class="inline-link" href="#anchor-removed">removed files</a>. The <strong>Code Comparison Report</strong> provides folder-wise (metadata-type) counts and a consolidated, diff-only comparison for each metadata file.
     </p>
-  </section>
 
-  <!-- Roles & Responsibilities (sepia) -->
-  <section class="card roles" style="margin-bottom:16px">
-    <h2>Roles & Responsibilities</h2>
+    <!-- Roles & Responsibilities inside the Summary card (sepia) -->
     <div class="roles-brief">
       <p style="margin:0">
         <strong>Development, DevOps,</strong> and <strong>Production Support</strong> must fill out the following columns in the
-        <strong>Production Modified File Report</strong> (SharePoint link):
+        <a class="inline-link" href="#anchor-pmfr"><strong>Production Modified File Report</strong></a> (SharePoint link):
       </p>
       <ul>
         <li>Ticket number (ID)</li>
@@ -254,7 +253,7 @@
 <footer>This is the end of report.</footer>
 
 <script>
-  // Info modal + safety for optional time vars (we now render time inline, but keep this harmless)
+  // Info modal (unchanged)
   (function(){
     const mask = document.getElementById('infoMask');
     const body = document.getElementById('infoBody');
@@ -287,4 +286,3 @@
 </script>
 </body>
 </html>
-
