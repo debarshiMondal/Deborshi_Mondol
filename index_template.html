@@ -31,54 +31,55 @@
   .layout{display:grid;grid-template-columns:1fr;gap:16px}
   @media (max-width:980px){.layout{grid-template-columns:1fr}}
 
-  /* Month header: count right beside heading */
   .section-header{
-    display:flex;align-items:center;gap:10px;
+    display:flex;align-items:flex-end;gap:10px;
     margin:18px 0 8px;border-left:4px solid #93c5fd;padding-left:10px
   }
-  .section-header h2{margin:0;font-size:clamp(18px,2vw,22px);font-weight:900;color:#0f172a}
-  .section-header .count{color:#475569;font-size:13px}
+  .section-header h2{margin:0;font-size:clamp(18px,2vw,22px);font-weight:900;color:#0f172a;display:flex;align-items:center;gap:8px}
+  .section-header .count{color:var(--muted);font-size:13px;display:inline-block;vertical-align:baseline}
 
-  /* Grid + Card — COMPACT SQUARISH (no color changes) */
-  .grid{display:grid;gap:12px;grid-template-columns:repeat(12,1fr)}
+  /* Cards/grid — compact sizing; no aspect ratio */
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(12,1fr)}
   .card{
     grid-column:span 12;
     background:var(--white);border:1px solid var(--line);border-radius:var(--radius);
     box-shadow:0 8px 24px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);
-    padding:10px;position:relative;transition:var(--transition);
-    display:flex;flex-direction:column;min-height:auto;
+    padding:10px 12px; position:relative; transition:var(--transition);
+    display:flex;flex-direction:column; min-height:auto;
   }
-  /* 3-up from 700px => narrower cards => smaller squares */
-  @media(min-width:700px){
-    .card{grid-column:span 4; aspect-ratio:1/1;}
-  }
-  /* 4-up from 1024px => even more compact squares */
-  @media(min-width:1024px){
-    .card{grid-column:span 3; aspect-ratio:1/1;}
-  }
+  @media(min-width:700px){.card{grid-column:span 6}}
+  @media(min-width:1024px){.card{grid-column:span 4}}
 
   .card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.10),0 3px 8px rgba(0,0,0,.08)}
 
-  /* Title: allow 2 lines; compact spacing; reserve tiny headroom for badge */
+  /* Week chip inside each card, top-left aligned */
+  .week-chip{
+    position:absolute; top:8px; left:10px;
+    font-size:12px; font-weight:800; color:#1e40af; letter-spacing:.2px;
+    padding:0; background:transparent; line-height:1.1;
+  }
+
+  /* Reserve small headroom so chip/badge never collide with title */
   .card h3{
-    margin:16px 0 4px; /* headroom so badge never overlaps */
-    font-size:14px; line-height:1.25; font-weight:900; color:#0f172a;
+    margin:22px 0 6px;          /* Title (line 1) */
+    font-size:15px; line-height:1.25; font-weight:900; color:#0f172a;
     display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
   }
 
-  /* API tag line */
-  .tag-line{margin:0 0 6px}
-  .tag{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:999px;border:1px solid #bae6fd;background:#e0f2fe;color:#075985}
+  /* API tag on its OWN line (line 2) */
+  .meta-api{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px}
+  .tag{display:inline-block;margin-left:0;font-size:11px;font-weight:700;padding:2px 6px;border-radius:999px;border:1px solid #bae6fd;background:#e0f2fe;color:#075985}
 
-  /* Execution Date pill (bold label) */
-  .meta{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px}
-  .pill{background:#f1f5f9;border:1px solid var(--line);border-radius:999px;padding:3px 8px;font-size:11.5px;color:#64748b}
+  /* Execution Date on its OWN line (line 3) — label bold */
+  .meta-exe{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
+  .pill{background:#f1f5f9;border:1px solid var(--line);border-radius:999px;padding:3px 8px;font-size:11px;color:#64748b}
   .pill strong{color:#0f172a}
 
+  /* Button row (line 4) */
   .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
   .btn{
     display:inline-flex;align-items:center;justify-content:center;
-    padding:8px 10px;border-radius:10px;font-weight:800;font-size:12.5px;
+    padding:8px 12px;border-radius:10px;font-weight:800;font-size:13px;
     border:1px solid var(--blue-700);color:#fff;
     background:linear-gradient(180deg,var(--blue-600),var(--blue-800));
     box-shadow:0 5px 14px rgba(29,78,216,.22);transition:var(--transition)
@@ -150,9 +151,14 @@
     var a=(k||'0000-00').split('-'); var y=+a[0]||0, m=(+a[1]||1)-1;
     var d=new Date(y,m,1); return d.toLocaleDateString(undefined,{month:'long',year:'numeric'});
   }
+  function getMonday(iso){
+    var d=new Date((iso||'1970-01-01')+'T00:00:00'); if(isNaN(d)) d=new Date('1970-01-01T00:00:00');
+    var day=(d.getDay()+6)%7; d.setDate(d.getDate()-day); d.setHours(0,0,0,0); return d;
+  }
+  function fmtShort(d){ return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
   function fmtRun(iso){ var d=new Date((iso||'1970-01-01')+'T00:00:00'); return isNaN(d)?'—':d.toLocaleDateString(); }
 
-  /* Drop the "Production Dump Comparison:" prefix in titles */
+  /* Drop the "Production Dump Comparison:" prefix in titles for card heading */
   function titleOf(r){
     var t=(r && (r.masterTitle || r.title)) || '—';
     return t.replace(/^Production Dump Comparison:\s*/i,'').trim();
@@ -200,30 +206,52 @@
     for(var i=0;i<order.length;i++){
       var k = order[i], monthItems = groups[k] || [];
 
+      /* count moved RIGHT BESIDE month heading */
       html+='<section id="m-'+k+'">';
-      html+='<div class="section-header"><h2>'+monthLabel(k)+'</h2><div class="count">('+monthItems.length+' report'+(monthItems.length!==1?'s':'')+')</div></div>';
+      html+='<div class="section-header"><h2>'+monthLabel(k)+' <span class="count">('+monthItems.length+' report'+(monthItems.length!==1?'s':'')+')</span></h2></div>';
 
-      /* single grid per month — compact squarish cards */
+      /* compute weeks for this month */
+      var weeks = Object.create(null), wkeys=[];
+      monthItems.forEach(function(r){
+        var mon = getMonday(r.runDate);
+        var wkKey = mon.toISOString().slice(0,10);
+        if(!weeks[wkKey]){ weeks[wkKey] = {mon:mon,list:[]}; wkeys.push(wkKey); }
+        weeks[wkKey].list.push(r);
+      });
+      wkeys.sort().reverse();
+
+      /* ONE grid for the WHOLE MONTH */
       html+='<div class="grid">';
 
-      /* Cards newest-first */
-      var L = monthItems.slice().sort(function(a,b){
-        return String(b.runDate).localeCompare(String(a.runDate));
-      });
+      /* Insert cards in week order; week chip top-left; strict order inside card:
+         Title (line1) → API tag (line2) → Execution Date (line3) → Button (line4) */
+      for(var t2=0;t2<wkeys.length;t2++){
+        var start=weeks[wkeys[t2]].mon, end=new Date(+start); end.setDate(end.getDate()+6);
+        var weekLabel = 'Week of '+fmtShort(start)+' \u2013 '+fmtShort(end);
 
-      for(var u=0;u<L.length;u++){
-        var r=L[u];
-        html+='<article class="card">';
-        if(r.runDate===latest){ html+='<span class="latest-badge">Latest</span>'; }
-        /* Title (2 lines max) */
-        html+='<h3>'+titleOf(r)+'</h3>';
-        /* API on own line */
-        html+='<p class="tag-line"><span class="tag">API '+apiOf(r)+'</span></p>';
-        /* Execution Date pill (bold label) */
-        html+='<div class="meta"><span class="pill"><strong>Execution Date:</strong> '+fmtRun(runDateOf(r))+'</span></div>';
-        /* Button bottom */
-        html+='<div class="btn-row"><a class="btn" target="_blank" href="'+hrefOf(r)+'">Open Detailed Report</a></div>';
-        html+='</article>';
+        var L = weeks[wkeys[t2]].list.slice().sort(function(a,b){
+          return String(b.runDate).localeCompare(String(a.runDate));
+        });
+        for(var u=0;u<L.length;u++){
+          var r=L[u];
+          html+='<article class="card">';
+          html+='<div class="week-chip">'+weekLabel+'</div>';                 /* top-left */
+          if(r.runDate===latest){ html+='<span class="latest-badge">Latest</span>'; } /* top-right */
+
+          /* Line 1: Title only */
+          html+='<h3>'+titleOf(r)+'</h3>';
+
+          /* Line 2: API tag (own line) */
+          html+='<div class="meta-api"><span class="tag">API '+apiOf(r)+'</span></div>';
+
+          /* Line 3: Execution Date (own line, label bold) */
+          html+='<div class="meta-exe"><span class="pill"><strong>Execution Date:</strong> '+fmtRun(runDateOf(r))+'</span></div>';
+
+          /* Line 4: Button */
+          html+='<div class="btn-row"><a class="btn" target="_blank" href="'+hrefOf(r)+'">Open Detailed Report</a></div>';
+
+          html+='</article>';
+        }
       }
 
       html+='</div>';  /* close month grid */
@@ -245,7 +273,6 @@
     render(out);
   }
 
-  /* initial */
   render(REPORTS);
   $search.addEventListener('input', doSearch);
 })();
