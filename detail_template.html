@@ -47,20 +47,23 @@
         border-radius:999px;padding:4px 8px;color:#fff;text-decoration:none}
   .back:hover{background:rgba(255,255,255,.18);text-decoration:none}
 
-  /* Subheader line (same spirit as month subheader on index page) */
-  .subline-wrap{max-width:1100px;margin:8px auto 0;padding:0 18px}
-  .subline{
-    display:flex;align-items:flex-end;justify-content:space-between;
-    margin:14px 0 6px;border-left:4px solid #93c5fd;padding-left:10px;
-  }
-  .subline h2{
-    margin:0;font-size:clamp(16px,1.8vw,20px);font-weight:900;color:#0f172a;letter-spacing:.2px;
-  }
-  .subline .links{display:flex;gap:14px;flex-wrap:wrap}
-  .subline .links a{
-    font-weight:800;font-size:12px;text-decoration:none;border-bottom:1px dashed rgba(29,64,175,.35);
-  }
-  .subline .links a:hover{filter:brightness(1.06)}
+/* Subheader line (match month subheader) */
+.subline-wrap{max-width:1100px;margin:8px auto 0;padding:0 18px}
+.subline{
+  display:flex;align-items:center;justify-content:space-between;
+  margin:14px 0 6px;border-left:4px solid #93c5fd;padding-left:10px;
+}
+.subline h2{
+  margin:0 18px 0 0;               /* space between title and links */
+  font-size:clamp(16px,1.8vw,20px);
+  font-weight:900;color:#0f172a;letter-spacing:.2px;
+}
+.subline .links{display:flex;gap:14px;flex-wrap:wrap}
+.subline .links a{
+  font-weight:800;font-size:12px;text-decoration:none; /* remove dashed underline */
+}
+.subline .links a:hover{filter:brightness(1.06)}
+
 
   main{max-width:1100px;margin:12px auto 0;padding:0 18px;flex:1 0 auto;}
 
@@ -421,3 +424,4 @@
 </script>
 </body>
 </html>
+
