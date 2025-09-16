@@ -34,7 +34,7 @@
   }
   .h-inner{max-width:1100px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
   .h-title{display:flex;flex-direction:column;gap:6px}
-  /* slightly reduced so long titles fit one line */
+  /* slightly smaller so long titles fit one line */
   .h-title h1{margin:0;font-size:clamp(16px,2vw,22px);font-weight:900;letter-spacing:.2px}
   .badges{display:flex;gap:8px;flex-wrap:wrap}
   .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);
@@ -46,22 +46,18 @@
         border-radius:999px;padding:4px 8px;color:#fff;text-decoration:none}
   .back:hover{background:rgba(255,255,255,.18);text-decoration:none}
 
-  /* Subheader line (match the “month” subheader vibe) */
-  .subline-wrap{max-width:1100px;margin:8px auto 0;padding:0 18px}
-  .subline{
-    display:flex;align-items:center;justify-content:space-between;
-    margin:14px 0 6px;border-left:4px solid #93c5fd;padding-left:10px;
+  /* MINI SUBHEADER BAR (just the two anchors) */
+  .subbar-wrap{max-width:1100px;margin:6px auto 0;padding:0 18px}
+  .subbar{
+    display:flex;align-items:center;gap:14px;
+    margin:10px 0 6px;border-left:4px solid #93c5fd;padding-left:10px;
+    line-height:1;
   }
-  .subline h2{
-    margin:0 18px 0 0; line-height:1;
-    font-size:clamp(16px,1.8vw,20px);font-weight:900;color:#0f172a;letter-spacing:.2px;
+  .subbar a{
+    font-weight:800;font-size:12px;text-decoration:none;border-bottom:none;
   }
-  .subline .links{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
-  /* force-remove dashed underline if any previous rule lingers */
-  .subline .links a{
-    font-weight:800;font-size:12px;text-decoration:none !important;border-bottom:none !important;
-  }
-  .subline .links a:hover{filter:brightness(1.06)}
+  .subbar a:hover{filter:brightness(1.06)}
+  .subbar .sep{opacity:.5;user-select:none}
 
   main{max-width:1100px;margin:12px auto 0;padding:0 18px;flex:1 0 auto;}
 
@@ -82,7 +78,7 @@
   .roles-brief ul{margin:8px 0 0 0;padding-left:18px}
   .roles-brief li{margin:4px 0;color:#111}
 
-  /* Inline anchor style used in summary/roles */
+  /* Inline anchors */
   .inline-link{color:var(--blue-deep);font-weight:800;text-decoration:none}
   .inline-link:hover{text-decoration:underline}
 
@@ -92,8 +88,7 @@
        display:flex;align-items:center;justify-content:space-between;gap:12px;
        padding:12px;border-radius:12px;border:1px solid var(--line);
        background:#fff;color:inherit;text-decoration:none;transition:.15s;
-       font-weight:600;font-size:12.5px;
-       box-shadow:0 1px 3px rgba(0,0,0,.05);
+       font-weight:600;font-size:12.5px; box-shadow:0 1px 3px rgba(0,0,0,.05);
   }
   .btn:hover{ filter:brightness(1.06); box-shadow:0 2px 6px rgba(0,0,0,.08); }
   .btn .left{display:flex;flex-direction:column}
@@ -135,7 +130,7 @@
   .btn:active{transform: translateY(-1px) scale(.995);box-shadow: 0 5px 14px rgba(0,0,0,.16), 0 3px 8px rgba(0,0,0,.10);filter: brightness(1.03);}
   .btn.green:hover, .btn.orange:hover, .btn.red:hover, .btn.blue:hover { filter: brightness(1.10); }
 
-  /* 1-second flash highlight (subtle blue ring) for buttons */
+  /* 1s flash highlights */
   @keyframes flashRing {
     0%   { box-shadow: 0 0 0 0 rgba(29,78,216,.00), 0 1px 3px rgba(0,0,0,.05); }
     20%  { box-shadow: 0 0 0 4px rgba(29,78,216,.30), 0 8px 18px rgba(0,0,0,.10); }
@@ -144,7 +139,6 @@
   }
   .btn.flash { animation: flashRing 1s ease; }
 
-  /* 1-second flash for whole card when using the subheader links */
   @keyframes cardFlash {
     0%   { box-shadow: var(--shadow); }
     20%  { box-shadow: 0 0 0 4px rgba(29,78,216,.28), 0 12px 28px rgba(0,0,0,.10); }
@@ -171,27 +165,24 @@
   </div>
 </header>
 
-<!-- Subheader line with inline links -->
-<div class="subline-wrap">
-  <div class="subline">
-    <h2>Sections</h2>
-    <div class="links">
-      <a href="#downloads-card" data-card="#downloads-card">Downloads</a>
-      <a href="#quickaccess-card" data-card="#quickaccess-card">Quick Access</a>
-    </div>
-  </div>
+<!-- MINI SUBHEADER BAR -->
+<div class="subbar-wrap">
+  <nav class="subbar" aria-label="In-page navigation">
+    <a href="#downloads-card" data-card="#downloads-card">Downloads</a>
+    <span class="sep">·</span>
+    <a href="#quickaccess-card" data-card="#quickaccess-card">Quick Access</a>
+  </nav>
 </div>
 
 <main>
-  <!-- Summary (includes Roles & Responsibilities) -->
+  <!-- Summary -->
   <section class="card" style="margin-bottom:16px">
     <h2>Summary</h2>
 
-    <!-- Hidden raw labels so JS can derive time if Python doesn't provide -->
+    <!-- Raw labels so JS can derive time if Python didn't provide -->
     <span id="prevLabel" data-label="{{PREVIOUS_LABEL}}" hidden></span>
     <span id="latestLabel" data-label="{{LATEST_LABEL}}" hidden></span>
 
-    <!-- Dump labels with time -->
     <div class="kv">
       <div class="lbl">Previous production dump</div>
       <div class="val">{{PREVIOUS_DATE_HUMAN}} <strong id="prevTime">{{PREVIOUS_TIME_HUMAN}} PST</strong></div>
@@ -203,7 +194,7 @@
       This report compares the latest SFDC production metadata dump with the previous one, enumerating all differences—<a class="inline-link" href="#anchor-new">new files</a>, <a class="inline-link" href="#anchor-changed">changed files (content mismatches)</a>, and <a class="inline-link" href="#anchor-removed">removed files</a>. A <a class="inline-link" href="#anchor-codecomp">code comparison report</a> that provides folder-wise (metadata-type) counts and a consolidated, diff-only comparison for each metadata file.
     </p>
 
-    <!-- Roles & Responsibilities inside the Summary card (sepia) -->
+    <!-- Roles & Responsibilities (sepia) -->
     <div class="roles-brief">
       <p style="margin:0">
         <strong>Development, DevOps,</strong> and <strong>Production Support</strong> must fill out the following columns in the
@@ -285,7 +276,7 @@
   </section>
 </main>
 
-<!-- Reusable modal -->
+<!-- Modal -->
 <div class="modal-mask" id="infoMask" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
     <h3 id="infoTitle">Info</h3>
@@ -359,7 +350,7 @@
     }
   })();
 
-  // Flash highlight the associated button for 1s after inline anchor clicks
+  // Flash button after inline anchor clicks
   (function(){
     function flash(id){
       try{
@@ -384,7 +375,7 @@
     });
   })();
 
-  // Flash entire card when using the subheader links
+  // Flash entire card for subbar links
   (function(){
     function flashCard(sel){
       var el = document.querySelector(sel);
@@ -396,7 +387,7 @@
       }, 60);
     }
     document.addEventListener('click', function(e){
-      var a = e.target.closest('.subline .links a[data-card]');
+      var a = e.target.closest('.subbar a[data-card]');
       if(!a) return;
       var sel = a.getAttribute('data-card');
       flashCard(sel);
