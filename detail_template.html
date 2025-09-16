@@ -35,7 +35,7 @@
   }
   .h-inner{max-width:1100px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
   .h-title{display:flex;flex-direction:column;gap:6px}
-  /* ↓ Reduced by ~2px overall so it fits one line */
+  /* slightly reduced so long titles fit one line */
   .h-title h1{margin:0;font-size:clamp(16px,2vw,22px);font-weight:900;letter-spacing:.2px}
   .badges{display:flex;gap:8px;flex-wrap:wrap}
   .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);
@@ -123,6 +123,15 @@
   .btn:hover{transform: translateY(-2px);box-shadow: 0 8px 22px rgba(0,0,0,.18), 0 4px 10px rgba(0,0,0,.10);filter: brightness(1.09);}
   .btn:active{transform: translateY(-1px) scale(.995);box-shadow: 0 5px 14px rgba(0,0,0,.16), 0 3px 8px rgba(0,0,0,.10);filter: brightness(1.03);}
   .btn.green:hover, .btn.orange:hover, .btn.red:hover, .btn.blue:hover { filter: brightness(1.10); }
+
+  /* 1-second flash highlight (subtle blue ring) */
+  @keyframes flashRing {
+    0%   { box-shadow: 0 0 0 0 rgba(29,78,216,.00), 0 1px 3px rgba(0,0,0,.05); }
+    20%  { box-shadow: 0 0 0 4px rgba(29,78,216,.30), 0 8px 18px rgba(0,0,0,.10); }
+    80%  { box-shadow: 0 0 0 4px rgba(29,78,216,.30), 0 8px 18px rgba(0,0,0,.10); }
+    100% { box-shadow: 0 0 0 0 rgba(29,78,216,.00), 0 1px 3px rgba(0,0,0,.05); }
+  }
+  .btn.flash { animation: flashRing 1s ease; }
 </style>
 </head>
 <body>
@@ -159,8 +168,9 @@
       <div class="val">{{LATEST_DATE_HUMAN}} <strong id="latestTime">{{LATEST_TIME_HUMAN}} PST</strong></div>
     </div>
 
+    <!-- Summary text with anchors -->
     <p class="note" style="margin-top:10px">
-      This report compares the latest SFDC production metadata dump with the previous one, enumerating all differences—<a class="inline-link" href="#anchor-new">new files</a>, <a class="inline-link" href="#anchor-changed">changed files (content mismatches)</a>, and <a class="inline-link" href="#anchor-removed">removed files</a>. The <strong>Code Comparison Report</strong> provides folder-wise (metadata-type) counts and a consolidated, diff-only comparison for each metadata file.
+      This report compares the latest SFDC production metadata dump with the previous one, enumerating all differences—<a class="inline-link" href="#anchor-new">new files</a>, <a class="inline-link" href="#anchor-changed">changed files (content mismatches)</a>, and <a class="inline-link" href="#anchor-removed">removed files</a>. A <a class="inline-link" href="#anchor-codecomp">code comparison report</a> that provides folder-wise (metadata-type) counts and a consolidated, diff-only comparison for each metadata file.
     </p>
 
     <!-- Roles & Responsibilities inside the Summary card (sepia) -->
@@ -292,7 +302,6 @@
   (function(){
     function parseTimeFromLabel(label){
       if(!label) return '';
-      // expect tail like _04:26:34
       var m = /_(\d{1,2}):(\d{2}):(\d{2})$/.exec(label.trim());
       if(!m) return '';
       var hh = parseInt(m[1],10), mm = m[2];
@@ -303,7 +312,6 @@
     function needsFill(el){
       if(!el) return false;
       var t = (el.textContent||'').trim();
-      // template placeholder or just 'PST' left behind
       return !t || t.indexOf('{{')!==-1 || /^PST$/i.test(t) || /^{LATEST_|{PREVIOUS_/i.test(t);
     }
     var prevLabel = (document.getElementById('prevLabel')||{}).dataset?.label || '';
@@ -319,6 +327,35 @@
       var t2 = parseTimeFromLabel(latestLabel);
       if(t2){ latestTimeEl.textContent = t2 + ' PST'; }
     }
+  })();
+
+  // Flash highlight the associated button for 1s after anchor clicks
+  (function(){
+    function flash(id){
+      try{
+        var el = document.querySelector(id);
+        if(!el) return;
+        el.classList.remove('flash'); // reset if already flashing
+        // ensure scroll happens first, then flash so user sees it
+        setTimeout(function(){
+          el.classList.add('flash');
+          setTimeout(function(){ el.classList.remove('flash'); }, 1000);
+        }, 60);
+      }catch(_){}
+    }
+    // any inline anchor in summary/roles that points to a button id
+    document.addEventListener('click', function(e){
+      var a = e.target.closest('a.inline-link[href^="#"]');
+      if(!a) return;
+      var hash = a.getAttribute('href') || '';
+      if(!hash) return;
+      // let default hash navigation occur; we only add a flash
+      flash(hash);
+    });
+    // if user navigates via URL hash directly, flash as well
+    window.addEventListener('hashchange', function(){
+      if(location.hash) flash(location.hash);
+    });
   })();
 </script>
 </body>
