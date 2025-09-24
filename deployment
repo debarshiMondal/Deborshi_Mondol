@@ -1,0 +1,1425 @@
+#!/bin/bash
+
+#SFDC deployment script #
+##########################
+
+#          Description
+# -------------------------------------------------------------------#
+#SUBJECT=SFDC Deployment script
+#https://wiki.cadence.com/confluence/pages/viewpage.action?pageId=218020658
+#
+#jbakshi@cadence.com, debarshi@cadence.com, jsaini@cadence.com
+#VERSION=0.1.0
+# -------------------------------------------------------------------#
+
+#export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.131-11.b12.el7.x86_64
+#export PATH=$JAVA_HOME/bin:$PATH
+#which java
+#java -version
+
+
+main()
+{
+	exec 1> >(logger  -s -t   SFDC_DEPLOY:["${SFDC_ORG}"] ) 2>&1 #Logger 	
+	echo "..............START "${SFDC_ORG}" DEPLOYMENT..............."
+	echo "======================================================"
+	OPTS $@
+	VAR
+	Email_Alert     #email alert
+	check_Lock_arg  #check Lock & dependency
+	Trap            #handle Ctrl-C
+	Check_Trigger   #whether build is enable/disable            #handle Ctrl-C
+	GIT_rev         #collect GIT rev
+	create_Cset		#generate changeset
+	StaticResource  #generate staticresource .resource
+	CusMetadata		#copy customMetadata along with object
+	ForceDeploy     #insert/delete as per buid/forcedeploy.txt
+	CheckAPIver
+	create_Wflow    #generate workflow
+	CodeAnalyser
+	CustomLabels_Prep
+	aura_Prep
+	lwc_Prep
+	CountDeployable #do nothing if no deployable
+#############################
+	ReplaceSapceToTabInClass
+	Chg_NonProd_Objs # Email masking and object change for Non prod
+	ChangeSetDeploy #Deploy ChangeSet
+#	CusSet_Deploy   #Deploy Customsetting
+#############################
+	Unlock
+	echo "..............END  "${SFDC_ORG}" DEPLOYMENT..............."
+	echo "======================================================"
+}
+
+USAGE() {
+cat << EOF  
+Usage: 
+$0 -h | -o <org-name>
+$0 -o <org-name> -F -f <from_GIT> -t <to_GIT>
+
+Options:
+-h | --help		Display help, this screen
+
+-o | --org		Set SFDC org name ..sbx/dev/hfx/tst/sandbox
+
+-F | --GIT_force	Optional, force GIT range
+
+-f | --GIT_from		Set from_GIT , when -F is declared
+
+-t | --GIT_to		Set to_GIT or L (Latest), when -F is declared
+
+-R | --rleax		Check last successful GIT when -F enforced
+
+
+EOF
+}
+
+#define var
+###########
+VAR()
+{
+LOCK=/tmp/$SFDC_ORG.DEPLOY.LOCK
+ARG=$#
+bin=build/script
+property=build/property
+buildProperty=${property}/build_${SFDC_ORG}.properties
+serverProperty=${property}/${SFDC_ORG}.conf
+SFCliBuildList=${property}/${SFDC_ORG}_SFCli.list
+deployLogFile=deployUtil/deployTracker/${SFDC_ORG}/DeployLog.log
+staticResourceFoldersFile=changeSetDeploy/staticResourceFolders.txt
+SFCliBuildList=${property}/${SFDC_ORG}_SFCli.list
+SFCliMetaXMLList=${property}/${SFDC_ORG}_SFCliMetaXML.list
+SFCliMetaMetaHasFolder=${property}/${SFDC_ORG}_SFCliMetaMetaHasFolder.list
+TRIGGER=build/${SFDC_ORG}_trigger
+LastSuccessbuild=build/success_githash${SFDC_ORG}
+LastSuccessbuildFull=build/success_githash${SFDC_ORG}Full
+CUSTOM_SETTING=changeSetDeploy/customSettings/src/env/$SFDC_ORG/customSetting
+LOG=/tmp/$SFDC_ORG.Deploy.log
+CHANGESETLOG=/tmp/$SFDC_ORG.Changeset.log
+CUSETLOG=/tmp/$SFDC_ORG.CusSetting.log
+WFLOWLOG=/tmp/$SFDC_ORG.Wflow.log
+GIT_LOG=/tmp/$SFDC_ORG.SFDC_GIT.log
+GITLOGFORMAT=${bin}/Format_gitLog
+HTMLLog=/tmp/${SFDC_ORG}.Deploy.log.html
+CUS_HTMLLog=/tmp/${SFDC_ORG}.CusSet.Deploy.log.html
+DEPLOYEDFILE=/tmp/${SFDC_ORG}.Deploy.file
+CodeAnalyserFILE=CodeAnalyser/CodeAnalysisReport.html
+DATE=$(date +"%d%h%Y_%Hh%Mm%Ss")
+SetAPI=$(grep ^APIver ${serverProperty}| cut -d "=" -f2)
+}
+
+
+
+
+FAIL_EXIT()
+{
+	echo "deploy failed... exiting.."
+	Unlock
+}
+
+OPTS() 
+{
+GIT_FORCE=0
+SFDC_ORG=
+FROM_GIT=
+TO_GIT=
+RELAX=
+# translate long options to short
+for longarg
+do
+    delim=""
+    case "$longarg" in
+       --help) longargs="${longargs}-h ";;
+       --org) longargs="${longargs}-o ";;
+       --GIT_form) longargs="${longargs}-f ";;
+       --GIT_to)longargs="${longargs}-t";;
+       --GIT_force)longargs="${longargs}-F";;
+       --relax)longargs="${longargs}-R";;
+       # pass through anything else
+       *) [[ "${longarg:0:1}" == "-" ]] || delim="\""
+           longargs="${longargs}${delim}${longarg}${delim} ";;
+    esac
+done
+# reset the translated longargs
+eval set -- $longargs
+
+#process with long/short option
+while getopts ":o:f:t:FRh" opt
+do
+  case $opt in
+    o)SFDC_ORG="$OPTARG" ;;
+    f)FROM_GIT="$OPTARG" ;;
+    t)TO_GIT="$OPTARG" ;;
+    F)GIT_FORCE=1 ;;
+    R)RELAX=TRUE ;;
+    h)USAGE;exit 1 ;;
+   \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+   :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+
+
+if [ $OPTIND -eq 1 ]
+then
+echo "No options were passed, use option -h|--help for help";exit 1
+fi
+
+if ([[ ! -z ${SFDC_ORG} ]] && [[ "$SFDC_ORG" != "praug224" ]] && [[ "$SFDC_ORG" != "tst" ]] && [[ "$SFDC_ORG" != "debarshi" ]] && [[ "$SFDC_ORG" != "sbx" ]] && [[ "$SFDC_ORG" != "sandbox" ]] && [[ "$SFDC_ORG" != "devsandbox" ]])
+then
+    USAGE
+    exit 1
+elif ([[ ! -z ${SFDC_ORG} ]] && [[ $GIT_FORCE -ne 1 ]] && [[ -z "$FROM_GIT" ]] && [[  -z "$TO_GIT" ]])
+then
+echo
+elif ([[ $GIT_FORCE -eq 1 ]] || ! [[ "$FROM_GIT" =~ [^[:digit:]] ]] || [[ ! -z "$TO_GIT" ]]) \
+&& ([[ ! -z ${SFDC_ORG} ]] && [[ $GIT_FORCE -eq 1 ]] && ! [[ "$FROM_GIT" =~ [^[:digit:]] ]] && [[ ! -z "$TO_GIT" ]] || [[ ! -z "$RELAX" ]])
+then
+echo
+else 
+echo "check option -h|--help for force GIT usage"
+exit 1
+fi
+}
+
+check_Lock_arg()
+{
+	if [ -f $LOCK ]
+	then 
+		echo "Another deployment process is present...exit" | tee $LOG
+		echo ${MAIL_LIST}
+		mail -s "${SFDC_ORG} Lock exists, another deployment may in progress" ${MAIL_LIST} < /dev/null
+		exit 1
+	elif [ ! -d src ]
+	then
+		echo "src not available"
+		exit 1
+	elif [ ! -s $LastSuccessbuild ]
+	then
+		echo "Last sucessfully deployed git rev not found..$LastSuccessbuild not found or empty"
+		exit 1
+	else
+		touch $LOCK
+	fi
+}
+
+Check_Trigger()
+{
+	if [ ! -s ${TRIGGER} ]
+	then
+	echo "file ${TRIGGER} is missing or not set"
+	Unlock
+	elif [ `cat ${TRIGGER}` -eq 0 ]
+	then
+	mail -s  "${SFDC_ORG} BuidTrigger is blocked by parent build / manually" $MAIL_LIST  < /dev/null
+	echo "${SFDC_ORG} BuidTrigger is blocked by parent build / manually"
+	Unlock
+	fi      
+}
+
+Email_Alert()
+{
+	dos2unix ${buildProperty}
+	CC=$(grep email_cc ${serverProperty} | cut -d "=" -f2)
+	TO=$(grep email_to ${serverProperty} | cut -d "=" -f2)
+	FROM=$(grep email_from ${serverProperty} | cut -d "=" -f2)
+	MAIL_LIST="-r $FROM -c $CC  $TO"
+	mutt_MAIL_LIST="$TO -c $CC"
+	MAIL=$(grep send_email ${serverProperty} | cut -d "=" -f2)
+	case ${MAIL} in
+	0) MAIL_DEBUG=$(grep email_debug ${serverProperty} | cut -d "=" -f2)
+	   MAIL_LIST=${MAIL_DEBUG}
+           mutt_MAIL_LIST=${MAIL_DEBUG}		
+	;;
+	*) 
+	;;
+	esac
+}
+
+
+COLLECT_GITLATEST()
+{
+  	 gitlatest=${TO_GIT}
+         if [ ${gitlatest} == 'L' ]
+         then
+         #update
+         git pull
+         #collect the branch version only
+         gitlatest=$(git log -n1 --format=format:"%H" .)
+         fi
+}
+
+
+#last & latest GIT rev
+GIT_rev()
+{
+
+	PARENTBUILD=$(grep retryFailedBuild ${serverProperty}| cut -d "=" -f2)
+	PARENTARGET=$(grep parentTarget ${serverProperty}| cut -d "=" -f2)
+	PARENTPATH=$(grep ${PARENTARGET}_Path ${serverProperty}| cut -d "=" -f2)
+
+if [ $GIT_FORCE -eq 1 ]
+then
+	gitlast=${FROM_GIT}
+        COLLECT_GITLATEST
+
+	#Last full deployed revision
+        if [ -f ${LastSuccessbuildFull} ]
+        then
+                gitlastFull=`cat $LastSuccessbuildFull`
+        elif [ ! -f ${LastSuccessbuildFull} ]
+	then
+                echo "set GIT rev of last successful full deployment"
+                Unlock
+	fi
+	
+	#Ralx option to check last successful GIT rev	
+	if [ ! -z ${RELAX} ] || [ ${RELAX} == "TRUE" ]
+	then
+	echo "Last successful revision lookup"
+	        if [ $gitlatest -eq $gitlastFull ]
+                then
+                echo "NO FULL Deployment--same GIT rev($gitlatest-$gitlastFull)" | tee $LOG
+                echo -e "\n\t FULL Deployment is not possible for same GIT revision. Will be attempted at next schedule" | \
+                mail -s "---$SFDC_ORG---NO FULL Deployment--same GIT rev($gitlatest-$gitlastFull) [`TZ=IST date +%d.%b.%Y` IST]" ${MAIL_LIST} 
+                Unlock
+		fi
+	fi
+else
+	#Latest GIT revision
+	#update GIT
+	git pull
+	#and collect branch version only
+	gitlatest=$(git log -n1 --format=format:"%H" src)
+	
+	#Last deployed revision
+	if [ -f $LastSuccessbuild ]
+	then
+		gitlast=`cat $LastSuccessbuild`
+		else
+		echo "set GIT rev of last successful deployment"
+		Unlock
+	fi
+
+fi	
+	if [ $gitlatest == $gitlast ]
+		then
+		echo "NO SF_CLI Deployment--same GIT commit($gitlast-$gitlatest)" | tee $LOG
+		echo -e "\n\t Deployment is not possible for same GIT revision. Will be attempted at next schedule" | \
+		mail -s "---$SFDC_ORG---NO Deployment--same GIT commit($gitlast-$gitlatest) [`TZ=IST date +%d.%b.%Y` IST]" ${MAIL_LIST} 
+		Unlock
+	fi
+}
+
+
+
+
+create_Cset()
+{
+    # Start logging with directory check
+    if [ -n "${deployLogFile}" ]; then
+        log_dir="$(dirname "${deployLogFile}")"
+        mkdir -p "${log_dir}"
+        echo "Build Started" >> "${deployLogFile}"
+    fi
+    # Start tee logging
+    exec > >(tee -a "${deployLogFile}") 2>&1
+
+    startTime="$(date +"%m/%d/%Y %I:%M:%S %p")"
+    echo "Build Start Time - ${startTime}"
+    echo "Deploying to ${SFDC_ORG} Environment."
+    echo -e "\nPreparing Changeset:"
+    echo "Input - From Hash: ${gitlast}"
+    echo "Input - To Hash:   ${gitlatest}"
+
+    gitDiffOutput="$(git diff --name-only -r --diff-filter='AMR' "${gitlast}" "${gitlatest}" .)"
+    echo -e "\nChanged Files:"
+    echo "${gitDiffOutput}"
+
+    echo "Creating Changeset Folder"
+    rm -rf changeSetDeploy
+    mkdir -p changeSetDeploy/force-app/main/default
+    touch "${staticResourceFoldersFile}"
+
+    # Read lists
+    if [ -f "${SFCliBuildList}" ]; then
+        mapfile -t valid_metadata_types < "${SFCliBuildList}"
+    else
+        echo "WARNING: Build list file ${SFCliBuildList} not found."
+        valid_metadata_types=()
+    fi
+
+    if [ -f "${SFCliMetaXMLList}" ]; then
+        mapfile -t meta_xml_types < "${SFCliMetaXMLList}"
+    else
+        echo "WARNING: MetaXML list file ${SFCliMetaXMLList} not found."
+        meta_xml_types=()
+    fi
+
+    if [ -f "${SFCliMetaMetaHasFolder}" ]; then
+        mapfile -t folder_meta_types < "${SFCliMetaMetaHasFolder}"
+    else
+        folder_meta_types=()
+    fi
+
+    in_array() {
+        # $1 = needle, remaining = haystack
+        local needle="$1"; shift
+        local x
+        for x in "$@"; do
+            [ "${x}" = "${needle}" ] && return 0
+        done
+        return 1
+    }
+
+    copy_file_and_pair() {
+        # Ensures both the base and its -meta.xml (if one exists) are copied.
+        # $1 = absolute source file path (under src/)
+        # $2 = target directory (already created)
+        local src_file="$1"
+        local target_dir="$2"
+        local base=""
+        local meta=""
+
+        if [[ "${src_file}" == *"-meta.xml" ]]; then
+            meta="${src_file}"
+            base="${src_file%-meta.xml}"
+        else
+            base="${src_file}"
+            meta="${src_file}-meta.xml"
+        fi
+
+        if [ -f "${base}" ]; then
+            cp "${base}" "${target_dir}/"
+        fi
+        if [ -f "${meta}" ]; then
+            cp "${meta}" "${target_dir}/"
+        fi
+    }
+
+    copy_folder_meta_file() {
+        # $1 = metadata_type (reports, email, dashboards, etc.)
+        # $2 = folder name
+        local mtype="$1"
+        local folder="$2"
+        local folder_dir="src/${mtype}"
+        [ -d "${folder_dir}" ] || return 0
+
+        # Look for any *Folder-meta.xml that starts with the folder name.
+        # Typical patterns:
+        #   reports/test_folder.reportFolder-meta.xml
+        #   email/Unified_Registration_Email_Templates.emailFolder-meta.xml
+        #   dashboards/Sales.dashboardFolder-meta.xml
+        # Use globbing; if multiple, copy the first (normally there's one).
+        local candidate
+        shopt -s nullglob
+        for candidate in "${folder_dir}/${folder}."*Folder-meta.xml; do
+            # Copy to root of that metadata type in the changeset
+            mkdir -p "changeSetDeploy/force-app/main/default/${mtype}"
+            cp "${candidate}" "changeSetDeploy/force-app/main/default/${mtype}/"
+        done
+        shopt -u nullglob
+    }
+
+    handle_folder_metadata() {
+        # $1 = the changed file path (e.g. src/reports/test_folder/Team_Paper.report-meta.xml)
+        local file="$1"
+        local rel="${file#src/}"             # reports/test_folder/Team_Paper.report-meta.xml
+        local mtype="${rel%%/*}"             # reports
+        local remainder="${rel#${mtype}/}"   # test_folder/Team_Paper.report-meta.xml
+
+        # Extract folder name = first path component
+        local folderName="${remainder%%/*}"  # test_folder
+        local fileInsideFolder="${remainder#${folderName}/}" # Team_Paper.report-meta.xml (or deeper)
+
+        # Create target folder structure
+        local target_folder_dir="changeSetDeploy/force-app/main/default/${mtype}/${folderName}"
+        mkdir -p "${target_folder_dir}"
+
+        # If the changed path itself is the folder meta file at root (e.g. src/reports/test_folder.reportFolder-meta.xml)
+        # then just copy it directly under reports (already handled by copy_folder_meta_file call, but include anyway if diff flagged).
+        if [[ "${fileInsideFolder}" == "${remainder}" ]] && [[ "${fileInsideFolder}" == *"Folder-meta.xml" ]]; then
+            mkdir -p "changeSetDeploy/force-app/main/default/${mtype}"
+            cp "${file}" "changeSetDeploy/force-app/main/default/${mtype}/"
+            return 0
+        fi
+
+        # Copy the component file and its pair
+        copy_file_and_pair "${file}" "${target_folder_dir}"
+
+        # Copy folder meta file (if exists)
+        copy_folder_meta_file "${mtype}" "${folderName}"
+    }
+
+    while IFS= read -r file; do
+        [ -z "${file}" ] && continue
+        echo "Processing: ${file}"
+
+        # Objects full path preservation
+        if [[ "${file}" == src/objects/* ]]; then
+            relative_path="${file#src/}"
+            target_path="changeSetDeploy/force-app/main/default/${relative_path%/*}"
+            mkdir -p "${target_path}"
+            cp "${file}" "${target_path}/"
+            continue
+        fi
+
+        # Email direct files (legacy handling) - but folder-based logic may override if email is in folder types
+        if [[ "${file}" == src/email/* ]] && [[ ! -d changeSetDeploy/force-app/main/default/email ]]; then
+            : # We allow later logic to process
+        fi
+
+        # LWC bundle
+        if [[ "${file}" == src/lwc/* ]]; then
+            subfolder="$(echo "${file}" | cut -d'/' -f3)"
+            target_dir="changeSetDeploy/force-app/main/default/lwc/${subfolder}"
+            mkdir -p "${target_dir}"
+            cp "${file}" "${target_dir}/"
+            meta_file="${file}-meta.xml"
+            if [ -f "${meta_file}" ]; then
+                cp "${meta_file}" "${target_dir}/"
+            fi
+            continue
+        fi
+
+        # Aura bundle
+        if [[ "${file}" == src/aura/* ]]; then
+            subfolder="$(echo "${file}" | cut -d'/' -f3)"
+            target_dir="changeSetDeploy/force-app/main/default/aura/${subfolder}"
+            mkdir -p "${target_dir}"
+            cp "${file}" "${target_dir}/"
+            meta_file="${file}-meta.xml"
+            if [ -f "${meta_file}" ]; then
+                cp "${meta_file}" "${target_dir}/"
+            fi
+            continue
+        fi
+
+        # Determine metadata_type & env-specific
+        env_specific=false
+        if [[ "${file}" == src/env/${SFDC_ORG}/* ]]; then
+            metadata_type="$(cut -d'/' -f4 <<< "${file}")"
+            env_specific=true
+        else
+            metadata_type="$(cut -d'/' -f2 <<< "${file}")"
+        fi
+
+        # Folder-based types handling (reports/email/dashboards/etc.)
+        if in_array "${metadata_type}" "${folder_meta_types[@]}"; then
+            # If path is like src/<type>/<folderName>.*Folder-meta.xml (folder meta file at root),
+            # treat it slightly differently; our handle function manages both cases.
+            handle_folder_metadata "${file}"
+            continue
+        fi
+
+        # Standard metadata inclusion test
+        if in_array "${metadata_type}" "${valid_metadata_types[@]}"; then
+            target_dir="changeSetDeploy/force-app/main/default/${metadata_type}"
+            mkdir -p "${target_dir}"
+            cp "${file}" "${target_dir}/"
+
+            # Pair -meta.xml if required
+            if in_array "${metadata_type}" "${meta_xml_types[@]}"; then
+                meta_file="${file}-meta.xml"
+                if [ -f "${meta_file}" ]; then
+                    cp "${meta_file}" "${target_dir}/"
+                fi
+            fi
+        else
+            echo "Skipping (not in allowed metadata types): ${file}"
+        fi
+
+        # Env-specific remaps
+        if [ "${env_specific}" = true ]; then
+            case "${metadata_type}" in
+                customLabel)
+                    mkdir -p "changeSetDeploy/force-app/main/default/labels"
+                    cp "${file}" "changeSetDeploy/force-app/main/default/labels/"
+                    ;;
+                remoteSiteSettings|customMetadata)
+                    mkdir -p "changeSetDeploy/force-app/main/default/${metadata_type}"
+                    cp "${file}" "changeSetDeploy/force-app/main/default/${metadata_type}/"
+                    ;;
+            esac
+        fi
+
+    done <<< "${gitDiffOutput}"
+
+    echo "Change set preparation completed."
+
+    # Queue user masking
+    if [ -d changeSetDeploy/force-app/main/default/queues ]; then
+        echo "Masking users in queue"
+        # Make regex minimally greedy before </user>
+        sed -i "s/@cadence\.com[^<]*<\/user>/@cadence.com.${SFDC_ORG}<\/user>/g" changeSetDeploy/force-app/main/default/queues/*
+    else
+        echo "No queue"
+    fi
+}
+
+
+#Static resource
+StaticResource()
+{
+
+# Check if static resource folder exists in the changeset
+if [ -d "changeSetDeploy/force-app/main/default/staticresources" ]; then
+    echo "Static resource folder detected; running detection script..."
+    bash ${bin}/detect_staticresource_mod_git_cli.sh ${gitlast}  ${gitlatest} ${SFDC_ORG}
+else
+    echo "No static resource folder found; skipping static resource detection."
+fi
+
+}
+ForceDeploy()
+{
+
+source ${bin}/forceDeploy_cli.sh ${SFDC_ORG}
+}
+
+create_Wflow()
+{
+    if [ -d changeSetDeploy/force-app/main/default/workflows ]; then
+        echo "workflows detected"
+        echo "build workflows"
+        # Run the new workflow builder script and capture its output.
+        antReturnCode=$(bash ${bin}/build-modify-workflows.sh ${SFDC_ORG} 2>&1 | tee ${WFLOWLOG})
+        case "$antReturnCode" in
+            *trycatch*)
+                grep "trycatch" ${WFLOWLOG} | \
+                mail -s "---$SFDC_ORG---Workflow Deployment Failed [`TZ=IST date +%d.%b.%Y` IST - git $gitlast-$gitlatest ]" $MAIL_LIST
+                echo "Workflow Deployment Failed"
+                echo "grep trycatch ${WFLOWLOG}"
+                FAIL_EXIT
+                ;;
+            *)
+                cp output/* changeSetDeploy/force-app/main/default/workflows/
+                ;;
+        esac
+    fi
+}
+
+
+CodeAnalyser()
+{
+
+rm /tmp/CodeAnalysisReport.txt
+
+	if [ -d changeSetDeploy/force-app/main/default/classes  -o  -d changeSetDeploy/force-app/main/default/triggers ]
+	then
+		
+		bash build/script/currpmd.sh
+		bash build/script/createpmdhtml.sh $SFDC_ORG
+
+	else
+	
+	echo "'classes/' or 'triggers/' not exist. Codebase will not appear." >> /tmp/CodeAnalysisReport.txt
+fi
+	
+}
+
+CustomLabels_Prep()
+	
+{
+ChangeSet_EnvLabel=changeSetDeploy/force-app/main/default/labels
+ChangeSet_SrcLabel=changeSetDeploy/force-app/main/default/commonLabel
+EnvLabel=src/env/${SFDC_ORG}/customLabel
+SrcLabel=src/commonLabel
+ChangeSet_Src=changeSetDeploy/force-app/main/default
+LastCommonCL=`cat build/LastCommonCL.txt`
+LatestCommonCL=`git log -n1 --format=format:"%H" src/commonLabel/CustomLabels.labels-meta.xml`
+
+if [ -d changeSetDeploy/force-app/main/default/labels -o $LastCommonCL != $LatestCommonCL ]
+	then
+		mkdir changeSetDeploy/force-app/main/default/labels 
+		cp -r ${SrcLabel} ${ChangeSet_Src}
+		sed -n '/<labels>/,/<\/labels>/p' ${ChangeSet_SrcLabel}/CustomLabels.labels-meta.xml  > ${ChangeSet_Src}/CustomLabels_common_after.labels
+
+		sed -i 's/^[ \t]*//' ${ChangeSet_Src}/CustomLabels_common_after.labels
+
+		sed -i '/<labels>/{n;:l N;/<\/labels>/b; s/\n//; bl}' ${ChangeSet_Src}/CustomLabels_common_after.labels
+
+		sed  -i '/<\/labels>/d ; /<labels>/d' ${ChangeSet_Src}/CustomLabels_common_after.labels
+		
+		
+		sed -n '/<labels>/,/<\/labels>/p' ${ChangeSet_EnvLabel}/CustomLabels.labels-meta.xml  > ${ChangeSet_Src}/CustomLabels_after.labels
+
+		sed -i 's/^[ \t]*//' ${ChangeSet_Src}/CustomLabels_after.labels
+
+		sed -i '/<labels>/{n;:l N;/<\/labels>/b; s/\n//; bl}' ${ChangeSet_Src}/CustomLabels_after.labels
+
+		sed  -i '/<\/labels>/d ; /<labels>/d' ${ChangeSet_Src}/CustomLabels_after.labels
+		
+		cat ${ChangeSet_Src}/CustomLabels_common_after.labels | while read line
+		do
+		fullname=`echo ${line} | grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'`
+
+		value=`grep ${fullname} ${ChangeSet_Src}/CustomLabels_after.labels`
+
+		if [ -z "$value" ]
+		then
+			echo "Value is NULL"
+		else
+			sed -i "/\b\(${fullname}\)\b/d" ${ChangeSet_Src}/CustomLabels_common_after.labels
+		fi
+
+		done
+		
+		cat ${ChangeSet_Src}/CustomLabels_common_after.labels >> ${ChangeSet_Src}/CustomLabels_after.labels
+		touch ${ChangeSet_Src}/CustomLabels_final.labels
+		XML=${ChangeSet_Src}/CustomLabels_final.labels
+
+		echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > ${XML}
+		echo "<CustomLabels xmlns=\"http://soap.sforce.com/2006/04/metadata\">" >> ${XML}
+
+		#for labels in `cat ${ChangeSet_Src}/CustomLabels_after.labels| awk '{print $1}'`
+		cat ${ChangeSet_Src}/CustomLabels_after.labels | while read line
+		do
+
+		echo "          <labels>${line}</labels>" >> ${XML}
+		done
+
+		echo "</CustomLabels>" >> ${XML}
+
+
+
+		rm ${ChangeSet_Src}/CustomLabels_after.labels
+		rm ${ChangeSet_Src}/CustomLabels_common_after.labels
+
+		rm ${ChangeSet_EnvLabel}/CustomLabels.labels-meta.xml
+
+		mv ${ChangeSet_Src}/CustomLabels_final.labels ${ChangeSet_EnvLabel}/CustomLabels.labels-meta.xml
+
+		rm -rf ${ChangeSet_SrcLabel}
+		
+else
+	echo "No customLabel found"
+fi
+
+
+
+#git log -n1 --format=format:"%H" src/commonLabel/CustomLabels.labels-meta.xml > build/LastCommonCL.txt
+
+}
+
+
+aura_Prep()
+
+{
+
+if [ -d changeSetDeploy/force-app/main/default/aura ]
+
+
+then
+	cd changeSetDeploy/force-app/main/default/aura
+	printf '%s\n' */ | while read line
+	do	
+		echo "$line"
+		cp -r ../../../../../src/aura/$line .
+		pwd
+	done
+	cd ../../../../../
+else	
+		echo "No aura in changeset"
+fi
+	
+}
+
+lwc_Prep()
+
+
+{
+
+if [ -d changeSetDeploy/force-app/main/default/lwc ]
+
+
+then
+        cd changeSetDeploy/force-app/main/default/lwc
+        printf '%s\n' */ | while read line
+        do
+                echo "$line"
+                cp -r ../../../../../src/lwc/$line .
+                pwd
+        done
+        cd ../../../../../
+else
+                echo "No lwc in changeset"
+fi
+
+}
+
+
+ReplaceSapceToTabInClass()
+{
+
+        if [ -d changeSetDeploy/force-app/main/default/classes ]
+        then
+           echo "==================================="
+           echo "Replacing Spaces to tab in classes"
+           echo "==================================="
+           ###
+           cd changeSetDeploy/force-app/main/default/classes
+           for file in `ls -1 *.cls*`
+           do
+              cat $file | sed 's/ *$//' | sed -n ':label1; s/^\(\t*\)    /\1\t/;/^\t*    / b label1; p;' > "${file}"_mod
+              echo "====================================="
+              ls -l $file "${file}"_mod
+              rm $file
+              mv "${file}"_mod $file
+           done
+          cd ../../../../../
+     fi
+pwd
+}
+
+CusSet_Deploy()
+{
+	if [ -d $CUSTOM_SETTING ]
+	then
+		echo "$SFDC_ORG customSettings detected"
+		echo "build customSettings"
+		ant migrateCustomSettings -Denv=$SFDC_ORG 2>&1 | tee $CUSETLOG
+		antReturnCode=`grep "BUILD SUCCESSFUL" $CUSETLOG`
+		case $antReturnCode in
+		"BUILD SUCCESSFUL") HTML_REPORT_CustomSetting
+				    echo $gitlatest > $LastSuccessbuild
+				    ;;
+		esac
+
+		PublishLOG customsetting	
+
+	fi
+}
+
+CusMetadata()
+{
+if [ -d changeSetDeploy/force-app/main/default/customMetadata ]
+then
+
+        if [ ! -d changeSetDeploy/force-app/main/default/objects ]
+        then
+        mkdir changeSetDeploy/force-app/main/default/objects
+        fi
+ 
+        for obj in $(find  changeSetDeploy/force-app/main/default/customMetadata/ -type f |sort -u| xargs -L1 -I% sh -c "basename %  | cut -d "." -f1")
+        do
+        cp src/objects/${obj} changeSetDeploy/force-app/main/default/objects/
+        done
+
+fi
+}
+
+
+#Retry failed build
+RecRun()
+{
+	RETRY=$(grep retryFailedBuild ${serverProperty}| cut -d "=" -f2)
+	INTERVAL=$(grep retryInterval ${serverProperty}| cut -d "=" -f2)
+
+	case ${RETRY} in
+	2) cd ${PARENTPATH}
+	   echo "${bin}/deploySFDC.sh -o  ${PARENTARGET}" | at now + `echo ${INTERVAL}` minutes
+	;;
+	1) echo "${bin}/deploySFDC.sh -o ${SFDC_ORG}" | at now + `echo ${INTERVAL}` minutes
+	;;
+	*) 
+	;;
+	esac
+}
+
+
+CountDeployable()
+{
+	changesetFile=$(find changeSetDeploy -type f | egrep -v "package.xml|staticResourceFolders.txt" | wc -l)
+	if [ ${changesetFile} -eq 0 ]
+	then
+	mail -s "---$SFDC_ORG---NO Deployment--Deployable Count [${changesetFile}] for commit($gitlast-$gitlatest) [`date +%d.%b.%Y` PST]" -r $FROM -c $CC  $TO  < /dev/null
+	echo "NO Deployment--Deployable Count [${changesetFile}] for commits($gitlast-$gitlatest)" | tee $LOG
+	Unlock
+	fi
+}
+
+
+
+
+ChangeSetDeploy()
+{
+
+#Return from function if changeSetDeploy/force-app/main/default/ has no deployable
+changesetFile=$(find changeSetDeploy/force-app/main/default/ -type f | egrep -v "package.xml|staticResourceFolders.txt" | wc -l)
+  if [ ${changesetFile} -eq 0 ]
+   then
+   return 1
+  fi
+
+echo "Deploy $SFDC_ORG ... Press <Ctrl>+C to cancel within 20 sec"
+sleep 20
+#Changeset deploy
+sf project deploy start --concise --source-dir changeSetDeploy/force-app --target-org $SFDC_ORG 2>&1 | tee $LOG
+antReturnCode=`egrep -o "Status: Succeeded|ALREADY_IN_PROCESS|EXCEEDED_MAX_SIZE_REQUEST|UNKNOWN_EXCEPTION|Failed to send request" $LOG | sort -u`
+
+case $antReturnCode in
+
+	"Status: Succeeded") HTML_REPORT SUCCEEDED
+	PublishLOG changeset
+	echo $gitlatest > $LastSuccessbuild
+	if [[ $GIT_FORCE -eq 1 ]]
+	then
+	echo $gitlatest > $LastSuccessbuildFull
+	git log -n1 --format=format:"%H" src/commonLabel/CustomLabels.labels-meta.xml > build/LastCommonCL.txt
+	fi
+	echo 1 > ${TRIGGER}
+
+	;;
+
+	"ALREADY_IN_PROCESS") HTML_REPORT LOCKED
+	PublishLOG changeset
+        #Don't trigger Relay
+        #retry
+        RecRun
+        #Unlock, Set RelayTrigger & Exit
+        FAIL_EXIT
+	;;
+
+       "EXCEEDED_MAX_SIZE_REQUEST") HTML_REPORT EXCEEDED_MAX_SIZE_REQUEST
+        PublishLOG changeset
+        #Don't trigger Relay
+        #retry
+        RecRun
+        #Unlock, Set RelayTrigger & Exit
+        FAIL_EXIT
+        ;;
+	
+	"Failed to send request") HTML_REPORT Failed_to_send_request
+        PublishLOG changeset
+        #Don't trigger Relay
+        #retry
+        RecRun
+        #Unlock, Set RelayTrigger & Exit
+        FAIL_EXIT
+        ;;
+
+        "UNKNOWN_EXCEPTION") HTML_REPORT UNKNOWN_EXCEPTION
+        PublishLOG changeset
+        #Don't trigger Relay
+        #retry
+        RecRun
+        #Unlock, Set RelayTrigger & Exit
+        FAIL_EXIT
+        ;;
+	*)
+	echo "Converting Error Log to Json...!!"
+
+	sf project deploy start --json --source-dir changeSetDeploy/force-app --target-org $SFDC_ORG > $LOG.filtered 2>/dev/null
+	#sed -e '/componentFailures/,$!d' $LOG.pre.filtered > $LOG.filtered
+	
+
+	SAVEIFS=$IFS
+	IFS=$(echo -en "\n\b")
+
+
+	
+	#restore IFS
+	IFS=$SAVEIFS
+
+
+    HTML_REPORT FAILED
+	PublishLOG changeset
+
+			
+	#retry
+	RecRun
+	
+
+	#Unlock, Set RelayTrigger & Exit
+	FAIL_EXIT
+	;;
+esac
+}
+
+
+HTML_REPORT()
+{
+
+	Report=$1
+
+	echo "<HTML>" > $HTMLLog
+	echo "<BODY>" >> $HTMLLog
+	echo "<table width=100%>" >> $HTMLLog
+	
+	if [ "${Report}" == "SUCCEEDED" ]
+	then
+		echo "<H3><tr><td bgcolor="SeaShell">${SFDC_ORG} deployment succeeded report</td></tr></H3>" >> $HTMLLog
+ 		echo "<H5><PRE><tr><td bgcolor=\"LightGreen\">`egrep -A3 "Status: Succeeded" $LOG | sed 's/^/ /'`</td></tr></PRE></H5>" >> $HTMLLog
+
+	elif [ "${Report}" == "FAILED" ]
+	then
+		echo "<H3><tr><td bgcolor="SeaShell">${SFDC_ORG} deployment failure report</td></tr></H3>" >> $HTMLLog
+		echo "<H5><PRE><tr><td bgcolor="Khaki">`egrep -A3 "Status: Failed" $LOG | sed 's/^/ /'`</td></tr></PRE></H5>" >> $HTMLLog
+	fi
+
+	echo "<tr><td bgcolor="LightBlue"></tr></td>" >> $HTMLLog
+    echo "GIT Repo URL: $(git config --get remote.origin.url)" >> $HTMLLog
+	echo "<br/>Current Branch: $(git rev-parse --abbrev-ref HEAD)" >> $HTMLLog   	
+	echo "<tr><td bgcolor="Yellow"></tr></td>" >> $HTMLLog
+	echo "<a href="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}">Log and changeset</a>" >> $HTMLLog
+	echo "<a href="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/$(basename ${HTMLFDLog}).${DATE}">ForceDeploy</a>" >> $HTMLLog
+	
+	echo "<br/>API used: ${SetAPI}" >> $HTMLLog
+	
+	
+	if [ -f /tmp/CodeAnalysisReport.txt ]	
+	then
+			echo "<br/>No PMD code review generated because classes or triggers do not exist in changeSet" >> $HTMLLog
+	else
+
+	echo "<br/><tr><td bgcolor="Salmon">PMD code review comments</td></tr>" >> $HTMLLog
+
+	echo "<br/><tr><td bgcolor="Lime"><a href="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}">Original PMD Report</a></td></tr>" >> $HTMLLog
+
+	echo "<tr><td><table style="width:35%" border="1"><tr><th bgcolor="Cyan">Class Name</th><th bgcolor="Cyan">Original Warning Count - (High Severity Count) </th><th bgcolor="Cyan">Current Warning Count - (High Severity Count) </th></tr>" >> $HTMLLog
+	for classeName in `ls changeSetDeploy/force-app/main/default/classes/*.cls`
+	do
+
+
+	classeNameMod=`echo $classeName | sed 's/changeSetDeploy\/src\/classes\///g' |sed s/.cls/.cls_currpmd.html/`
+
+	CurrseverityFile=`echo ${classeNameMod} | sed s/.cls_currpmd.html/.cls_currpmd.txt/`
+	OrgseverityFile=`echo ${classeNameMod} | sed s/.cls_currpmd.html/.cls_orgpmd.txt/`
+
+	OriginalPmd=`grep "Original PMD Warnings Total" /data/public/pmd_rule/$SFDC_ORG/$classeNameMod | cut -d ":" -f 2`
+	Currentpmd=`grep "Current PMD Warnings Total" /data/public/pmd_rule/$SFDC_ORG/$classeNameMod | cut -d ":" -f 2`
+
+
+
+
+	classeNameMod_mod=`echo ${classeNameMod} | sed s/.cls_currpmd.html//`
+
+	#echo $OriginalPmd > /data/code/sfdc_deploySandbox/branches/release2020_Q1/Org.txt
+	#echo $Currentpmd > /data/code/sfdc_deploySandbox/branches/release2020_Q1/Cur.txt
+
+	#pattern="ApexUnitTestShouldNotUseSeeAllDataTrue\UnusedLocalVariable\|ClassNamingConventions\|FieldDeclarationsShouldBeAtStart\|FieldNamingConventions\|FormalParameterNamingConventions\|LocalVariableNamingConventions\|MethodNamingConventions\|PropertyNamingConventions\|ExcessiveClassLength\|ExcessiveParameterList\|ApexDoc\|ApexCSRF\|AvoidDirectAccessTriggerMap\|AvoidHardcodingId\|AvoidNonExistentAnnotations\|EmptyCatchBlock\|EmptyIfStmt\|EmptyStatementBlock\|EmptyTryOrFinallyBlock\|EmptyWhileStmt\|InaccessibleAuraEnabledGetter\|MethodWithSameNameAsEnclosingClass\|OverrideBothEqualsAndHashcode\|TestMethodsMustBeInTestClasses\|AvoidDmlStatementsInLoops\|AvoidSoqlInLoops\|AvoidSoslInLoops\|OperationWithLimitsInLoop\|ApexBadCrypto\|ApexDangerousMethods\|ApexInsecureEndpoint\|ApexOpenRedirect\|ApexSharingViolations\|ApexSOQLInjection\|ApexSuggestUsingNamedCred"
+
+	pattern="ApexUnitTestShouldNotUseSeeAllDataTrue:\|UnusedLocalVariable:\|ClassNamingConventions:\|FieldDeclarationsShouldBeAtStart:\|FieldNamingConventions:\|FormalParameterNamingConventions:\|LocalVariableNamingConventions:\|MethodNamingConventions:\|PropertyNamingConventions:\|ExcessiveClassLength:\|ExcessiveParameterList:\|ApexDoc:\|ApexCSRF:\|AvoidDirectAccessTriggerMap:\|AvoidHardcodingId:\|AvoidNonExistentAnnotations:\|EmptyCatchBlock:\|EmptyIfStmt:\|EmptyStatementBlock:\|EmptyTryOrFinallyBlock:\|EmptyWhileStmt:\|InaccessibleAuraEnabledGetter:\|MethodWithSameNameAsEnclosingClass:\|OverrideBothEqualsAndHashcode:\|TestMethodsMustBeInTestClasses:\|AvoidDmlStatementsInLoops:\|AvoidSoqlInLoops:\|AvoidSoslInLoops:\|OperationWithLimitsInLoop:\|ApexBadCrypto:\|ApexDangerousMethods:\|ApexInsecureEndpoint:\|ApexOpenRedirect:\|ApexSharingViolations:\|ApexSOQLInjection:\|ApexSuggestUsingNamedCred:"
+
+	CurrseverityCnt=`grep -o $pattern PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$CurrseverityFile | wc -l`
+	OrgseverityCnt=`grep -o $pattern PMDReport/orgpmdoutput/src/classes/$OrgseverityFile | wc -l`
+
+	#severity=`grep $pattern /data/public/pmd_rule/$SFDC_ORG/$classeNameMod`
+
+	#if ([[ $Currentpmd -gt $OriginalPmd ]] && [[ ! -z "$severity" ]])
+	if [ $CurrseverityCnt -gt $OrgseverityCnt ]
+	then
+	echo "<tr><th style="text-align:left"><a href="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$classeNameMod">$classeNameMod_mod</a></th><th style="text-align:right" bgcolor="Tomato">${OriginalPmd}-($OrgseverityCnt)</th><th style="text-align:right" bgcolor="Tomato">${Currentpmd}-($CurrseverityCnt)</th></tr>" >> $HTMLLog
+	else
+	echo "<tr><th style="text-align:left"><a href="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$classeNameMod">$classeNameMod_mod</a></th><th style="text-align:right">${OriginalPmd}-($OrgseverityCnt)</th><th style="text-align:right">${Currentpmd}-($CurrseverityCnt)</th></tr>" >> $HTMLLog
+	fi
+
+	done
+	echo "</table></td></tr>" >> $HTMLLog
+
+
+	echo "<tr><td><table style="width:35%" border="1"><tr><th bgcolor="Cyan">Trigger Name</th><th bgcolor="Cyan">Original Warning Count</th><th bgcolor="Cyan">Current Warning Count</th></tr>" >> $HTMLLog
+	for triggerName in `ls changeSetDeploy/force-app/main/default/triggers/*.trigger`
+	do
+
+	triggerNameMod=`echo $triggerName | sed 's/changeSetDeploy\/src\/triggers\///g' |sed s/.trigger/.trigger_currpmd.html/`
+
+
+	OriginalPmd=`grep "Original PMD Warnings Total" /data/public/pmd_rule/$SFDC_ORG/$triggerNameMod | cut -d ":" -f 2`
+	Currentpmd=`grep "Current PMD Warnings Total" /data/public/pmd_rule/$SFDC_ORG/$triggerNameMod | cut -d ":" -f 2`
+
+	triggerNameMod_mod=`echo ${triggerNameMod} | sed s/.trigger_currpmd.html// `
+
+
+
+	echo "<tr><th style="text-align:left"><a href="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$triggerNameMod">$triggerNameMod_mod</a></th><th style="text-align:right">${OriginalPmd}</th><th style="text-align:right">${Currentpmd}</th></tr>" >> $HTMLLog
+
+
+	done
+	echo "</table></td></tr>" >> $HTMLLog
+
+
+	fi
+
+	SAVEIFS=$IFS
+	IFS=$(echo -en "\n\b")
+	
+	if [ "${Report}" == "SUCCEEDED" ]
+	then
+		# Collect files from the SF CLI changeset structure and convert paths from
+		# changeSetDeploy/force-app/main/default to the old format (src/...)
+		find changeSetDeploy/force-app/main/default -type f | \
+		egrep -v "customSettings|staticResourceFolders.txt" | \
+		sed 's|^changeSetDeploy/force-app/main/default|src|' | sort -u > ${DEPLOYEDFILE}
+
+		changesetFile=$(find changeSetDeploy/force-app/main/default -type f | egrep -v "customSettings|staticResourceFolders.txt" | wc -l)
+		echo "<tr><td bgcolor=\"SeaShell\">Changeset file/s ...[${changesetFile}]</td></tr>" >> $HTMLLog
+
+		NUM=1
+		for FILE in `cat ${DEPLOYEDFILE}`
+		do
+			if [ "${FILE}" == "src/labels/CustomLabels.labels-meta.xml" ]
+			then
+				FILE=src/env/${SFDC_ORG}/customLabel/CustomLabels.labels-meta.xml
+			elif [ ! -z "$(echo $FILE | grep ^"customSettings")" ]
+			then
+				FILE=$(echo "${FILE}" | sed -e 's/^customSettings\///g')
+			elif [[ "${FILE}" =~ "src/remoteSiteSettings/" ]]
+			then
+				FILE=$(echo "${FILE}" | sed -e "s/^src/src\/env\/${SFDC_ORG}/g")
+			elif [[ "${FILE}" =~ "src/customMetadata/" ]]
+			then
+				FILE=$(echo "${FILE}" | sed -e "s/^src/src\/env\/${SFDC_ORG}/g")
+			fi
+
+			echo "<tr><td bgcolor=\"LightGreen\"><PRE>" >> $HTMLLog
+			echo " [$((NUM++))] ${FILE}" >> ${HTMLLog}
+			echo "</PRE></td></tr>" >> $HTMLLog
+			LastAuthor=`git log -1 ${FILE} | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g'`
+			echo "<tr><td bgcolor=\"Gainsboro\"><PRE>" >> $HTMLLog
+			echo "Last author... ${LastAuthor}" >> $HTMLLog
+			echo "</PRE></td></tr>" >> $HTMLLog
+		done
+		echo "</table>" >> $HTMLLog
+
+	
+		
+	elif [ "${Report}" == "FAILED" ]
+	then
+		# Title row in the HTML
+		echo "<tr><td bgcolor=\"SeaShell\">All Component Failures:</td></tr>" >> "$HTMLLog"
+
+		i=1
+		# Loop through each failure in the JSON
+		# -c ensures each JSON object is on a single line
+		for failure in $(jq -c '.result.details.componentFailures[]' "$LOG.filtered"); do
+
+			# Extract fileName and problem
+			fileName=$(echo "$failure" | jq -r '.fileName')
+			errorMsg=$(echo "$failure" | jq -r '.problem')
+
+			# 1) Remove newlines/carriage returns
+			# 2) Escape special HTML chars (&, <, >) so they don't break formatting
+			sanitizedErrorMsg=$(echo "$errorMsg" \
+			| tr '\n' ' ' \
+			| tr '\r' ' ' \
+			| sed -e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+
+			# Print an ANT-like error line in Khaki
+			echo "<tr><td bgcolor=\"Khaki\"><PRE>$i. $fileName -- Error: $sanitizedErrorMsg</PRE></td></tr>" >> "$HTMLLog"
+
+			# Locate the file in your local repo for the Git log
+			# (Adjust 'find src' if your directory structure differs)
+			gitFile=$(find src -type f -iname "$(basename "$fileName")" | head -n 1)
+
+			# If not found, and extension is not among the known pairs (e.g., .cls, .page, .trigger),
+			# then try appending '-meta.xml' to handle metadata like 'roles', 'profiles', etc.
+			if [ -z "$gitFile" ]; then
+				# Extract extension
+				ext=$(echo "$fileName" | sed 's/.*\.//')
+
+				# Known pairs that we do NOT alter (already have separate file & meta.xml)
+				# Adjust this list as needed for your org
+				knownPairs="cls page trigger component"
+
+				# If extension is not in knownPairs, try adding '-meta.xml'
+				if ! echo "$knownPairs" | grep -qw "$ext"; then
+					metaCandidate="$(basename "$fileName")-meta.xml"
+					fallbackFile=$(find src -type f -iname "$metaCandidate" | head -n 1)
+					if [ -n "$fallbackFile" ]; then
+						gitFile="$fallbackFile"
+					fi
+				fi
+			fi
+
+			# Print Git log in Gainsboro
+			echo "<tr><td bgcolor=\"Gainsboro\"><PRE>" >> "$HTMLLog"
+			if [ -n "$gitFile" ]; then
+				LastAuthor=$(git log -1 "$gitFile" 2>/dev/null \
+					| sed -e 's/$/\ |/g' \
+					| xargs \
+					| sed -e 's/| |/|\ Comment:/g')
+				echo "GIT log >>> $gitFile" >> "$HTMLLog"
+				echo "$LastAuthor" >> "$HTMLLog"
+			else
+				echo "No Git log available for $fileName" >> "$HTMLLog"
+			fi
+			echo "</PRE></td></tr>" >> "$HTMLLog"
+
+			i=$((i+1))
+		done
+
+		# Close out the table
+		echo "</table>" >> "$HTMLLog"
+
+
+
+	elif [ "${Report}" == "LOCKED" ]
+        then
+		echo "<H3><tr><td bgcolor="SeaShell">${SFDC_ORG} is Locked</td></tr></H3>" >> $HTMLLog
+		echo "<H5><PRE><tr><td bgcolor="LightYellow">`grep ALREADY_IN_PROCESS ${LOG} | cut -d ":" -f 3-100`</td></tr></PRE></H5>" >> $HTMLLog		
+
+        elif [ "${Report}" == "EXCEEDED_MAX_SIZE_REQUEST" ]
+        then
+                echo "<H3><tr><td bgcolor="SeaShell">${SFDC_ORG} EXCEEDED_MAX_SIZE_REQUEST </td></tr></H3>" >> $HTMLLog
+                echo "<H5><PRE><tr><td bgcolor="LightYellow">`grep EXCEEDED_MAX_SIZE_REQUEST ${LOG} | cut -d ":" -f 3-100`</td></tr></PRE></H5>" >> $HTMLLog
+
+
+	elif [ "${Report}" == "UNKNOWN_EXCEPTION" ]
+	then
+		echo "<H3><tr><td bgcolor="SeaShell">${SFDC_ORG} UNKNOWN_EXCEPTION </td></tr></H3>" >> $HTMLLog
+                echo "<H5><PRE><tr><td bgcolor="LightYellow">`grep UNKNOWN_EXCEPTION ${LOG} | cut -d ":" -f 3-100`</td></tr></PRE></H5>" >> $HTMLLog
+
+	elif [ "${Report}" == "Failed_to_send_request" ]
+	then
+	  	 echo "<H3><tr><td bgcolor="SeaShell">${SFDC_ORG} Failed to send request </td></tr></H3>" >> $HTMLLog
+	         echo "<H5><PRE><tr><td bgcolor="LightYellow">$(grep Error ${LOG})</td></tr></PRE></H5>" >> $HTMLLog
+	fi
+
+	#restore IFS
+	IFS=$SAVEIFS
+	echo "</HTML></BODY>" >> $HTMLLog
+	
+	EMAIL=${FROM} mutt -e 'set content_type=text/html' \
+	-s "---${SFDC_ORG}--- SF-CLI ChangeSet Deploy ${Report} [`TZ=IST date +%d.%b.%Y` IST - git ${gitlast}-${gitlatest} ]" "${mutt_MAIL_LIST}" < $HTMLLog
+
+}
+
+
+HTML_REPORT_CustomSetting()
+{
+
+	CSLOG_PATH=changeSetDeploy/customSettings/logs
+	
+	echo "<HTML>" > $CUS_HTMLLog
+	echo "<BODY>" >> $CUS_HTMLLog
+	echo "<table width=100%>" >> $CUS_HTMLLog
+   
+	echo "<H3><tr><td bgcolor="LightBlue">${SFDC_ORG} CustomSetting Deployment</td></tr></H3>" >> $CUS_HTMLLog
+	
+	grep Object: $CUSETLOG | cut -d ":" -f2 | tr -d ' ' |sort|uniq > $CUSETLOG.filtered
+	CS_Total=$(cat $CUSETLOG.filtered | wc -l)
+
+	SAVEIFS=$IFS
+	IFS=$(echo -en "\n\b")
+    
+	echo "<tr><td bgcolor="WHEAT">CustomSetting .....[${CS_Total}]</tr></td>" >> $CUS_HTMLLog
+
+	NUM=1	
+	for CS in $(cat $CUSETLOG.filtered)
+	do
+	echo "<tr><td bgcolor="LightBlue">[$((NUM++))] ${CS}</tr></td>" >> $CUS_HTMLLog
+	
+	#collect last line & add new line before "There", delete all line except the last one
+	INSERT=$(tail -n 1 ${CSLOG_PATH}/${CS}.deploy.log | sed 's/There/\nThere/g' | sed '$!d')
+	
+	CS_FULL_LOG="<a href="https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.SVN_${svnlast}-${svnlatest}.${DATE}/${SFDC_ORG}.changeSetDeploy.${DATE}/customSettings/logs/${CS}.deploy.log">Full Log</a>"
+	
+	
+	if [ ! -z "$(echo ${INSERT} | grep -e "0 errors" )" ]
+	then
+	echo "<tr><td bgcolor="LightGreen">${INSERT} | "${CS_FULL_LOG}" | "${CS_viewvc}" </tr></td>" >> $CUS_HTMLLog
+	else
+	echo "<tr><td bgcolor="Yellow">${INSERT} | DEPLOYMENT FAILED | "${CS_FULL_LOG}" | "${CS_viewvc}" </tr></td>" >> $CUS_HTMLLog
+	fi
+	
+	LastAuthor=`git log -1 src/env/${SFDC_ORG}/customSetting/${CS}.csv | sed -e 's/$/\ |/g'  | xargs | sed -e 's/| |/|\ Comment:/g'`
+	echo "<tr><td bgcolor="Gainsboro"><PRE>" >> $CUS_HTMLLog            
+	echo "Last author... ${LastAuthor}" >> $CUS_HTMLLog
+	echo "</PRE></td></tr>" >> $CUS_HTMLLog
+	
+	done
+	echo "</table>" >> $CUS_HTMLLog
+	
+	EMAIL=${FROM} mutt -e 'set content_type=text/html' \
+	-s "---${SFDC_ORG}---CustomSetting Deploy Report [`date +%d.%b.%Y` PST - svn ${svnlast}-${svnlatest} ]" \
+	"${mutt_MAIL_LIST}" < $CUS_HTMLLog
+
+}
+
+PublishLOG()
+{
+
+        LogPath="/data/public/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
+        mkdir -p ${LogPath}
+		
+        if [ "$1" == "customsetting" ]
+        then
+              cp ${CUSETLOG} ${LogPath}/$SFDC_ORG.CusSetting.log.${DATE}
+              cp -r changeSetDeploy/customSettings ${LogPath}/${SFDC_ORG}.changeSetDeploy.${DATE}/
+
+        elif [ "$1" == "changeset" ]
+        then
+                cp ${CHANGESETLOG} ${LogPath}/$SFDC_ORG.Changeset.log.${DATE}
+                cp ${LOG} ${LogPath}/$SFDC_ORG.Deploy.log.${DATE}
+                cp ${HTMLLog} ${LogPath}/${SFDC_ORG}.Deploy.log.${DATE}.html
+				
+                if  [ -d changeSetDeploy/force-app/main/default/workflows ]
+                then
+                cp ${WFLOWLOG} ${LogPath}/$SFDC_ORG.Wflow.log.${DATE}
+                fi
+
+		cp ${CodeAnalyserFILE}    ${LogPath}/${SFDC_ORG}.CodeAnalysisReport.${DATE}.html
+        cp -r changeSetDeploy ${LogPath}/${SFDC_ORG}.changeSetDeploy.${DATE}
+        cp build/testClasses.txt  ${LogPath}/${SFDC_ORG}.testClasses.txt.${DATE}
+        cp ${FD_FILE}   ${LogPath}/$(basename ${FD_FILE}).${DATE}
+        cp ${ENV_FD_FILE}  ${LogPath}/$(basename ${ENV_FD_FILE}).${DATE}
+        cp ${FD_COMBINED}  ${LogPath}/$(basename ${FD_COMBINED}).${DATE}
+        cp ${FD_FILTERED}  ${LogPath}/$(basename ${FD_FILTERED}).${DATE}
+        cp ${HTMLFDLog}    ${LogPath}/$(basename ${HTMLFDLog}).${DATE}
+
+        fi
+}
+
+
+CheckAPIver()
+{
+
+local CheckAPI
+local COMP
+local API_minVer
+local API
+local ClaTrig=/tmp/${SFDC_ORG}_deploy_ClaTrig
+rm ${ClaTrig}
+local ExceptionList=build/property/${SFDC_ORG}.API_exceptionList.txt
+
+APIVER()
+{
+# -h > suppress file name in grep
+grep -h -Po "(?<=<apiVersion>).*(?=</apiVersion>)" $1 | cut -d "." -f1
+}
+
+check()
+{
+COMP=$1
+API_minVer=$(grep APIMin ${serverProperty}| cut -d "=" -f2)
+
+
+if [ -d changeSetDeploy/force-app/main/default/"${COMP}" ]
+then
+        for i in $(find changeSetDeploy/force-app/main/default/"${COMP}"/*.xml | grep -v -f "${ExceptionList}")
+        do
+                CheckAPI=$(APIVER $i)
+                if [ "${CheckAPI}" -lt "${API_minVer}" ]
+                then
+                        CancelledReport
+                        #retry
+                        RecRun
+                        CALL_SCRIPT FAILED
+                        #Unlock, Set RelayTrigger & Exit
+                        FAIL_EXIT
+                fi
+        done
+fi
+}
+
+Collectcom()
+{
+
+COMP=$1
+        for i in $(find changeSetDeploy/force-app/main/default/"${COMP}"/*.xml)
+        do
+                CheckAPI=$(APIVER $i)
+                if [ "${CheckAPI}" -lt "${API_minVer}" ]
+                then
+                echo  $i | cut -d "/" -f 2-22 >> ${ClaTrig}
+                fi
+        done
+
+
+
+}
+
+
+AUTHOR()
+{
+git log -n 3 | grep "Author:" | awk '{print $2 " " $3}' | uniq 
+}
+
+
+Addinfo_AuthornAPI()
+{
+
+cp ${ClaTrig}  ${ClaTrig}.tmp
+#remove meta.xml 
+sed -e "s/-meta.xml//g"  ${ClaTrig} >> ${ClaTrig}.tmp
+sort ${ClaTrig}.tmp | sed -e "s/$/,/g" > ${ClaTrig}
+
+
+for i in $(cat ${ClaTrig} | cut -d "," -f1)
+do
+
+Author="$(AUTHOR $i)"
+sed  -i  "s:${i},:${i}|${Author}:g" ${ClaTrig}
+
+if [[ "${i}" =~ "meta.xml" ]]
+then
+API="$(APIVER $i)"
+else
+API=NA
+fi
+sed  -i  "s:${i}|:${i}|${API}|:g" ${ClaTrig}
+
+done
+#add column header
+#sed -e "1ixml|API Version|Author" ${ClaTrig} >> ${ClaTrig}.tmp
+
+cat ${ClaTrig}
+}
+
+CancelledReport()
+{
+Collectcom classes
+Collectcom triggers
+Addinfo_AuthornAPI
+
+cat ${ClaTrig} | mail -s "---${SFDC_ORG}---Deployment Cancelled-git rev($gitlast-$gitlatest)-${COMP} below API ${API_minVer}" -r $FROM -c $CC  $TO
+}
+
+check classes
+check triggers
+
+}
+Unlock()
+{
+	## process before exit #
+	rm -f $LOCK
+	exit
+}
+Chg_NonProd_Objs()
+
+{
+echo "Hardcode email replacement"
+bash ${bin}/emails_mask_cli.sh ${SFDC_ORG}
+#
+#
+echo "Hardcode URL Replacement"
+bash ${bin}/change_object_in_nonprod_cli.sh ${SFDC_ORG}
+#
+echo "Modify Unified Registration email template"
+bash ${bin}/modify_email_template_cli.sh ${SFDC_ORG}
+##
+echo "Modify Unified Registration email template"
+bash ${bin}/modify_marketo_email_template_cli.sh ${SFDC_ORG}
+}
+
+
+
+
+
+
+# trap keyboard interrupt (control-c)
+Trap()
+{
+	trap Unlock SIGINT
+}
+
+main "$@"
