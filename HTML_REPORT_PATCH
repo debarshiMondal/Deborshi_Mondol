@@ -1,0 +1,21 @@
+html_report patch
+
+cat > "$HTML_OUT" <<EOF
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#FAFAFA;color:#222;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.4;">
+  <!-- ${TEMPLATE_TAG} -->
+  <!-- rest of your HTML ... -->
+EOF
+
+
+# copy to the legacy path in case other parts expect it
+cp -f "$HTML_OUT" "$HTMLLog"
+
+# show a debug hint in stdout/stderr during the run (pipeline logs)
+echo "HTML_REPORT(): using NEW template file: $HTML_OUT (marker=$TEMPLATE_TAG)" >&2
+
+# send the email using the isolated file
+EMAIL=${FROM} mutt -e 'set content_type=text/html' \
+  -s "---${SFDC_ORG}--- SF-CLI ChangeSet Deploy ${Report} [`TZ=IST date +%d.%b.%Y` IST - git ${gitlast}-${gitlatest} ]" \
+  "${mutt_MAIL_LIST}" < "$HTML_OUT"
