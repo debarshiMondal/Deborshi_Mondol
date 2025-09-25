@@ -1,30 +1,40 @@
 HTML_REPORT() {
 
-  Report=$1
+  Report=$1                 # "SUCCEEDED" | "FAILED" | etc.
+  LOGF="$2"                 # optional: per-run filtered JSON path
 
-  # -------- Inputs / defaults (safe fallbacks) --------
+  # -------- Inputs / defaults --------
   : "${HTMLLog:=/tmp/${SFDC_ORG}.deploy.html}"
   if DEPLOYEDFILE=$(mktemp "/tmp/${SFDC_ORG}.deployed.XXXXXX" 2>/dev/null); then :; else DEPLOYEDFILE="/tmp/${SFDC_ORG}.deployed.$$"; fi
   SFCliMetaMetaHasFolder="${property}/${SFDC_ORG}_SFCliMetaMetaHasFolder.list"
+
+  # If no log path passed, try newest; else fall back to legacy $LOG.filtered if present
+  if [ -z "$LOGF" ] || [ ! -s "$LOGF" ]; then
+    LOGF="$(ls -t /data/public/SFDC_LOG_SFCLI/${SFDC_ORG}.GIT_*/*.filtered.json 2>/dev/null | head -1)"
+  fi
+  if [ -z "$LOGF" ] || [ ! -s "$LOGF" ]; then
+    [ -n "$LOG" ] && [ -s "$LOG.filtered" ] && LOGF="$LOG.filtered"
+  fi
 
   # -------- Shared values --------
   GIT_REMOTE_URL="$(git config --get remote.origin.url)"
   BRANCH="$(git rev-parse --abbrev-ref HEAD)"
   DATE_TIME_IST="$(TZ=IST date '+%d %b %Y %H:%M IST')"
-  REQUEST_ID="$(jq -r '.result.id // .result.requestId // empty' "$LOG.filtered" 2>/dev/null)"
+  REQUEST_ID="$(jq -r '.result.id // .result.requestId // empty' "$LOGF" 2>/dev/null)"
 
-  # Status from JSON (prevents wrong email branch)
-  JSON_STATUS="$(jq -r '.result.status // .status // empty' "$LOG.filtered" 2>/dev/null)"
-  JSON_SUCCESS="$(jq -r '.result.success // empty' "$LOG.filtered" 2>/dev/null)"
-  NUM_ERRS="$(jq -r '(.result.numberComponentErrors // .numberComponentErrors // (.result.details.componentFailures|length // 0))' "$LOG.filtered" 2>/dev/null)"
+  # Robust status detection to avoid stale/wrong branch
+  JSON_STATUS="$(jq -r '.result.status // .status // empty' "$LOGF" 2>/dev/null)"
+  JSON_SUCCESS="$(jq -r '.result.success // empty' "$LOGF" 2>/dev/null)"
+  NUM_ERRS="$(jq -r '(.result.numberComponentErrors // .numberComponentErrors // (.result.details.componentFailures|length // 0))' "$LOGF" 2>/dev/null)"
+  [ -z "$NUM_ERRS" ] && NUM_ERRS=0
 
-  if [ "$JSON_SUCCESS" = "true" ] || [ "$JSON_STATUS" = "Succeeded" ] || [ "${NUM_ERRS:-0}" -eq 0 ]; then
+  if [ "$JSON_SUCCESS" = "true" ] || [ "$JSON_STATUS" = "Succeeded" ] || [ "$NUM_ERRS" -eq 0 ]; then
     Report="SUCCEEDED"
-  elif [ "$JSON_STATUS" = "Failed" ] || [ "${NUM_ERRS:-0}" -gt 0 ]; then
+  elif [ "$JSON_STATUS" = "Failed" ] || [ "$NUM_ERRS" -gt 0 ]; then
     Report="FAILED"
   fi
 
-  # Colors & labels
+  # Colors & labels (email-safe hex + inline)
   if [ "$Report" = "SUCCEEDED" ]; then
     TITLE_BG="#2E7D32"; PANEL_BG="#90EE90"; PANEL_B="#7FDC7F"; BOX_BG="#F5F5F5"; BOX_B="#DDDDDD"
     DEPLOY_BOX_BG="#E8F5E9"; DEPLOY_BOX_B="#C8E6C9"; TITLE_TEXT="Success"
@@ -37,12 +47,12 @@ HTML_REPORT() {
   PMD_BOX_BG="#EAF2FF"; PMD_BOX_B="#D8E6FF"
   TIME_BOX_BG="#F4F4F4"; TIME_BOX_B="#E0E0E0"
 
-  # Counts
-  COMP_PASS="$(jq -r '(.result.numberComponentsDeployed // .numberComponentsDeployed // 0)' "$LOG.filtered" 2>/dev/null)"; [ -z "$COMP_PASS" ] && COMP_PASS=0
-  COMP_FAIL="$(jq -r '(.result.numberComponentErrors // .numberComponentErrors // (.result.details.componentFailures|length // 0))' "$LOG.filtered" 2>/dev/null)"; [ -z "$COMP_FAIL" ] && COMP_FAIL=0
+  # Counts / timings
+  COMP_PASS="$(jq -r '(.result.numberComponentsDeployed // .numberComponentsDeployed // 0)' "$LOGF" 2>/dev/null)"; [ -z "$COMP_PASS" ] && COMP_PASS=0
+  COMP_FAIL="$(jq -r '(.result.numberComponentErrors  // .numberComponentErrors  // (.result.details.componentFailures|length // 0))' "$LOGF" 2>/dev/null)"; [ -z "$COMP_FAIL" ] && COMP_FAIL=0
 
-  START_TIME_IST="$(jq -r '.result.startDate // empty' "$LOG.filtered" 2>/dev/null)"
-  END_TIME_IST="$(jq -r '.result.completedDate // empty' "$LOG.filtered" 2>/dev/null)"
+  START_TIME_IST="$(jq -r '.result.startDate // empty' "$LOGF" 2>/dev/null)"
+  END_TIME_IST="$(jq -r   '.result.completedDate // empty' "$LOGF" 2>/dev/null)"
   TOTAL_DURATION="N/A"
   if [ -n "$START_TIME_IST" ] && [ -n "$END_TIME_IST" ]; then
     s=$(date -d "$START_TIME_IST" +%s 2>/dev/null || echo "")
@@ -54,23 +64,24 @@ HTML_REPORT() {
     fi
   fi
 
-  # URLs (served by PublishLOG, not by this function)
+  # Run ID for links (served by PublishLOG)
   RUN_ID="${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
   OPEN_LOGS_URL="https://cdnsfdc.cadence.com/SFDC_LOG_SFCLI/${RUN_ID}/index.html"
   COMBINED_PMD_HTML_URL="https://cdnsfdc.cadence.com/SFDC_LOG_SFCLI/${RUN_ID}/pmd/combined.html"
   COMBINED_PMD_CSV_URL="https://cdnsfdc.cadence.com/SFDC_LOG_SFCLI/${RUN_ID}/pmd/combined.csv"
   FORCE_DEPLOY_FILE_URL="https://cdnsfdc.cadence.com/SFDC_LOG_SFCLI/${RUN_ID}/force_deploy.html"
 
-  # PMD rollups (current changeset only)
+  # PMD scan (current changeset only)
   CLASS_COUNT=$(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null | wc -l)
   TRIGGER_COUNT=$(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null | wc -l)
+  # Always show counts (even if 0); HAS_PMD gates the PMD table + high counts
   HAS_PMD=0; [ "$CLASS_COUNT" -gt 0 ] || [ "$TRIGGER_COUNT" -gt 0 ] && HAS_PMD=1
   PMD_HIGH_CLS=0; PMD_HIGH_TRG=0
   PMD_ROWS=""
   pattern="ApexUnitTestShouldNotUseSeeAllDataTrue:\|UnusedLocalVariable:\|ClassNamingConventions:\|FieldDeclarationsShouldBeAtStart:\|FieldNamingConventions:\|FormalParameterNamingConventions:\|LocalVariableNamingConventions:\|MethodNamingConventions:\|PropertyNamingConventions:\|ExcessiveClassLength:\|ExcessiveParameterList:\|ApexDoc:\|ApexCSRF:\|AvoidDirectAccessTriggerMap:\|AvoidHardcodingId:\|AvoidNonExistentAnnotations:\|EmptyCatchBlock:\|EmptyIfStmt:\|EmptyStatementBlock:\|EmptyTryOrFinallyBlock:\|EmptyWhileStmt:\|InaccessibleAuraEnabledGetter:\|MethodWithSameNameAsEnclosingClass:\|OverrideBothEqualsAndHashcode:\|TestMethodsMustBeInTestClasses:\|AvoidDmlStatementsInLoops:\|AvoidSoqlInLoops:\|AvoidSoslInLoops:\|OperationWithLimitsInLoop:\|ApexBadCrypto:\|ApexDangerousMethods:\|ApexInsecureEndpoint:\|ApexOpenRedirect:\|ApexSharingViolations:\|ApexSOQLInjection:\|ApexSuggestUsingNamedCred:"
 
   if [ "$HAS_PMD" -eq 1 ]; then
-    # Classes
+    # classes
     if ls changeSetDeploy/force-app/main/default/classes/*.cls >/dev/null 2>&1; then
       for classeName in changeSetDeploy/force-app/main/default/classes/*.cls; do
         classeNameMod=$(echo "$classeName" | sed 's|changeSetDeploy/force-app/main/default/classes/||' | sed 's/.cls$/.cls_currpmd.html/')
@@ -95,7 +106,7 @@ HTML_REPORT() {
 "
       done
     fi
-    # Triggers
+    # triggers
     if ls changeSetDeploy/force-app/main/default/triggers/*.trigger >/dev/null 2>&1; then
       for triggerName in changeSetDeploy/force-app/main/default/triggers/*.trigger; do
         triggerNameMod=$(echo "$triggerName" | sed 's|changeSetDeploy/force-app/main/default/triggers/||' | sed 's/.trigger$/.trigger_currpmd.html/')
@@ -127,7 +138,7 @@ HTML_REPORT() {
   DEPLOY_SUBLINE="${DEPLOY_SUBLINE/__COMP_PASS__/$COMP_PASS}"
   DEPLOY_SUBLINE="${DEPLOY_SUBLINE/__COMP_FAIL__/$COMP_FAIL}"
 
-  # -------- BEGIN HTML --------
+  # -------- BEGIN HTML (table + inline CSS only) --------
   cat > "$HTMLLog" <<EOF
 <!DOCTYPE html>
 <html>
@@ -158,18 +169,18 @@ HTML_REPORT() {
             </td>
           </tr>
 
-          <!-- Button Row (TD-based buttons; Outlook-safe) -->
+          <!-- Button Row (TD-based buttons) -->
           <tr>
             <td style="padding:8px 14px;border-top:1px solid #EEEEEE;border-bottom:1px solid #EEEEEE;">
               <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                 <tr>
-                  <td bgcolor="#0D47A1" style="border-radius:8px;"><a href="${OPEN_LOGS_URL}" style="display:block;padding:7px 12px;font-size:11px;font-weight:900;color:#FFFFFF;text-decoration:none;">Open Logs</a></td>
+                  <td bgcolor="#0D47A1" style="border-radius:6px;"><a href="${OPEN_LOGS_URL}" style="display:block;padding:7px 12px;font-size:11px;font-weight:900;color:#FFFFFF;text-decoration:none;">Open Logs</a></td>
                   <td width="8"></td>
-                  <td bgcolor="#0D47A1" style="border-radius:8px;"><a href="${COMBINED_PMD_HTML_URL}" style="display:block;padding:7px 12px;font-size:11px;font-weight:900;color:#FFFFFF;text-decoration:none;">Combined PMD</a></td>
+                  <td bgcolor="#0D47A1" style="border-radius:6px;"><a href="${COMBINED_PMD_HTML_URL}" style="display:block;padding:7px 12px;font-size:11px;font-weight:900;color:#FFFFFF;text-decoration:none;">Combined PMD</a></td>
                   <td width="8"></td>
-                  <td bgcolor="#0D47A1" style="border-radius:8px;"><a href="${COMBINED_PMD_CSV_URL}" style="display:block;padding:7px 12px;font-size:11px;font-weight:900;color:#FFFFFF;text-decoration:none;">Download PMD CSV</a></td>
+                  <td bgcolor="#0D47A1" style="border-radius:6px;"><a href="${COMBINED_PMD_CSV_URL}" style="display:block;padding:7px 12px;font-size:11px;font-weight:900;color:#FFFFFF;text-decoration:none;">Download PMD CSV</a></td>
                   <td width="8"></td>
-                  <td bgcolor="#0D47A1" style="border-radius:8px;"><a href="${FORCE_DEPLOY_FILE_URL}" style="display:block;padding:7px 12px;font-size:11px;font-weight:900;color:#FFFFFF;text-decoration:none;">Force Deploy File</a></td>
+                  <td bgcolor="#0D47A1" style="border-radius:6px;"><a href="${FORCE_DEPLOY_FILE_URL}" style="display:block;padding:7px 12px;font-size:11px;font-weight:900;color:#FFFFFF;text-decoration:none;">Force Deploy File</a></td>
                 </tr>
               </table>
             </td>
@@ -191,12 +202,12 @@ HTML_REPORT() {
                       <td width="6"></td>
                       <td width="33%" style="background:${PMD_BOX_BG};border:1px solid ${PMD_BOX_B};border-radius:6px;padding:6px 8px;">
                         <div style="font-size:9px;color:#666;text-transform:uppercase;">PMD — Current Changeset</div>
+                        <div style="font-size:11px;font-weight:800;">Classes: <strong>${CLASS_COUNT}</strong> • Triggers: <strong>${TRIGGER_COUNT}</strong></div>
 EOF
 
-  # PMD box: counts or red notice
+  # PMD box: show red notice if none
   if [ "$HAS_PMD" -eq 1 ]; then
     cat >> "$HTMLLog" <<EOF
-                        <div style="font-size:11px;font-weight:800;">Classes: <strong>${CLASS_COUNT}</strong> • Triggers: <strong>${TRIGGER_COUNT}</strong></div>
                         <div style="font-size:9.5px;color:#666;">High (Classes): <strong>${PMD_HIGH_CLS}</strong> • High (Triggers): <strong>${PMD_HIGH_TRG}</strong></div>
 EOF
   else
@@ -221,7 +232,7 @@ EOF
           </tr>
 EOF
 
-  # ---- PMD Review table only if classes/triggers exist ----
+  # ---- PMD Review table only when we have PMD files ----
   if [ "$HAS_PMD" -eq 1 ]; then
     cat >> "$HTMLLog" <<EOF
           <tr>
@@ -245,9 +256,9 @@ EOF
 EOF
   fi
 
-  # ---------- SUCCESS: Changeset file/s (your original loop preserved) ----------
+  # ---------- SUCCEEDED: your original Changeset file/s loop (fresh each run) ----------
   if [ "${Report}" = "SUCCEEDED" ]; then
-    # fresh build every time (avoid stale)
+    # rebuild fresh (avoid stale lists)
     find changeSetDeploy/force-app/main/default -type f \
       | egrep -v "customSettings|staticResourceFolders.txt" \
       | sed 's|^changeSetDeploy/force-app/main/default|src|' \
@@ -276,7 +287,6 @@ EOF
       elif [[ "${FILE}" =~ "src/customMetadata/" ]]; then
         FILE=$(echo "${FILE}" | sed -e "s/^src/src\/env\/${SFDC_ORG}/g")
       fi
-
       echo "                    <tr><td bgcolor=\"#90EE90\" style=\"padding:6px;font:12px/1.4 Arial;\"><span style=\"font-family:Consolas,Menlo,monospace;\"> [${NUM}] ${FILE}</span></td></tr>" >> "$HTMLLog"
       NUM=$((NUM+1))
       LastAuthor=$(git log -1 "${FILE}" 2>/dev/null | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')
@@ -292,7 +302,7 @@ EOF
 EOF
   fi
 
-  # ---------- FAILED: All Component Failures (compact, path fix, Gainsboro git log) ----------
+  # ---------- FAILED: All Component Failures (compact; correct paths; Gainsboro git log) ----------
   if [ "${Report}" = "FAILED" ]; then
     cat >> "$HTMLLog" <<EOF
           <tr>
@@ -302,9 +312,8 @@ EOF
                 <tr><td>
                   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
 EOF
-
     i=1
-    for failure in $(jq -c '.result.details.componentFailures[]' "$LOG.filtered"); do
+    for failure in $(jq -c '.result.details.componentFailures[]' "$LOGF"); do
       fileName=$(echo "$failure" | jq -r '.fileName')
       errorMsg=$(echo "$failure" | jq -r '.problem')
       sanitizedErrorMsg=$(echo "$errorMsg" | tr '\n' ' ' | tr '\r' ' ' | sed -e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
@@ -345,7 +354,6 @@ EOF
         echo "No Git log available for ${fileName}" >> "$HTMLLog"
       fi
       echo "                    </span></td></tr>" >> "$HTMLLog"
-
       i=$((i+1))
     done
 
@@ -373,7 +381,7 @@ EOF
 </html>
 EOF
 
-  # Send
+  # Send the email
   EMAIL=${FROM} mutt -e 'set content_type=text/html' \
     -s "---${SFDC_ORG}--- SF-CLI ChangeSet Deploy ${Report} [`TZ=IST date +%d.%b.%Y` IST - git ${gitlast}-${gitlatest} ]" "${mutt_MAIL_LIST}" < "$HTMLLog"
 }
