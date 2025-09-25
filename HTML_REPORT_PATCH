@@ -1,5 +1,17 @@
 html_report patch
 
+HTML_REPORT() {
+  Report=$1
+
+  # --- isolate output + add a visible marker to detect the new template ---
+  : "${HTMLLog:=/tmp/${SFDC_ORG}.deploy.html}"
+  HTML_OUT="$(mktemp "/tmp/${SFDC_ORG}.email.XXXXXX.html")"
+  TEMPLATE_TAG="__NEW_EMAIL_TEMPLATE_V4__"
+
+  # from now on, write to $HTML_OUT (NOT $HTMLLog); at the very end we’ll send $HTML_OUT
+
+
+
 cat > "$HTML_OUT" <<EOF
 <!DOCTYPE html>
 <html>
