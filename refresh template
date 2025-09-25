@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SFDC Sandbox Refresh Template</title>
+  <style>
+    :root{
+      --ink:#0b1020; --bg:#f7fafc; --card:#ffffff; --line:#e5ecf4;
+      --blue-600:#2563eb; --blue-700:#1d4ed8; --blue-800:#1e40af; --muted:#5b6b7a;
+      --green:#16a34a; --amber:#f59e0b; --red:#dc2626; --violet:#7c3aed;
+      --radius:16px; --shadow:0 6px 20px rgba(2,12,27,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+    h1,h2,h3{margin:0 0 .5rem}
+    h1{font-size:1.75rem;letter-spacing:.25px}
+    h2{font-size:1.2rem;color:var(--blue-800)}
+    p{margin:.5rem 0;color:#2a3441}
+
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+
+    .header{position:relative;border-radius:var(--radius);background:linear-gradient(135deg,#eef2ff,#e0f2fe 65%,#fff);padding:24px;border:1px solid var(--line);box-shadow:var(--shadow)}
+    .title{display:flex;align-items:center;gap:12px}
+    .pill{display:inline-flex;align-items:center;gap:8px;font-weight:600;padding:6px 10px;border-radius:999px;background:#eef2ff;color:var(--blue-700);border:1px solid #d7e0ff}
+    .meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}
+    .meta .k{font-size:.72rem;color:var(--muted)}
+    .meta .v{font-weight:600}
+
+    .bar{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+    .btn{appearance:none;border:1px solid var(--blue-600);background:var(--blue-600);color:#fff;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer;box-shadow:0 2px 10px rgba(37,99,235,.18)}
+    .btn.outline{background:#fff;color:var(--blue-700);border-color:#c8d5ff}
+
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:18px}
+    @media (max-width:920px){.grid{grid-template-columns:1fr}} 
+
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+    .sub{color:var(--muted);font-size:.9rem}
+
+    .tasks{margin-top:10px}
+    .tasks li{margin:.35rem 0;padding-left:.25rem}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);font-size:.75rem;color:var(--muted);background:#f8fafc}
+
+    .teams{margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
+
+    .status{display:inline-flex;gap:8px;flex-wrap:wrap}
+    .ok{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+    .warn{background:#fffbeb;color:#92400e;border-color:#fde68a}
+    .danger{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+
+    table{width:100%;border-collapse:separate;border-spacing:0;margin-top:10px}
+    th,td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:#f3f6fb;color:#223148;text-align:left;position:sticky;top:0}
+    tbody tr:hover{background:#fafcff}
+
+    .note{display:flex;gap:8px;align-items:flex-start;background:#f8fafc;border:1px dashed var(--line);padding:10px;border-radius:12px;margin:10px 0;color:#314359}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:.72rem;border:1px solid var(--line);background:#fff}
+    .badge-strong{display:block;margin-top:4px;margin-bottom:8px;padding:6px 12px;border-radius:999px;background:#eaf1ff;border:1px solid #c8d5ff;color:var(--blue-800);font-weight:800;font-size:1.05rem;box-shadow:0 2px 8px rgba(29,78,216,.12);}
+
+    .footer{margin:20px 0 40px;color:var(--muted);font-size:.9rem}
+
+    .section-title{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .dot{width:10px;height:10px;border-radius:999px;background:var(--blue-600)}
+
+    .print{margin-left:auto}
+
+    /* Print */
+    @media print{
+      .btn,.print{display:none}
+      body{background:#fff}
+      .header{box-shadow:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="header">
+      <div class="title">
+        <h1>SFDC Sandbox Refresh Template</h1>
+        <span class="pill">Reusable Plan & Checklist</span>
+      </div>
+      <div class="meta">
+        <div>
+          <div class="k">Source Org</div>
+          <div class="v">{{PROD_ORG_NAME}}</div>
+        </div>
+        <div>
+          <div class="k">Target Sandbox</div>
+          <div class="v">{{SANDBOX_NAME}}</div>
+        </div>
+        <div>
+          <div class="k">Refresh Type</div>
+          <div class="v">{{FULL / PARTIAL / DEV}}</div>
+        </div>
+        <div>
+          <div class="k">Last Updated</div>
+          <div class="v">{{DD-MM-YYYY}}</div>
+        </div>
+      </div>
+      <div class="bar">
+        <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+        <button class="btn outline" onclick="toggleNotes()">Toggle Notes</button>
+      </div>
+    </header>
+
+    <!-- PHASES -->
+    <section class="grid" aria-label="Phases">
+      <article class="card">
+        <div class="section-title"><span class="dot"></span><h2>Phase 1 — Environment Bring‑Up</h2></div>
+        <p class="sub">Objective: Activate and prepare the sandbox for development.</p>
+        <ul class="tasks">
+          <li>Org activation</li>
+          <li>Branch creation</li>
+          <li>Data masking</li>
+          <li>Single Sign‑On (SSO) activation</li>
+          <li>Unified Registration (UR)</li>
+          <li>Environment‑specific configurations</li>
+        </ul>
+        <div class="teams">
+          <span class="badge badge-strong">Teams enabled after this phase:</span>
+          <div class="status" style="margin-top:6px">
+            <span class="chip ok">SFDC Development Team</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="section-title"><span class="dot"></span><h2>Phase 2 — Access & Integrations</h2></div>
+        <p class="sub">Objective: Restore access and reconfigure dependent integrations.</p>
+        <ul class="tasks">
+          <li>Access restoration</li>
+          <li>Managed package reconfiguration</li>
+          <li>Okta Preview restoration</li>
+          <li>Web portal access</li>
+          <li>Connected App integrations restored</li>
+        </ul>
+        <div class="teams">
+          <span class="badge badge-strong">Teams enabled after this phase:</span>
+          <div class="status" style="margin-top:6px">
+            <span class="chip ok">Business</span>
+            <span class="chip ok">QA</span>
+            <span class="chip ok">Platform user teams (e.g., NGA, ECOM, JIRA, Cloud)</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="section-title"><span class="dot"></span><h2>Phase 3 — Docebo & Coveo</h2></div>
+        <p class="sub">Objective: Complete learning and search platform configurations.</p>
+        <ul class="tasks">
+          <li>Docebo configuration</li>
+          <li>Coveo configuration</li>
+        </ul>
+        <div class="teams">
+          <span class="badge">Outcome:</span>
+          <div class="status" style="margin-top:6px">
+            <span class="chip ok">Sandbox is fully ready for all users</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ROLES & RESPONSIBILITIES -->
+    <section class="card" style="margin-top:18px">
+      <div class="section-title"><span class="dot"></span><h2>Roles & Responsibilities</h2></div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:18%">Owner</th>
+            <th>Responsibility</th>
+            <th style="width:16%">Target Date</th>
+            <th style="width:36%">Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>DevOps</td>
+            <td>Initiate the sandbox refresh</td>
+            <td>16‑09‑25</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Guru / Himanshu</td>
+            <td>Deactivate Docebo production user sync</td>
+            <td>18‑09‑25</td>
+            <td class="note">DevOps will coordinate with the Docebo team on refresh status.</td>
+          </tr>
+          <tr>
+            <td>DevOps</td>
+            <td>Activate the org</td>
+            <td>18‑09‑25</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Guru / Himanshu</td>
+            <td>Re‑activate Docebo production user sync</td>
+            <td>18‑09‑25</td>
+            <td class="note">DevOps will coordinate with the Docebo team on refresh status.</td>
+          </tr>
+          <tr>
+            <td>DevOps</td>
+            <td>Complete post‑refresh configuration</td>
+            <td>—</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Kamal Chabra</td>
+            <td>Configure the email alias</td>
+            <td>—</td>
+            <td class="note">DevOps will coordinate with Kamal on refresh status.</td>
+          </tr>
+          <tr>
+            <td>Interface Team</td>
+            <td>Create internal testing users</td>
+            <td>—</td>
+            <td class="note">DevOps will coordinate with the Interface team on refresh status.</td>
+          </tr>
+          <tr>
+            <td>DNS Team</td>
+            <td>Configure DKIM</td>
+            <td>—</td>
+            <td class="note">DevOps will coordinate with the DNS team on refresh status.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- IMPLEMENTATION DETAILS / PLACEHOLDERS -->
+    <section class="grid" style="margin-top:18px">
+      <article class="card">
+        <div class="section-title"><span class="dot"></span><h2>Key Parameters</h2></div>
+        <table>
+          <tbody>
+            <tr><th style="width:38%">Masking Profile</th><td>{{MASKING_PROFILE_NAME}}</td></tr>
+            <tr><th>SSO Provider</th><td>{{SSO_IDP_NAME}}</td></tr>
+            <tr><th>Okta Tenant</th><td>{{OKTA_TENANT}}</td></tr>
+            <tr><th>Connected Apps</th><td>{{CONNECTED_APPS_LIST}}</td></tr>
+            <tr><th>DNS / DKIM Domain</th><td>{{DOMAIN_NAME}}</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article class="card">
+        <div class="section-title"><span class="dot"></span><h2>Change Log</h2></div>
+        <p class="sub">Record significant updates to this plan.</p>
+        <ul class="tasks">
+          <li>{{DD‑MM‑YYYY}} — Initial draft created</li>
+          <li>{{DD‑MM‑YYYY}} — Dates confirmed with stakeholders</li>
+          <li>{{DD‑MM‑YYYY}} — Final sign‑off</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <div class="section-title"><span class="dot"></span><h2>Approvals</h2></div>
+        <table>
+          <tbody>
+            <tr><th style="width:38%">DevOps Lead</th><td>____________________ Date: ________</td></tr>
+            <tr><th>SFDC Platform Owner</th><td>____________________ Date: ________</td></tr>
+            <tr><th>Security / IAM</th><td>____________________ Date: ________</td></tr>
+            <tr><th>Business Owner</th><td>____________________ Date: ________</td></tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+
+    <footer class="footer">
+      <div>Tip: Replace placeholders like <strong>{{SANDBOX_NAME}}</strong> and <strong>{{DD‑MM‑YYYY}}</strong> before distributing.</div>
+    </footer>
+  </div>
+
+  <script>
+    function toggleNotes(){
+      document.querySelectorAll('.note').forEach(n=>{
+        n.style.display = (n.style.display==="none")?"flex":"none";
+      });
+    }
+  </script>
+</body>
+</html>
