@@ -2,13 +2,24 @@ HTML_REPORT() {
   Report=$1
   : > "$HTMLLog"
 
-  # presentation colors only
+  # ------------ presentation colors (no logic changes) ------------
   _hdr_bg="#2e7d32"; _run_strip="#e8f5e9"; _status_bg="#e8f5e9"
   [ "$Report" = "FAILED" ] && { _hdr_bg="#c62828"; _run_strip="#fff2b6"; _status_bg="#fff4cc"; }
 
+  # ------------ values for Run Details ------------
+  _RUN_IST="$(TZ=Asia/Kolkata date +'%d.%b.%Y %H:%M IST')"
+  _API="${SetAPI:-N/A}"
+  _BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo N/A)"
+  _REPO="$(git config --get remote.origin.url 2>/dev/null || echo N/A)"
+  _REQID="${REQUEST_ID:-N/A}"
+
+  # quick link URLs
   OPEN_LOGS_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
   ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
   FORCE_DEPLOY_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/$(basename ${HTMLFDLog:-$HTMLLog}).${DATE}"
+
+  # tiny HTML escaper
+  _esc(){ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
 
   cat >>"$HTMLLog" <<'HTML_TOP'
 <!DOCTYPE html><html><head><meta charset="utf-8"></head>
@@ -16,7 +27,7 @@ HTML_REPORT() {
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f8fa;"><tr><td align="center">
 HTML_TOP
 
-  # Header (always visible)
+  # Header
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="980" style="max-width:980px;margin:18px auto;">
     <tr>
@@ -27,180 +38,187 @@ HTML_TOP
   </table>
 EOF
 
-  # Single main card
+  # Main card open
   cat >>"$HTMLLog" <<'CARD_TOP'
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="980" style="max-width:980px;background:#ffffff;border:1px solid #e6e6e6;">
     <tr><td style="padding:12px 14px;">
 CARD_TOP
 
-  #### Run Details (curved strip + gray chips; Outlook safe) ####
+  # -------- Run Details (curved strip + gray centered chips) --------
   cat >>"$HTMLLog" <<EOF
-      <!--[if mso]>
-      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" fillcolor="${_run_strip}" strokeweight="0" arcsize="6%"
-        style="width:952px;height:auto;"><v:textbox inset="0,0,0,0">
-      <![endif]-->
-      <div style="background:${_run_strip};border-radius:10px;">
+  <!-- Run Details -->
+  <!--[if mso]>
+  <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" fillcolor="${_run_strip}" strokeweight="0" arcsize="6%"
+    style="width:952px;height:auto;"><v:textbox inset="0,0,0,0">
+  <![endif]-->
+  <div style="background:${_run_strip};border-radius:10px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr><td style="padding:8px 10px;font:800 13px Arial;color:#1a365d;">Run Details</td></tr>
+      <tr><td style="padding:0 8px 8px 8px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-          <tr><td style="padding:8px 10px;font:800 13px Arial;color:#1a365d;">Run Details</td></tr>
-          <tr><td style="padding:0 8px 8px 8px;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                $(# each chip)
-              </tr>
-            </table>
-          </td></tr>
-        </table>
-      </div>
-      <!--[if mso]></v:textbox></v:roundrect><![endif]-->
+          <tr>
 EOF
 
-  # chips (subtle gray, centered text)
-  chips_html() {
-    local label="$1" value="$2"
-    cat <<CHIP
-      <td width="20%" style="padding:4px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-               bgcolor="#f2f4f7" style="background:#f2f4f7;border:1px solid #e3e3e3;">
-          <tr><td align="center" valign="middle" height="40" style="height:40px;padding:6px 8px;">
-            <div style="font:10px Arial;color:#666;line-height:12px;">${label}</div>
-            <div style="font:bold 13px Arial;text-decoration:underline;word-wrap:break-word;word-break:break-word;white-space:normal;max-width:100%;">${value}</div>
-          </td></tr>
-        </table>
-      </td>
-CHIP
+  # chip helper (centered; subtle gray; word-wrap)
+  _chip(){ # $1=label $2=value
+    cat >>"$HTMLLog" <<EOF
+            <td width="20%" style="padding:4px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                     bgcolor="#f2f4f7" style="background:#f2f4f7;border:1px solid #e3e3e3;">
+                <tr><td align="center" valign="middle" height="40" style="height:40px;padding:6px 8px;">
+                  <div style="font:10px Arial;color:#666;line-height:12px;">$1</div>
+                  <div style="font:bold 13px Arial;text-decoration:underline;word-wrap:break-word;word-break:break-word;white-space:normal;max-width:100%;">$2</div>
+                </td></tr>
+              </table>
+            </td>
+EOF
   }
+  _chip "RUN (IST)"    "$(_esc <<<"$_RUN_IST")"
+  _chip "API"          "$(_esc <<<"$_API")"
+  _chip "BRANCH"       "$(_esc <<<"$_BRANCH")"
+  _chip "REPO"         "$(_esc <<<"$_REPO")"
+  _chip "REQUEST ID"   "$(_esc <<<"$_REQID")"
 
-  chips_html "RUN (IST)" "__DATE_TIME_IST__"        >>"$HTMLLog"
-  chips_html "API"       "__API__"                   >>"$HTMLLog"
-  chips_html "BRANCH"    "__BRANCH__"                >>"$HTMLLog"
-  chips_html "REPO"      "__GIT_REMOTE_URL__"        >>"$HTMLLog"
-  chips_html "REQUEST ID" "__REQUEST_ID__"           >>"$HTMLLog"
+  # close chips row and strip
+  cat >>"$HTMLLog" <<'EOF'
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+  </div>
+  <!--[if mso]></v:textbox></v:roundrect><![endif]-->
+EOF
 
-  # Quick Links (VML bulletproof tiles)
-  print_tile() {
-    local label="$1" href="$2" bg="$3"
-    cat >>"$HTMLLog" <<TILE
+  # -------- Quick Links (bulletproof VML tiles) --------
+  _tile(){ # $1=label $2=href $3=bg
+    cat >>"$HTMLLog" <<EOF
       <td width="20%" style="padding:4px;">
         <!--[if mso]>
-        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${href}" style="height:36px;v-text-anchor:middle;width:184px;"
-          arcsize="12%" stroke="f" fillcolor="${bg}">
-          <w:anchorlock/><center style="color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:bold;text-decoration:underline;">${label}</center>
+        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="$2" style="height:36px;v-text-anchor:middle;width:184px;"
+          arcsize="12%" stroke="f" fillcolor="$3">
+          <w:anchorlock/><center style="color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:bold;text-decoration:underline;">$1</center>
         </v:roundrect>
         <![endif]--><!--[if !mso]><!-- -->
-        <a href="${href}" style="display:block;background:${bg};line-height:36px;height:36px;text-align:center;color:#ffffff;font:bold 12px Arial;text-decoration:underline;">${label}</a>
+        <a href="$2" style="display:block;background:$3;line-height:36px;height:36px;text-align:center;color:#ffffff;font:bold 12px Arial;text-decoration:underline;">$1</a>
         <!--<![endif]-->
       </td>
-TILE
+EOF
   }
+  echo '  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:6px 0 8px 0;"><tr>' >>"$HTMLLog"
+  _tile "Open Logs"               "$OPEN_LOGS_URL"  "#2f80ed"
+  _tile "Combined Original PMD"   "$ORIG_PMD_URL"   "#27ae60"
+  _tile "Combined Current PMD"    "#"               "#6c63ff"
+  _tile "Download PMD CSV"        "#"               "#e67e22"
+  _tile "ForceDeploy"             "$FORCE_DEPLOY_URL" "#b23aee"
+  echo '  </tr></table>' >>"$HTMLLog"
 
-  echo '      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:6px 0 8px 0;"><tr>' >>"$HTMLLog"
-  print_tile "Open Logs" "$OPEN_LOGS_URL" "#2f80ed"
-  print_tile "Combined Original PMD" "$ORIG_PMD_URL" "#27ae60"
-  print_tile "Combined Current PMD" "#" "#6c63ff"
-  print_tile "Download PMD CSV" "#" "#e67e22"
-  print_tile "ForceDeploy" "$FORCE_DEPLOY_URL" "#b23aee"
-  echo '      </tr></table>' >>"$HTMLLog"
-
-  #### STATUS SUMMARY (rounded; equal height) ####
+  # -------- STATUS SUMMARY (rounded, equal height) --------
   cat >>"$HTMLLog" <<EOF
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-        <tr><td style="padding:6px 4px 4px 4px;font:800 13px Arial;color:#1a365d;">STATUS SUMMARY</td></tr>
-      </table>
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-        <tr>
-          $(# DEPLOYMENT)
-          <td width="33%" valign="top" style="padding:4px;">
-            <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" arcsize="6%" fillcolor="${_status_bg}" strokeweight="0" style="width:308px;height:96px;"><v:textbox inset="0,0,0,0"><![endif]-->
-            <div style="background:${_status_bg};border-radius:8px;">
-              <table role="presentation" width="100%" height="96"><tr><td style="padding:8px;" valign="top">
-                <div style="font:10px Arial;color:#666;">DEPLOYMENT</div>
-                <div style="font:bold 14px Arial;color:#111;">$([ "$Report" = "SUCCEEDED" ] && echo "Succeeded" || echo "Failed")</div>
-                <div style="font:12px Arial;color:#111;">Passed: __COMP_PASS__ &nbsp; • &nbsp; Failed: __COMP_FAIL__</div>
-              </td></tr></table>
-            </div>
-            <!--[if mso]></v:textbox></v:roundrect><![endif]-->
-          </td>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr><td style="padding:6px 4px 4px 4px;font:800 13px Arial;color:#1a365d;">STATUS SUMMARY</td></tr>
+  </table>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+      <!-- Deployment -->
+      <td width="33%" valign="top" style="padding:4px;">
+        <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" arcsize="6%" fillcolor="${_status_bg}" strokeweight="0" style="width:308px;height:96px;"><v:textbox inset="0,0,0,0"><![endif]-->
+        <div style="background:${_status_bg};border-radius:8px;">
+          <table role="presentation" width="100%" height="96"><tr><td style="padding:8px;" valign="top">
+            <div style="font:10px Arial;color:#666;">DEPLOYMENT</div>
+            <div style="font:bold 14px Arial;color:#111;">$([ "$Report" = "SUCCEEDED" ] && echo "Succeeded" || echo "Failed")</div>
+            <div style="font:12px Arial;color:#111;">Passed: ${COMP_PASS:-N/A} &nbsp; • &nbsp; Failed: ${COMP_FAIL:-N/A}</div>
+          </td></tr></table>
+        </div>
+        <!--[if mso]></v:textbox></v:roundrect><![endif]-->
+      </td>
 
-          $(# PMD CARD)
-          <td width="33%" valign="top" style="padding:4px;">
-            <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" arcsize="6%" fillcolor="#e7f1ff" strokeweight="0" style="width:308px;height:96px;"><v:textbox inset="0,0,0,0"><![endif]-->
-            <div style="background:#e7f1ff;border-radius:8px;">
-              <table role="presentation" width="100%" height="96"><tr><td style="padding:8px;" valign="top">
-                <div style="font:10px Arial;color:#666;">PMD — CURRENT CHANGESET</div>
-                <div style="font:bold 13px Arial;color:#111;">Classes: __CLASS_COUNT__ &nbsp; • &nbsp; Triggers: __TRIGGER_COUNT__</div>
-                <div style="font:12px Arial;color:#111;">High (Classes): __PMD_HIGH_CLS__ &nbsp; • &nbsp; High (Triggers): __PMD_HIGH_TRG__</div>
-              </td></tr></table>
-            </div>
-            <!--[if mso]></v:textbox></v:roundrect><![endif]-->
-          </td>
+      <!-- PMD -->
+      <td width="33%" valign="top" style="padding:4px;">
+        <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" arcsize="6%" fillcolor="#e7f1ff" strokeweight="0" style="width:308px;height:96px;"><v:textbox inset="0,0,0,0"><![endif]-->
+        <div style="background:#e7f1ff;border-radius:8px;">
+          <table role="presentation" width="100%" height="96"><tr><td style="padding:8px;" valign="top">
+            <div style="font:10px Arial;color:#666;">PMD — CURRENT CHANGESET</div>
+            <div style="font:bold 13px Arial;color:#111;">Classes: ${CLASS_COUNT:-N/A} &nbsp; • &nbsp; Triggers: ${TRIGGER_COUNT:-N/A}</div>
+            <div style="font:12px Arial;color:#111;">High (Classes): ${PMD_HIGH_CLS:-N/A} &nbsp; • &nbsp; High (Triggers): ${PMD_HIGH_TRG:-N/A}</div>
+          </td></tr></table>
+        </div>
+        <!--[if mso]></v:textbox></v:roundrect><![endif]-->
+      </td>
 
-          $(# TIME CARD)
-          <td width="33%" valign="top" style="padding:4px;">
-            <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" arcsize="6%" fillcolor="#f3f4f7" strokeweight="0" style="width:308px;height:96px;"><v:textbox inset="0,0,0,0"><![endif]-->
-            <div style="background:#f3f4f7;border-radius:8px;">
-              <table role="presentation" width="100%" height="96"><tr><td style="padding:8px;" valign="top">
-                <div style="font:10px Arial;color:#666;">DEPLOYMENT TIME</div>
-                <div style="font:bold 14px Arial;color:#111;">__TOTAL_DURATION__</div>
-                <div style="font:12px Arial;color:#111;">Start: __START_TIME_IST__ &nbsp; • &nbsp; End: __END_TIME_IST__</div>
-              </td></tr></table>
-            </div>
-            <!--[if mso]></v:textbox></v:roundrect><![endif]-->
-          </td>
-        </tr>
-      </table>
+      <!-- Time -->
+      <td width="33%" valign="top" style="padding:4px;">
+        <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" arcsize="6%" fillcolor="#f3f4f7" strokeweight="0" style="width:308px;height:96px;"><v:textbox inset="0,0,0,0"><![endif]-->
+        <div style="background:#f3f4f7;border-radius:8px;">
+          <table role="presentation" width="100%" height="96"><tr><td style="padding:8px;" valign="top">
+            <div style="font:10px Arial;color:#666;">DEPLOYMENT TIME</div>
+            <div style="font:bold 14px Arial;color:#111;">${TOTAL_DURATION:-N/A}</div>
+            <div style="font:12px Arial;color:#111;">Start: ${START_TIME_IST:-N/A} &nbsp; • &nbsp; End: ${END_TIME_IST:-N/A}</div>
+          </td></tr></table>
+        </div>
+        <!--[if mso]></v:textbox></v:roundrect><![endif]-->
+      </td>
+    </tr>
+  </table>
 EOF
 
-  #### PMD REVIEW (no cream) ####
-  echo '      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:10px 4px 6px 4px;font:800 13px Arial;color:#1a365d;">PMD REVIEW</td></tr></table>' >>"$HTMLLog"
+  # -------- PMD REVIEW --------
+  echo '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:10px 4px 6px 4px;font:800 13px Arial;color:#1a365d;">PMD REVIEW</td></tr></table>' >>"$HTMLLog"
 
   if [ -f /tmp/CodeAnalysisReport.txt ]; then
     echo '<div style="font:bold 12px Arial;color:#c62828;margin:0 4px 8px;">No PMD Report – No Class/Trigger in Changeset</div>' >>"$HTMLLog"
   else
+    # ----- Classes table (separate) -----
     echo '<table role="presentation" cellpadding="8" cellspacing="0" border="0" width="100%" style="border-collapse:separate;border-spacing:0 4px;">' >>"$HTMLLog"
-    echo '<tr style="background:#eaf2ff;"><th align="left"  style="font:11px Arial;color:#274690;padding:8px;">CLASS / TRIGGER</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">ORIGINAL (HIGH)</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">CURRENT (HIGH)</th></tr>' >>"$HTMLLog"
+    echo '<tr style="background:#eaf2ff;"><th align="left"  style="font:11px Arial;color:#274690;padding:8px;">CLASS NAME</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">ORIGINAL (HIGH)</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">CURRENT (HIGH)</th></tr>' >>"$HTMLLog"
 
-    # classes loop (logic same; display tweaks)
     for classeName in `ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null`
     do
-      classeNameMod=$(echo "$classeName" | sed 's|changeSetDeploy/force-app/main/default/classes/||' | sed 's/.cls$/.cls_currpmd.html/')
-      CurrseverityFile=${classeNameMod%.html}.txt
-      OrgseverityFile=$(echo "$classeNameMod" | sed 's/.cls_currpmd.html/.cls_orgpmd.txt/')
-      OriginalPmd=`grep "Original PMD Warnings Total" /data/public/pmd_rule/$SFDC_ORG/$classeNameMod | cut -d ":" -f 2`
-      Currentpmd=`grep "Current PMD Warnings Total"  /data/public/pmd_rule/$SFDC_ORG/$classeNameMod | cut -d ":" -f 2`
-      classeText="${classeNameMod%.cls_currpmd.html}"   # display text without path prefix
-      pattern="ApexUnitTestShouldNotUseSeeAllDataTrue:\|UnusedLocalVariable:\|ClassNamingConventions:\|FieldDeclarationsShouldBeAtStart:\|FieldNamingConventions:\|FormalParameterNamingConventions:\|LocalVariableNamingConventions:\|MethodNamingConventions:\|PropertyNamingConventions:\|ExcessiveClassLength:\|ExcessiveParameterList:\|ApexDoc:\|ApexCSRF:\|AvoidDirectAccessTriggerMap:\|AvoidHardcodingId:\|AvoidNonExistentAnnotations:\|EmptyCatchBlock:\|EmptyIfStmt:\|EmptyStatementBlock:\|EmptyTryOrFinallyBlock:\|EmptyWhileStmt:\|InaccessibleAuraEnabledGetter:\|MethodWithSameNameAsEnclosingClass:\|OverrideBothEqualsAndHashcode:\|TestMethodsMustBeInTestClasses:\|AvoidDmlStatementsInLoops:\|AvoidSoqlInLoops:\|AvoidSoslInLoops:\|OperationWithLimitsInLoop:\|ApexBadCrypto:\|ApexDangerousMethods:\|ApexInsecureEndpoint:\|ApexOpenRedirect:\|ApexSharingViolations:\|ApexSOQLInjection:\|ApexSuggestUsingNamedCred:"
-      CurrseverityCnt=`grep -o $pattern PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$CurrseverityFile | wc -l`
-      OrgseverityCnt=`grep -o $pattern PMDReport/orgpmdoutput/src/classes/$OrgseverityFile | wc -l`
+      # file names to read
+      classeBase=$(basename "$classeName" .cls)
+      classeNameMod="${classeBase}.cls_currpmd.html"
+      CurrseverityFile="${classeBase}.cls_currpmd.txt"
+      OrgseverityFile="${classeBase}.cls_orgpmd.txt"
 
-      if [ $CurrseverityCnt -gt $OrgseverityCnt ]; then
-        echo "<tr style=\"background:#ffffff;border:1px solid #e6eefc;\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$classeNameMod\" style=\"text-decoration:underline;color:#c62828;font-weight:bold;\">$classeText</a></td><td align=\"right\" style=\"color:#c62828;\">${OriginalPmd}-($OrgseverityCnt)</td><td align=\"right\" style=\"color:#c62828;\"><b>${Currentpmd}-($CurrseverityCnt)</b></td></tr>" >>"$HTMLLog"
+      # read counts safely
+      pmd_html="/data/public/pmd_rule/$SFDC_ORG/$classeNameMod"
+      OriginalPmd=$( [ -f "$pmd_html" ] && grep "Original PMD Warnings Total" "$pmd_html" | cut -d ":" -f 2 || echo "0")
+      Currentpmd=$(  [ -f "$pmd_html" ] && grep "Current PMD Warnings Total"  "$pmd_html" | cut -d ":" -f 2 || echo "0")
+
+      pattern="ApexUnitTestShouldNotUseSeeAllDataTrue:\|UnusedLocalVariable:\|ClassNamingConventions:\|FieldDeclarationsShouldBeAtStart:\|FieldNamingConventions:\|FormalParameterNamingConventions:\|LocalVariableNamingConventions:\|MethodNamingConventions:\|PropertyNamingConventions:\|ExcessiveClassLength:\|ExcessiveParameterList:\|ApexDoc:\|ApexCSRF:\|AvoidDirectAccessTriggerMap:\|AvoidHardcodingId:\|AvoidNonExistentAnnotations:\|EmptyCatchBlock:\|EmptyIfStmt:\|EmptyStatementBlock:\|EmptyTryOrFinallyBlock:\|EmptyWhileStmt:\|InaccessibleAuraEnabledGetter:\|MethodWithSameNameAsEnclosingClass:\|OverrideBothEqualsAndHashcode:\|TestMethodsMustBeInTestClasses:\|AvoidDmlStatementsInLoops:\|AvoidSoqlInLoops:\|AvoidSoslInLoops:\|OperationWithLimitsInLoop:\|ApexBadCrypto:\|ApexDangerousMethods:\|ApexInsecureEndpoint:\|ApexOpenRedirect:\|ApexSharingViolations:\|ApexSOQLInjection:\|ApexSuggestUsingNamedCred:"
+      CurrseverityCnt=$( [ -f "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$CurrseverityFile" ] && grep -o $pattern "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$CurrseverityFile" | wc -l || echo 0 )
+      OrgseverityCnt=$(  [ -f "PMDReport/orgpmdoutput/src/classes/$OrgseverityFile" ] && grep -o $pattern "PMDReport/orgpmdoutput/src/classes/$OrgseverityFile" | wc -l || echo 0 )
+
+      displayText="$classeBase.cls"
+      link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$classeNameMod"
+      if [ "$CurrseverityCnt" -gt "$OrgseverityCnt" ]; then
+        echo "<tr style=\"background:#ffffff;border:1px solid #e6eefc;\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:#c62828;font-weight:bold;\">$displayText</a></td><td align=\"right\" style=\"color:#c62828;\">${OriginalPmd}-($OrgseverityCnt)</td><td align=\"right\" style=\"color:#c62828;\"><b>${Currentpmd}-($CurrseverityCnt)</b></td></tr>" >>"$HTMLLog"
       else
-        echo "<tr style=\"background:#ffffff;border:1px solid #e6eefc;\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$classeNameMod\" style=\"text-decoration:underline;color:#0b5ed7;\">$classeText</a></td><td align=\"right\" style=\"color:#0b5ed7;\">${OriginalPmd}-($OrgseverityCnt)</td><td align=\"right\" style=\"color:#0b5ed7;\">${Currentpmd}-($CurrseverityCnt)</td></tr>" >>"$HTMLLog"
+        echo "<tr style=\"background:#ffffff;border:1px solid #e6eefc;\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:#0b5ed7;\">$displayText</a></td><td align=\"right\" style=\"color:#0b5ed7;\">${OriginalPmd}-($OrgseverityCnt)</td><td align=\"right\" style=\"color:#0b5ed7;\">${Currentpmd}-($CurrseverityCnt)</td></tr>" >>"$HTMLLog"
       fi
     done
     echo "</table>" >>"$HTMLLog"
 
-    # triggers table (same style)
+    # ----- Triggers table (separate) -----
     echo '<table role="presentation" cellpadding="8" cellspacing="0" border="0" width="100%" style="border-collapse:separate;border-spacing:0 4px;margin-top:6px;"><tr style="background:#eaf2ff;"><th align="left" style="font:11px Arial;color:#274690;padding:8px;">TRIGGER NAME</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">ORIGINAL</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">CURRENT</th></tr>' >>"$HTMLLog"
     for triggerName in `ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null`
     do
-      triggerMod=$(echo "$triggerName" | sed 's|changeSetDeploy/force-app/main/default/triggers/||' | sed 's/.trigger$/.trigger_currpmd.html/')
-      OriginalPmd=`grep "Original PMD Warnings Total" /data/public/pmd_rule/$SFDC_ORG/$triggerMod | cut -d ":" -f 2`
-      Currentpmd=`grep "Current PMD Warnings Total"  /data/public/pmd_rule/$SFDC_ORG/$triggerMod | cut -d ":" -f 2`
-      triggerText="${triggerMod%.trigger_currpmd.html}"
-      echo "<tr style=\"background:#ffffff;border:1px solid #e6eefc;\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$triggerMod\" style=\"text-decoration:underline;color:#0b5ed7;\">$triggerText</a></td><td align=\"right\" style=\"color:#0b5ed7;\">${OriginalPmd}</td><td align=\"right\" style=\"color:#0b5ed7;\">${Currentpmd}</td></tr>" >>"$HTMLLog"
+      trigBase=$(basename "$triggerName" .trigger)
+      trigHtml="${trigBase}.trigger_currpmd.html"
+      OriginalPmd=$( [ -f "/data/public/pmd_rule/$SFDC_ORG/$trigHtml" ] && grep "Original PMD Warnings Total" "/data/public/pmd_rule/$SFDC_ORG/$trigHtml" | cut -d ":" -f 2 || echo "0")
+      Currentpmd=$(  [ -f "/data/public/pmd_rule/$SFDC_ORG/$trigHtml" ] && grep "Current PMD Warnings Total"  "/data/public/pmd_rule/$SFDC_ORG/$trigHtml" | cut -d ":" -f 2 || echo "0")
+      link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$trigHtml"
+      displayText="$trigBase.trigger"
+      echo "<tr style=\"background:#ffffff;border:1px solid #e6eefc;\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:#0b5ed7;\">$displayText</a></td><td align=\"right\" style=\"color:#0b5ed7;\">${OriginalPmd}</td><td align=\"right\" style=\"color:#0b5ed7;\">${Currentpmd}</td></tr>" >>"$HTMLLog"
     done
     echo "</table>" >>"$HTMLLog"
   fi
 
-  #### CHANGES / FAILURES (two-color blocks, gap, rounded feel; wrap text) ####
+  # -------- Changeset / Failures (two-color, gap, rounded feel) --------
   SAVEIFS=$IFS; IFS=$(echo -en "\n\b")
-
   if [ "$Report" = "SUCCEEDED" ]; then
     find changeSetDeploy/force-app/main/default -type f | egrep -v "customSettings|staticResourceFolders.txt" | sed 's|^changeSetDeploy/force-app/main/default|src|' | sort -u > "${DEPLOYEDFILE}"
     changesetFile=$(find changeSetDeploy/force-app/main/default -type f | egrep -v "customSettings|staticResourceFolders.txt" | wc -l)
     echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:8px;\"><tr><td style=\"font:bold 13px Arial;color:#1a365d;padding:4px;\">Changeset file/s ...[${changesetFile}]</td></tr></table>" >>"$HTMLLog"
-
     NUM=1
     while read -r FILE; do
       [ "${FILE}" = "src/labels/CustomLabels.labels-meta.xml" ] && FILE=src/env/${SFDC_ORG}/customLabel/CustomLabels.labels-meta.xml
@@ -208,16 +226,11 @@ EOF
       [[ "$FILE" =~ "src/remoteSiteSettings/" ]] && FILE=$(echo "${FILE}" | sed -e "s/^src/src\/env\/${SFDC_ORG}/g")
       [[ "$FILE" =~ "src/customMetadata/" ]]     && FILE=$(echo "${FILE}" | sed -e "s/^src/src\/env\/${SFDC_ORG}/g")
 
-      # green row
       echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:6px;\">
-              <tr><td style=\"background:#e8f5e9;padding:6px 8px;border:1px solid #d8eeda;\">
-                <div style=\"font:12px Consolas,Menlo,monospace;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">[$((NUM++))] ${FILE}</div>
-              </td></tr>
-              <tr><td style=\"background:#e0e0e0;padding:6px 8px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;\">
-                <div style=\"font:12px Consolas,Menlo,monospace;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">Last author... $(git log -1 ${FILE} | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')</div>
-              </td></tr></table>" >>"$HTMLLog"
+              <tr><td style=\"background:#e8f5e9;padding:6px 8px;border:1px solid #d8eeda;\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">[$((NUM++))] ${FILE}</pre></td></tr>
+              <tr><td style=\"background:#e0e0e0;padding:6px 8px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">Last author... $(git log -1 ${FILE} | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')</pre></td></tr>
+            </table>" >>"$HTMLLog"
     done < "${DEPLOYEDFILE}"
-
   else
     echo '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;"><tr><td style="font:bold 13px Arial;color:#1a365d;padding:4px;">All Component Failures:</td></tr></table>' >>"$HTMLLog"
     i=1
@@ -225,23 +238,15 @@ EOF
       fileName=$(echo "$failure" | jq -r '.fileName')
       fileDisp=$(echo "$fileName" | sed 's|^changeSetDeploy/force-app/main/default/||')
       errorMsg=$(echo "$failure" | jq -r '.problem' | tr '\n' ' ' | tr '\r' ' ' | sed -e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
-
-      echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0" >>"$HTMLLog"
-      echo "\" border=\"0\" style=\"margin-top:6px;\"><tr><td style=\"background:#fff4cc;padding:6px 8px;border:1px solid #f0e1a6;\"><div style=\"font:12px Consolas,Menlo,monospace;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">$i. $fileDisp -- Error: $errorMsg</div></td></tr>" >>"$HTMLLog"
-
+      echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:6px;\"><tr><td style=\"background:#fff4cc;padding:6px 8px;border:1px solid #f0e1a6;\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">$i. $fileDisp -- Error: $errorMsg</pre></td></tr>" >>"$HTMLLog"
       gitFile=$(find src -type f -iname "$(basename "$fileName")" | head -n 1)
-      if [ -z "$gitFile" ]; then
-        ext=$(echo "$fileName" | sed 's/.*\.//'); if ! echo "cls page trigger component" | grep -qw "$ext"; then
-          metaCandidate="$(basename "$fileName")-meta.xml"; fallbackFile=$(find src -type f -iname "$metaCandidate" | head -n 1); [ -n "$fallbackFile" ] && gitFile="$fallbackFile"; fi
-      fi
-
+      if [ -z "$gitFile" ]; then ext=$(echo "$fileName" | sed 's/.*\.//'); if ! echo "cls page trigger component" | grep -qw "$ext"; then metaCandidate="$(basename "$fileName")-meta.xml"; fallbackFile=$(find src -type f -iname "$metaCandidate" | head -n 1); [ -n "$fallbackFile" ] && gitFile="$fallbackFile"; fi; fi
       if [ -n "$gitFile" ]; then
         LastAuthor=$(git log -1 "$gitFile" 2>/dev/null | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')
-        echo "<tr><td style=\"background:#e0e0e0;padding:6px 8px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;\"><div style=\"font:12px Consolas,Menlo,monospace;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">GIT log >>> $gitFile\n$LastAuthor</div></td></tr></table>" >>"$HTMLLog"
+        echo "<tr><td style=\"background:#e0e0e0;padding:6px 8px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">GIT log >>> $gitFile\n$LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
       else
-        echo "<tr><td style=\"background:#e0e0e0;padding:6px 8px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;\"><div style=\"font:12px Consolas,Menlo,monospace;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">No Git log available for $fileDisp</div></td></tr></table>" >>"$HTMLLog"
+        echo "<tr><td style=\"background:#e0e0e0;padding:6px 8px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">No Git log available for $fileDisp</pre></td></tr></table>" >>"$HTMLLog"
       fi
-
       i=$((i+1))
     done
   fi
