@@ -1,0 +1,104 @@
+<HTML>
+<BODY>
+<table width=100%>
+<H3><tr><td bgcolor=SeaShell>sbx deployment succeeded report</td></tr></H3>
+<H5><PRE><tr><td bgcolor="LightGreen">  Status: Succeeded
+  Deploy ID: 0AfO900000ccAN3KAM
+  Target Org: sfdc_codemigration@cadence.com.sbx
+  Elapsed Time: 2m 21.32s
+ --
+  Status: Succeeded
+  Deploy ID: 0AfO900000ccAN3KAM
+  Target Org: sfdc_codemigration@cadence.com.sbx
+  Elapsed Time: 2m 21.32s</td></tr></PRE></H5>
+<tr><td bgcolor=LightBlue></tr></td>
+GIT Repo URL: https://github.cadence.com/IT/SFDC/
+<br/>Current Branch: 2025-q4nov-release
+<tr><td bgcolor=Yellow></tr></td>
+<a href=https://cdnsfdc.cadence.com/SFDC_GIT_LOG/sbx.GIT_5dfc26d68bf13e3c40bae3aed23796d8f2ab5afe-36a160417a3bf62c34c47ba3b3201f7437d46865.25Sep2025_21h32m33s>Log and changeset</a>
+<a href=https://cdnsfdc.cadence.com/SFDC_GIT_LOG/sbx.GIT_5dfc26d68bf13e3c40bae3aed23796d8f2ab5afe-36a160417a3bf62c34c47ba3b3201f7437d46865.25Sep2025_21h32m33s/sbx.FDLog.html.25Sep2025_21h32m33s>ForceDeploy</a>
+<br/>API used: 60.0
+<br/><tr><td bgcolor=Salmon>PMD code review comments</td></tr>
+<br/><tr><td bgcolor=Lime><a href=https://cdnsfdc.cadence.com/PMDOUTPUT/sbx>Original PMD Report</a></td></tr>
+<tr><td><table style=width:35% border=1><tr><th bgcolor=Cyan>Class Name</th><th bgcolor=Cyan>Original Warning Count - (High Severity Count) </th><th bgcolor=Cyan>Current Warning Count - (High Severity Count) </th></tr>
+<tr><th style=text-align:left><a href=https://cdnsfdc.cadence.com/pmd_rule/sbx/changeSetDeploy/force-app/main/default/classes/AEAcknowledgementTest.cls_currpmd.html>changeSetDeploy/force-app/main/default/classes/AEAcknowledgementTest</a></th><th style=text-align:right>-(0)</th><th style=text-align:right>-(0)</th></tr>
+<tr><th style=text-align:left><a href=https://cdnsfdc.cadence.com/pmd_rule/sbx/changeSetDeploy/force-app/main/default/classes/GoalLetterAuthenticationControllerTest.cls_currpmd.html>changeSetDeploy/force-app/main/default/classes/GoalLetterAuthenticationControllerTest</a></th><th style=text-align:right>-(0)</th><th style=text-align:right>-(0)</th></tr>
+<tr><th style=text-align:left><a href=https://cdnsfdc.cadence.com/pmd_rule/sbx/changeSetDeploy/force-app/main/default/classes/GoalLetterSearchControllerTest.cls_currpmd.html>changeSetDeploy/force-app/main/default/classes/GoalLetterSearchControllerTest</a></th><th style=text-align:right>-(0)</th><th style=text-align:right>-(0)</th></tr>
+</table></td></tr>
+<tr><td><table style=width:35% border=1><tr><th bgcolor=Cyan>Trigger Name</th><th bgcolor=Cyan>Original Warning Count</th><th bgcolor=Cyan>Current Warning Count</th></tr>
+</table></td></tr>
+<tr><td bgcolor="SeaShell">Changeset file/s ...[12]</td></tr>
+<tr><td bgcolor="LightGreen"><PRE>
+ [1] src/classes/AEAcknowledgementTest.cls
+</PRE></td></tr>
+<tr><td bgcolor="Gainsboro"><PRE>
+Last author... commit 945fdde77cdd875cc693ed9833e4ae5deedb82a8 | Author: gmittal <gmittal@cadence.com> | Date: Thu Sep 25 17:16:16 2025 +0530 | Comment: [LMA-000]:(Basic Sales Test CLasses only api change) |
+</PRE></td></tr>
+<tr><td bgcolor="LightGreen"><PRE>
+ [2] src/classes/AEAcknowledgementTest.cls-meta.xml
+</PRE></td></tr>
+<tr><td bgcolor="Gainsboro"><PRE>
+Last author... commit 945fdde77cdd875cc693ed9833e4ae5deedb82a8 | Author: gmittal <gmittal@cadence.com> | Date: Thu Sep 25 17:16:16 2025 +0530 | Comment: [LMA-000]:(Basic Sales Test CLasses only api change) |
+</PRE></td></tr>
+<tr><td bgcolor="LightGreen"><PRE>
+ [3] src/classes/GoalLetterAuthenticationControllerTest.cls
+</PRE></td></tr>
+<tr><td bgcolor="Gainsboro"><PRE>
+Last author... commit 945fdde77cdd875cc693ed9833e4ae5deedb82a8 | Author: gmittal <gmittal@cadence.com> | Date: Thu Sep 25 17:16:16 2025 +0530 | Comment: [LMA-000]:(Basic Sales Test CLasses only api change) |
+</PRE></td></tr>
+<tr><td bgcolor="LightGreen"><PRE>
+ [4] src/classes/GoalLetterAuthenticationControllerTest.cls-meta.xml
+</PRE></td></tr>
+<tr><td bgcolor="Gainsboro"><PRE>
+Last author... commit 945fdde77cdd875cc693ed9833e4ae5deedb82a8 | Author: gmittal <gmittal@cadence.com> | Date: Thu Sep 25 17:16:16 2025 +0530 | Comment: [LMA-000]:(Basic Sales Test CLasses only api change) |
+</PRE></td></tr>
+<tr><td bgcolor="LightGreen"><PRE>
+ [5] src/classes/GoalLetterSearchControllerTest.cls
+</PRE></td></tr>
+<tr><td bgcolor="Gainsboro"><PRE>
+Last author... commit 945fdde77cdd875cc693ed9833e4ae5deedb82a8 | Author: gmittal <gmittal@cadence.com> | Date: Thu Sep 25 17:16:16 2025 +0530 | Comment: [LMA-000]:(Basic Sales Test CLasses only api change) |
+</PRE></td></tr>
+<tr><td bgcolor="LightGreen"><PRE>
+ [6] src/classes/GoalLetterSearchControllerTest.cls-meta.xml
+</PRE></td></tr>
+<tr><td bgcolor="Gainsboro"><PRE>
+Last author... commit 945fdde77cdd875cc693ed9833e4ae5deedb82a8 | Author: gmittal <gmittal@cadence.com> | Date: Thu Sep 25 17:16:16 2025 +0530 | Comment: [LMA-000]:(Basic Sales Test CLasses only api change) |
+</PRE></td></tr>
+<tr><td bgcolor="LightGreen"><PRE>
+ [7] src/env/sbx/customLabel/CustomLabels.labels-meta.xml
+</PRE></td></tr>
+<tr><td bgcolor="Gainsboro"><PRE>
+Last author... commit 07c07cf9f22bbb17084d5ba1a33800daabac4ecb | Author: Rajesh Debnath <rdebnath@cadence.com> | Date: Tue Sep 16 22:28:36 2025 -0700 | Comment: [SFDC-0000]:(Update) |
+</PRE></td></tr>
+<tr><td bgcolor="LightGreen"><PRE>
+ [8] src/pages/AccountContentTab.page
+</PRE></td></tr>
+<tr><td bgcolor="Gainsboro"><PRE>
+Last author... commit 273965e5a182e30e72e0d1c99db42311e67f3422 | Author: sharmade <sharmade@cadence.com> | Date: Wed Sep 24 18:13:56 2025 +0530 | Comment: [LMA-621]:(Basic Sales related VF Page) |
+</PRE></td></tr>
+<tr><td bgcolor="LightGreen"><PRE>
+ [9] src/pages/AccountContentTab.page-meta.xml
+</PRE></td></tr>
+<tr><td bgcolor="Gainsboro"><PRE>
+Last author... commit 1e91605538a735c2ee74f8e590e62c0405c81aa5 | Author: sharmade <sharmade@cadence.com> | Date: Thu Sep 11 13:14:27 2025 +0530 | Comment: [LMA-000]:(Basic Sales related VF Page) |
+</PRE></td></tr>
+<tr><td bgcolor="LightGreen"><PRE>
+ [10] src/pages/CreateContentRecord.page
+</PRE></td></tr>
+<tr><td bgcolor="Gainsboro"><PRE>
+Last author... commit 273965e5a182e30e72e0d1c99db42311e67f3422 | Author: sharmade <sharmade@cadence.com> | Date: Wed Sep 24 18:13:56 2025 +0530 | Comment: [LMA-621]:(Basic Sales related VF Page) |
+</PRE></td></tr>
+<tr><td bgcolor="LightGreen"><PRE>
+ [11] src/pages/CreateContentRecord.page-meta.xml
+</PRE></td></tr>
+<tr><td bgcolor="Gainsboro"><PRE>
+Last author... commit 8aa348963805a74250944181e243737c49d35aed | Author: gmittal <gmittal@cadence.com> | Date: Thu Sep 11 10:57:38 2025 +0530 | Comment: [LMA-000]:(Basic Sales CreateContentRecord VF page change) |
+</PRE></td></tr>
+<tr><td bgcolor="LightGreen"><PRE>
+ [12] src/reports/unfiled$public/X3rdParty_Employee_RESTRICTIONS.report-meta.xml
+</PRE></td></tr>
+<tr><td bgcolor="Gainsboro"><PRE>
+Last author... commit 1cade8aecbe57ca17ed0c695aa9b2477f1674160 | Author: Anjali Kumari <kumarian@cadence.com> | Date: Thu Sep 25 23:12:09 2025 +0530 | Comment: [LMA-401]-(Sprint-7 business feedback) |
+</PRE></td></tr>
+</table>
+</HTML></BODY>
