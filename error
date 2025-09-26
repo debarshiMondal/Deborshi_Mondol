@@ -1,14 +1,14 @@
-rm: cannot remove 'prod_62.0_4thSept2025_04:26:34/labels/CustomLabels.labels.flat': No such file or directory
-/software/codedev/misc_script/SFDC/BCompareScript/codecompare.posix2.sh: line 327: prod_62.0_10thAug2025_04:26:34_vs_prod_62.0_4thSept2025_04:26:34/codecomp/TIME: No such file or directory
-Traceback (most recent call last):
-  File "/software/codedev/misc_script/SFDC/ProdvsProd/prodvsprod.py", line 616, in <module>
-    main()
-  File "/software/codedev/misc_script/SFDC/ProdvsProd/prodvsprod.py", line 535, in main
-    sp_pattern = cfg.get("links","csv_full_sharepoint_pattern",fallback="").strip()
-  File "/software/miniconda3/lib/python3.9/configparser.py", line 799, in get
-    return self._interpolation.before_get(self, section, option, value,
-  File "/software/miniconda3/lib/python3.9/configparser.py", line 395, in before_get
-    self._interpolate_some(parser, option, L, value, section, defaults, 1)
-  File "/software/miniconda3/lib/python3.9/configparser.py", line 442, in _interpolate_some
-    raise InterpolationSyntaxError(
-configparser.InterpolationSyntaxError: '%' must be followed by '%' or '(', found: '%20Dev%20Ops/WeeklyMasterUpdate/ProdDumpComparison_List_{EXEC_DATE}(Execution Date).csv'
+<13>Sep 26 03:52:56 SFDC_DEPLOY:[]: Converting Error Log to Json...!!
+<13>Sep 26 03:52:56 SFDC_DEPLOY:[]: build/script/deploySFDC_git_sfcli_2.0.sh: command substitution: line 986: syntax error near unexpected token `newline'
+<13>Sep 26 03:52:56 SFDC_DEPLOY:[]: build/script/deploySFDC_git_sfcli_2.0.sh: command substitution: line 986: `              </tr>'
+<13>Sep 26 03:52:56 SFDC_DEPLOY:[]: build/script/deploySFDC_git_sfcli_2.0.sh: command substitution: line 1054: syntax error near unexpected token `newline'
+<13>Sep 26 03:52:56 SFDC_DEPLOY:[]: build/script/deploySFDC_git_sfcli_2.0.sh: command substitution: line 1054: `          <td width="33%" valign="top" style="padding:4px;">'
+<13>Sep 26 03:52:56 SFDC_DEPLOY:[]: grep: /data/public/pmd_rule/sbx/APTS_QuoteTriggerhandler.cls_currpmd.html: No such file or directory
+<13>Sep 26 03:52:56 SFDC_DEPLOY:[]: grep: /data/public/pmd_rule/sbx/APTS_QuoteTriggerhandler.cls_currpmd.html: No such file or directory
+<13>Sep 26 03:52:56 SFDC_DEPLOY:[]: grep: PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/APTS_QuoteTriggerhandler.cls_currpmd.txt: No such file or directory
+<13>Sep 26 03:52:56 SFDC_DEPLOY:[]: grep: PMDReport/orgpmdoutput/src/classes/APTS_QuoteTriggerhandler.cls_orgpmd.txt: No such file or directory
+<13>Sep 26 03:52:56 SFDC_DEPLOY:[]: cp: cannot stat '/tmp/sbx.Changeset.log': No such file or directory
+<13>Sep 26 03:52:56 SFDC_DEPLOY:[]: cp: cannot stat 'CodeAnalyser/CodeAnalysisReport.html': No such file or directory
+<13>Sep 26 03:52:56 SFDC_DEPLOY:[]: cp: cannot stat 'build/sbx.forceDeploy.txt': No such file or directory
+<13>Sep 26 03:52:56 SFDC_DEPLOY:[]: deploy failed... exiting..
+[codedev@vlsj-deploybox SFDC]$ 
