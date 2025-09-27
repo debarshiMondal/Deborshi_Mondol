@@ -99,7 +99,16 @@ EOF
   </table>
 EOF
 
-  # ---------- Status Summary (consistent sizes; real counts with fallback) ----------
+  # ---------- Status Summary (consistent sizes; show real counts) ----------
+  # Succeeded: show only Passed; Failed: show Passed & Failed
+  _status_counts() {
+    if [ "$Report" = "SUCCEEDED" ]; then
+      echo "Passed: ${COMP_PASS:-N/A}"
+    else
+      echo "Passed: ${COMP_PASS:-N/A} &nbsp; • &nbsp; Failed: ${COMP_FAIL:-N/A}"
+    fi
+  }
+
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr><td style="padding:6px 4px 4px 4px;font:800 13px Arial;color:#1a365d;">STATUS SUMMARY</td></tr>
@@ -112,7 +121,7 @@ EOF
           <tr><td style="padding:8px;" valign="top">
             <div style="font:10px Arial;color:#666;">DEPLOYMENT</div>
             <div style="font:bold 14px Arial;color:#111;">$([ "$Report" = "SUCCEEDED" ] && echo "Succeeded" || echo "Failed")</div>
-            <div style="font:12px Arial;color:#111;">Passed: ${COMP_PASS:-N/A} &nbsp; • &nbsp; Failed: ${COMP_FAIL:-N/A}</div>
+            <div style="font:12px Arial;color:#111;">$(_status_counts)</div>
           </td></tr>
         </table>
       </td>
@@ -163,7 +172,7 @@ EOF
       OriginalPmd=$( [ -f "$pmd_html" ] && grep "Original PMD Warnings Total" "$pmd_html" | cut -d ":" -f 2 || echo "0")
       Currentpmd=$(  [ -f "$pmd_html" ] && grep "Current PMD Warnings Total"  "$pmd_html" | cut -d ":" -f 2 || echo "0")
 
-      pattern="ApexUnitTestShouldNotUseSeeAllDataTrue:\|UnusedLocalVariable:\|ClassNamingConventions:\|FieldDeclarationsShouldBeAtStart:\|FieldNamingConventions:\|FormalParameterNamingConventions:\|LocalVariableNamingConventions:\|MethodNamingConventions:\|PropertyNamingConventions:\|ExcessiveClassLength:\|ExcessiveParameterList:\|ApexDoc:\|ApexCSRF:\|AvoidDirectAccessTriggerMap:\|AvoidHardcodingId:\|AvoidHardcodingId:\|AvoidNonExistentAnnotations:\|EmptyCatchBlock:\|EmptyIfStmt:\|EmptyStatementBlock:\|EmptyTryOrFinallyBlock:\|EmptyWhileStmt:\|InaccessibleAuraEnabledGetter:\|MethodWithSameNameAsEnclosingClass:\|OverrideBothEqualsAndHashcode:\|TestMethodsMustBeInTestClasses:\|AvoidDmlStatementsInLoops:\|AvoidSoqlInLoops:\|AvoidSoslInLoops:\|OperationWithLimitsInLoop:\|ApexBadCrypto:\|ApexDangerousMethods:\|ApexInsecureEndpoint:\|ApexOpenRedirect:\|ApexSharingViolations:\|ApexSOQLInjection:\|ApexSuggestUsingNamedCred:"
+      pattern="ApexUnitTestShouldNotUseSeeAllDataTrue:\|UnusedLocalVariable:\|ClassNamingConventions:\|FieldDeclarationsShouldBeAtStart:\|FieldNamingConventions:\|FormalParameterNamingConventions:\|LocalVariableNamingConventions:\|MethodNamingConventions:\|PropertyNamingConventions:\|ExcessiveClassLength:\|ExcessiveParameterList:\|ApexDoc:\|ApexCSRF:\|AvoidDirectAccessTriggerMap:\|AvoidHardcodingId:\|AvoidNonExistentAnnotations:\|EmptyCatchBlock:\|EmptyIfStmt:\|EmptyStatementBlock:\|EmptyTryOrFinallyBlock:\|EmptyWhileStmt:\|InaccessibleAuraEnabledGetter:\|MethodWithSameNameAsEnclosingClass:\|OverrideBothEqualsAndHashcode:\|TestMethodsMustBeInTestClasses:\|AvoidDmlStatementsInLoops:\|AvoidSoqlInLoops:\|AvoidSoslInLoops:\|OperationWithLimitsInLoop:\|ApexBadCrypto:\|ApexDangerousMethods:\|ApexInsecureEndpoint:\|ApexOpenRedirect:\|ApexSharingViolations:\|ApexSOQLInjection:\|ApexSuggestUsingNamedCred:"
       CurrseverityCnt=$( [ -f "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" ] && grep -o $pattern "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" | wc -l || echo 0 )
       OrgseverityCnt=$(  [ -f "PMDReport/orgpmdoutput/src/classes/$orgTxt" ] && grep -o $pattern "PMDReport/orgpmdoutput/src/classes/$orgTxt" | wc -l || echo 0 )
       delta=$(( CurrseverityCnt - OrgseverityCnt )); [ $delta -gt 0 ] && delta="+$delta"
@@ -233,7 +242,8 @@ EOF
       fileName=$(echo "$failure" | jq -r '.fileName')
       fileDisp=$(echo "$fileName" | sed 's|^changeSetDeploy/force-app/main/default/||')
       errorMsg=$(echo "$failure" | jq -r '.problem' | tr '\n' ' ' | tr '\r' ' ' | sed -e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
-      echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:6px;\"><tr><td style=\"background:#fff4cc;padding:6px 8px;border:1px solid #f0e1a6;\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">$i. $fileDisp -- Error: $errorMsg</pre></td></tr>" >>"$HTMLLog"
+      echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0" >>"$HTMLLog"
+      echo "\" cellspacing=\"0\" border=\"0\" style=\"margin-top:6px;\"><tr><td style=\"background:#fff4cc;padding:6px 8px;border:1px solid #f0e1a6;\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">$i. $fileDisp -- Error: $errorMsg</pre></td></tr>" >>"$HTMLLog"
       gitFile=$(find src -type f -iname "$(basename "$fileName")" | head -n 1)
       if [ -n "$gitFile" ]; then
         LastAuthor=$(git log -1 "$gitFile" 2>/dev/null | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')
