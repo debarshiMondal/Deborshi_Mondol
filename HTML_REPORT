@@ -6,6 +6,13 @@ HTML_REPORT() {
   _hdr_bg="#2e7d32"; _run_strip="#e8f5e9"; _status_bg="#e8f5e9"
   [ "$Report" = "FAILED" ] && { _hdr_bg="#c62828"; _run_strip="#fff2b6"; _status_bg="#fff4cc"; }
 
+  # Run Details chip bg + text by status
+  if [ "$Report" = "SUCCEEDED" ]; then
+    _chip_bg="#2A3439"; _chip_txt="#ffffff"   # Gunmetal
+  else
+    _chip_bg="#C2B280"; _chip_txt="#111111"   # Ecru
+  fi
+
   # ---------- values for Run Details chips ----------
   _RUN_IST="$(TZ=Asia/Kolkata date +'%d.%b.%Y %H:%M IST')"
   _API="${SetAPI:-N/A}"
@@ -18,10 +25,10 @@ HTML_REPORT() {
   ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
   FORCE_DEPLOY_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/$(basename ${HTMLFDLog:-$HTMLLog}).${DATE}"
 
-  # ---------- tiny escaper for chip values ----------
+  # ---------- tiny escaper ----------
   _esc(){ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
 
-  # ---------- HTML top (keeps hover underline for web; Outlook ignores) ----------
+  # ---------- HTML top (keep hover underline for web; Outlook ignores) ----------
   cat >>"$HTMLLog" <<'HTML_TOP'
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <style type="text/css">
@@ -35,7 +42,7 @@ HTML_TOP
 
   # ---------- Header (compact) ----------
   cat >>"$HTMLLog" <<EOF
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="980" style="max-width:980px;margin:8px auto;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="1100" style="max-width:1100px;margin:8px auto;">
     <tr>
       <td style="background:${_hdr_bg};padding:4px 8px;color:#ffffff;font:bold 16px Arial,Helvetica,sans-serif;line-height:18px;mso-line-height-rule:exactly;">
         ${SFDC_ORG} Deployment $([ "$Report" = "SUCCEEDED" ] && echo "Success" || echo "Failure") Report
@@ -44,30 +51,32 @@ HTML_TOP
   </table>
 EOF
 
-  # ---------- Main card ----------
+  # ---------- Main card (single container; widened plate) ----------
   cat >>"$HTMLLog" <<'CARD_TOP'
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="980" style="max-width:980px;background:#ffffff;border:1px solid #e6e6e6;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="1100" style="max-width:1100px;background:#ffffff;border:1px solid #e6e6e6;">
     <tr><td style="padding:12px 14px;">
 CARD_TOP
 
-  # ---------- Run Details (single strip; centered gray chips) ----------
+  # ---------- Run Details (lower strip height + shorter chips) ----------
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
          style="background:${_run_strip};border-radius:10px;mso-border-alt:none;">
-    <tr><td style="padding:6px 10px;font:800 13px Arial;color:#1a365d;">Run Details</td></tr>
-    <tr><td style="padding:0 8px 6px 8px;">
+    <tr><td style="padding:4px 10px;font:800 12px Arial;color:#1a365d;line-height:14px;">Run Details</td></tr>
+    <tr><td style="padding:0 8px 4px 8px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
 EOF
 
   _chip(){ # $1=label $2=value
     cat >>"$HTMLLog" <<EOF
-        <td width="20%" style="padding:4px;">
+        <td width="20%" style="padding:3px;">
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-                 bgcolor="#f2f4f7" style="background:#f2f4f7;border:1px solid #e3e3e3;">
-            <tr><td align="center" valign="middle" height="40" style="height:40px;padding:6px 8px;">
-              <div style="font:10px Arial;color:#666;line-height:12px;">$1</div>
-              <div style="font:bold 13px Arial;word-wrap:break-word;word-break:break-word;white-space:normal;max-width:100%;">$2</div>
-            </td></tr>
+                 bgcolor="${_chip_bg}" style="background:${_chip_bg};border:1px solid #d0d0d0;">
+            <tr>
+              <td align="center" valign="middle" height="32" style="height:32px;padding:4px 6px;">
+                <div style="font:10px Arial;color:${_chip_txt};line-height:12px;">$1</div>
+                <div style="font:bold 12px Arial;color:${_chip_txt};line-height:14px;word-wrap:break-word;word-break:break-word;white-space:normal;max-width:100%;">$2</div>
+              </td>
+            </tr>
           </table>
         </td>
 EOF
@@ -84,28 +93,32 @@ EOF
   </table>
 EOF
 
-  # ---------- Quick Links (compact, new colors, bigger font, no underline) ----------
-  # Palette mapping (left→right): Wine #722F37, Gunmetal #2A3439, Eggplant #614051, Oxblood #4A0E0E
+  # ---------- Quick Links (compact height; auto width; tiny gaps) ----------
+  # Colors (left→right): Wine #722F37, Gunmetal #2A3439, Eggplant #614051, Oxblood #4A0E0E
+  # Height fixed via td height; 4px spacer cells between buttons.
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:6px 0 8px 0;">
     <tr>
-      <td width="25%" align="center" bgcolor="#722F37" style="padding:5px;">
-        <a class="cta" href="${OPEN_LOGS_URL}" style="color:#ffffff;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:15px;">Open Logs</a>
+      <td align="center" bgcolor="#722F37" height="28" style="height:28px;padding:4px 8px;">
+        <a class="cta" href="${OPEN_LOGS_URL}" style="font:bold 12px Arial;display:block;line-height:15px;white-space:normal;word-break:break-word;">Open Logs</a>
       </td>
-      <td width="25%" align="center" bgcolor="#2A3439" style="padding:5px;">
-        <a class="cta" href="${ORIG_PMD_URL}" style="color:#ffffff;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:15px;">Combined Original PMD</a>
+      <td width="4" style="font-size:0;line-height:0;">&nbsp;</td>
+      <td align="center" bgcolor="#2A3439" height="28" style="height:28px;padding:4px 8px;">
+        <a class="cta" href="${ORIG_PMD_URL}" style="font:bold 12px Arial;display:block;line-height:15px;white-space:normal;word-break:break-word;">Combined Original PMD</a>
       </td>
-      <td width="25%" align="center" bgcolor="#614051" style="padding:5px;">
-        <a class="cta" href="#" style="color:#ffffff;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:15px;">Combined Current PMD</a>
+      <td width="4" style="font-size:0;line-height:0;">&nbsp;</td>
+      <td align="center" bgcolor="#614051" height="28" style="height:28px;padding:4px 8px;">
+        <a class="cta" href="#" style="font:bold 12px Arial;display:block;line-height:15px;white-space:normal;word-break:break-word;">Combined Current PMD</a>
       </td>
-      <td width="25%" align="center" bgcolor="#4A0E0E" style="padding:5px;">
-        <a class="cta" href="${FORCE_DEPLOY_URL}" style="color:#ffffff;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:15px;">ForceDeploy</a>
+      <td width="4" style="font-size:0;line-height:0;">&nbsp;</td>
+      <td align="center" bgcolor="#4A0E0E" height="28" style="height:28px;padding:4px 8px;">
+        <a class="cta" href="${FORCE_DEPLOY_URL}" style="font:bold 12px Arial;display:block;line-height:15px;white-space:normal;word-break:break-word;">ForceDeploy</a>
       </td>
     </tr>
   </table>
 EOF
 
-  # ---------- Status Summary ----------
+  # ---------- Status Summary (unchanged layout; keeps earlier sizes) ----------
   _status_counts() {
     if [ "$Report" = "SUCCEEDED" ]; then
       echo "Passed: ${COMP_PASS:-N/A}"
@@ -156,13 +169,12 @@ EOF
   </table>
 EOF
 
-  # ---------- PMD REVIEW ----------
+  # ---------- PMD REVIEW (unchanged logic) ----------
   echo '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:10px 4px 6px 4px;font:800 13px Arial;color:#1a365d;">PMD REVIEW</td></tr></table>' >>"$HTMLLog"
 
   if [ -f /tmp/CodeAnalysisReport.txt ]; then
     echo '<div style="font:bold 12px Arial;color:#c62828;margin:0 4px 8px;">No PMD Report – No Class/Trigger in Changeset</div>' >>"$HTMLLog"
   else
-    # ----- Classes table (Δ HIGH) -----
     echo '<table role="presentation" cellpadding="8" cellspacing="0" border="0" width="100%" style="border-collapse:separate;border-spacing:0 4px;">' >>"$HTMLLog"
     echo '<tr style="background:#eaf2ff;"><th align="left"  style="font:11px Arial;color:#274690;padding:8px;">CLASS NAME</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">ORIGINAL (HIGH)</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">CURRENT (HIGH)</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">Δ HIGH</th></tr>' >>"$HTMLLog"
 
@@ -192,7 +204,6 @@ EOF
     done
     echo "</table>" >>"$HTMLLog"
 
-    # ----- Triggers table (Δ HIGH) -----
     echo '<table role="presentation" cellpadding="8" cellspacing="0" border="0" width="100%" style="border-collapse:separate;border-spacing:0 4px;margin-top:6px;"><tr style="background:#eaf2ff;"><th align="left" style="font:11px Arial;color:#274690;padding:8px;">TRIGGER NAME</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">ORIGINAL (HIGH)</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">CURRENT (HIGH)</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">Δ HIGH</th></tr>' >>"$HTMLLog"
     for triggerName in `ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null`
     do
@@ -221,7 +232,7 @@ EOF
     echo "</table>" >>"$HTMLLog"
   fi
 
-  # ---------- Changeset / Failures ----------
+  # ---------- Changeset / Failures (unchanged) ----------
   SAVEIFS=$IFS; IFS=$(echo -en "\n\b")
   if [ "$Report" = "SUCCEEDED" ]; then
     find changeSetDeploy/force-app/main/default -type f \
@@ -264,7 +275,7 @@ $LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
   # ---------- Footer (compact) ----------
   cat >>"$HTMLLog" <<'CARD_END'
     </td></tr></table>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="980" style="max-width:980px;margin:8px auto 14px;background:#111111;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="1100" style="max-width:1100px;margin:8px auto 14px;background:#111111;">
       <tr><td style="padding:6px 8px;text-align:center;color:#ffffff;font:bold 12px Arial;line-height:16px;mso-line-height-rule:exactly;">End of Report</td></tr>
     </table>
 </td></tr></table>
