@@ -21,9 +21,15 @@ HTML_REPORT() {
   # ---------- tiny escaper for chip values ----------
   _esc(){ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
 
-  # ---------- HTML top ----------
+  # ---------- HTML top (adds minimal hover style for non-Outlook clients) ----------
   cat >>"$HTMLLog" <<'HTML_TOP'
-<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style type="text/css">
+  /* Many desktop/web clients support :hover; Outlook desktop ignores it (fine). */
+  a.cta { text-decoration:none !important; color:#ffffff !important; }
+  a.cta:hover { text-decoration:underline !important; }
+</style>
+</head>
 <body style="margin:0;padding:0;background:#f6f8fa;">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f8fa;"><tr><td align="center">
 HTML_TOP
@@ -45,7 +51,7 @@ EOF
     <tr><td style="padding:12px 14px;">
 CARD_TOP
 
-  # ---------- Run Details (single strip; centered gray chips; no VML) ----------
+  # ---------- Run Details (single strip; centered gray chips) ----------
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
          style="background:${_run_strip};border-radius:10px;mso-border-alt:none;">
@@ -61,7 +67,7 @@ EOF
                  bgcolor="#f2f4f7" style="background:#f2f4f7;border:1px solid #e3e3e3;">
             <tr><td align="center" valign="middle" height="40" style="height:40px;padding:6px 8px;">
               <div style="font:10px Arial;color:#666;line-height:12px;">$1</div>
-              <div style="font:bold 13px Arial;text-decoration:underline;word-wrap:break-word;word-break:break-word;white-space:normal;max-width:100%;">$2</div>
+              <div style="font:bold 13px Arial;word-wrap:break-word;word-break:break-word;white-space:normal;max-width:100%;">$2</div>
             </td></tr>
           </table>
         </td>
@@ -79,28 +85,28 @@ EOF
   </table>
 EOF
 
-  # ---------- Quick Links (no VML; table buttons; full text wraps) ----------
+  # ---------- Quick Links (compact colored boxes, no underline; hover adds underline where supported) ----------
+  # Colors per request: Oxblood #4A0E0E, Rust #B4552A, Navy #1F3A93, Charcoal #333333 (white text).
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:6px 0 8px 0;">
     <tr>
-      <td width="25%" align="center" bgcolor="#2f80ed" style="padding:8px;">
-        <a href="${OPEN_LOGS_URL}" style="color:#ffffff;text-decoration:underline;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:14px;">Open Logs</a>
+      <td width="25%" align="center" bgcolor="#4A0E0E" style="padding:6px;">
+        <a class="cta" href="${OPEN_LOGS_URL}" style="color:#ffffff;font:bold 11px Arial;display:block;white-space:normal;word-break:break-word;line-height:13px;">Open Logs</a>
       </td>
-      <td width="25%" align="center" bgcolor="#27ae60" style="padding:8px;">
-        <a href="${ORIG_PMD_URL}" style="color:#ffffff;text-decoration:underline;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:14px;">Combined Original PMD</a>
+      <td width="25%" align="center" bgcolor="#B4552A" style="padding:6px;">
+        <a class="cta" href="${ORIG_PMD_URL}" style="color:#ffffff;font:bold 11px Arial;display:block;white-space:normal;word-break:break-word;line-height:13px;">Combined Original PMD</a>
       </td>
-      <td width="25%" align="center" bgcolor="#6c63ff" style="padding:8px;">
-        <a href="#" style="color:#ffffff;text-decoration:underline;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:14px;">Combined Current PMD</a>
+      <td width="25%" align="center" bgcolor="#1F3A93" style="padding:6px;">
+        <a class="cta" href="#" style="color:#ffffff;font:bold 11px Arial;display:block;white-space:normal;word-break:break-word;line-height:13px;">Combined Current PMD</a>
       </td>
-      <td width="25%" align="center" bgcolor="#b23aee" style="padding:8px;">
-        <a href="${FORCE_DEPLOY_URL}" style="color:#ffffff;text-decoration:underline;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:14px;">ForceDeploy</a>
+      <td width="25%" align="center" bgcolor="#333333" style="padding:6px;">
+        <a class="cta" href="${FORCE_DEPLOY_URL}" style="color:#ffffff;font:bold 11px Arial;display:block;white-space:normal;word-break:break-word;line-height:13px;">ForceDeploy</a>
       </td>
     </tr>
   </table>
 EOF
 
   # ---------- Status Summary (consistent sizes; show real counts) ----------
-  # Succeeded: show only Passed; Failed: show Passed & Failed
   _status_counts() {
     if [ "$Report" = "SUCCEEDED" ]; then
       echo "Passed: ${COMP_PASS:-N/A}"
@@ -157,7 +163,7 @@ EOF
   if [ -f /tmp/CodeAnalysisReport.txt ]; then
     echo '<div style="font:bold 12px Arial;color:#c62828;margin:0 4px 8px;">No PMD Report – No Class/Trigger in Changeset</div>' >>"$HTMLLog"
   else
-    # ----- Classes table (adds Δ HIGH) -----
+    # ----- Classes table (Δ HIGH) -----
     echo '<table role="presentation" cellpadding="8" cellspacing="0" border="0" width="100%" style="border-collapse:separate;border-spacing:0 4px;">' >>"$HTMLLog"
     echo '<tr style="background:#eaf2ff;"><th align="left"  style="font:11px Arial;color:#274690;padding:8px;">CLASS NAME</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">ORIGINAL (HIGH)</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">CURRENT (HIGH)</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">Δ HIGH</th></tr>' >>"$HTMLLog"
 
@@ -187,7 +193,7 @@ EOF
     done
     echo "</table>" >>"$HTMLLog"
 
-    # ----- Triggers table (same Δ HIGH logic) -----
+    # ----- Triggers table (Δ HIGH) -----
     echo '<table role="presentation" cellpadding="8" cellspacing="0" border="0" width="100%" style="border-collapse:separate;border-spacing:0 4px;margin-top:6px;"><tr style="background:#eaf2ff;"><th align="left" style="font:11px Arial;color:#274690;padding:8px;">TRIGGER NAME</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">ORIGINAL (HIGH)</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">CURRENT (HIGH)</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">Δ HIGH</th></tr>' >>"$HTMLLog"
     for triggerName in `ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null`
     do
@@ -216,7 +222,7 @@ EOF
     echo "</table>" >>"$HTMLLog"
   fi
 
-  # ---------- Changeset / Failures (two-tone rows; same logic) ----------
+  # ---------- Changeset / Failures ----------
   SAVEIFS=$IFS; IFS=$(echo -en "\n\b")
   if [ "$Report" = "SUCCEEDED" ]; then
     find changeSetDeploy/force-app/main/default -type f \
@@ -242,8 +248,7 @@ EOF
       fileName=$(echo "$failure" | jq -r '.fileName')
       fileDisp=$(echo "$fileName" | sed 's|^changeSetDeploy/force-app/main/default/||')
       errorMsg=$(echo "$failure" | jq -r '.problem' | tr '\n' ' ' | tr '\r' ' ' | sed -e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
-      echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0" >>"$HTMLLog"
-      echo "\" cellspacing=\"0\" border=\"0\" style=\"margin-top:6px;\"><tr><td style=\"background:#fff4cc;padding:6px 8px;border:1px solid #f0e1a6;\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">$i. $fileDisp -- Error: $errorMsg</pre></td></tr>" >>"$HTMLLog"
+      echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:6px;\"><tr><td style=\"background:#fff4cc;padding:6px 8px;border:1px solid #f0e1a6;\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">$i. $fileDisp -- Error: $errorMsg</pre></td></tr>" >>"$HTMLLog"
       gitFile=$(find src -type f -iname "$(basename "$fileName")" | head -n 1)
       if [ -n "$gitFile" ]; then
         LastAuthor=$(git log -1 "$gitFile" 2>/dev/null | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')
