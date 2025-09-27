@@ -21,11 +21,10 @@ HTML_REPORT() {
   # ---------- tiny escaper for chip values ----------
   _esc(){ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
 
-  # ---------- HTML top (adds minimal hover style for non-Outlook clients) ----------
+  # ---------- HTML top (keeps hover underline for web; Outlook ignores) ----------
   cat >>"$HTMLLog" <<'HTML_TOP'
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <style type="text/css">
-  /* Many desktop/web clients support :hover; Outlook desktop ignores it (fine). */
   a.cta { text-decoration:none !important; color:#ffffff !important; }
   a.cta:hover { text-decoration:underline !important; }
 </style>
@@ -34,7 +33,7 @@ HTML_REPORT() {
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f8fa;"><tr><td align="center">
 HTML_TOP
 
-  # ---------- Header (compact; Outlook-safe) ----------
+  # ---------- Header (compact) ----------
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="980" style="max-width:980px;margin:8px auto;">
     <tr>
@@ -45,7 +44,7 @@ HTML_TOP
   </table>
 EOF
 
-  # ---------- Main card (single container) ----------
+  # ---------- Main card ----------
   cat >>"$HTMLLog" <<'CARD_TOP'
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="980" style="max-width:980px;background:#ffffff;border:1px solid #e6e6e6;">
     <tr><td style="padding:12px 14px;">
@@ -85,28 +84,28 @@ EOF
   </table>
 EOF
 
-  # ---------- Quick Links (compact colored boxes, no underline; hover adds underline where supported) ----------
-  # Colors per request: Oxblood #4A0E0E, Rust #B4552A, Navy #1F3A93, Charcoal #333333 (white text).
+  # ---------- Quick Links (compact, new colors, bigger font, no underline) ----------
+  # Palette mapping (left→right): Wine #722F37, Gunmetal #2A3439, Eggplant #614051, Oxblood #4A0E0E
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:6px 0 8px 0;">
     <tr>
-      <td width="25%" align="center" bgcolor="#4A0E0E" style="padding:6px;">
-        <a class="cta" href="${OPEN_LOGS_URL}" style="color:#ffffff;font:bold 11px Arial;display:block;white-space:normal;word-break:break-word;line-height:13px;">Open Logs</a>
+      <td width="25%" align="center" bgcolor="#722F37" style="padding:5px;">
+        <a class="cta" href="${OPEN_LOGS_URL}" style="color:#ffffff;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:15px;">Open Logs</a>
       </td>
-      <td width="25%" align="center" bgcolor="#B4552A" style="padding:6px;">
-        <a class="cta" href="${ORIG_PMD_URL}" style="color:#ffffff;font:bold 11px Arial;display:block;white-space:normal;word-break:break-word;line-height:13px;">Combined Original PMD</a>
+      <td width="25%" align="center" bgcolor="#2A3439" style="padding:5px;">
+        <a class="cta" href="${ORIG_PMD_URL}" style="color:#ffffff;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:15px;">Combined Original PMD</a>
       </td>
-      <td width="25%" align="center" bgcolor="#1F3A93" style="padding:6px;">
-        <a class="cta" href="#" style="color:#ffffff;font:bold 11px Arial;display:block;white-space:normal;word-break:break-word;line-height:13px;">Combined Current PMD</a>
+      <td width="25%" align="center" bgcolor="#614051" style="padding:5px;">
+        <a class="cta" href="#" style="color:#ffffff;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:15px;">Combined Current PMD</a>
       </td>
-      <td width="25%" align="center" bgcolor="#333333" style="padding:6px;">
-        <a class="cta" href="${FORCE_DEPLOY_URL}" style="color:#ffffff;font:bold 11px Arial;display:block;white-space:normal;word-break:break-word;line-height:13px;">ForceDeploy</a>
+      <td width="25%" align="center" bgcolor="#4A0E0E" style="padding:5px;">
+        <a class="cta" href="${FORCE_DEPLOY_URL}" style="color:#ffffff;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:15px;">ForceDeploy</a>
       </td>
     </tr>
   </table>
 EOF
 
-  # ---------- Status Summary (consistent sizes; show real counts) ----------
+  # ---------- Status Summary ----------
   _status_counts() {
     if [ "$Report" = "SUCCEEDED" ]; then
       echo "Passed: ${COMP_PASS:-N/A}"
@@ -262,7 +261,7 @@ $LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
   fi
   IFS=$SAVEIFS
 
-  # ---------- Footer (compact; Outlook-safe) ----------
+  # ---------- Footer (compact) ----------
   cat >>"$HTMLLog" <<'CARD_END'
     </td></tr></table>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="980" style="max-width:980px;margin:8px auto 14px;background:#111111;">
