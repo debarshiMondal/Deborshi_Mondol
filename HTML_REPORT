@@ -2,7 +2,7 @@ HTML_REPORT() {
   Report=$1
   : > "$HTMLLog"
 
-  # ---------- presentation colors (UI only) ----------
+  # ---------- presentation colors (UI only; no core logic changes) ----------
   _hdr_bg="#2e7d32"; _run_strip="#e8f5e9"; _status_bg="#e8f5e9"
   [ "$Report" = "FAILED" ] && { _hdr_bg="#c62828"; _run_strip="#fff2b6"; _status_bg="#fff4cc"; }
 
@@ -18,7 +18,7 @@ HTML_REPORT() {
   ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
   FORCE_DEPLOY_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/$(basename ${HTMLFDLog:-$HTMLLog}).${DATE}"
 
-  # ---------- tiny escaper ----------
+  # ---------- tiny escaper for chip values ----------
   _esc(){ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
 
   # ---------- HTML top ----------
@@ -28,24 +28,24 @@ HTML_REPORT() {
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f8fa;"><tr><td align="center">
 HTML_TOP
 
-  # ---------- Header (slim) ----------
+  # ---------- Header (compact; Outlook-safe) ----------
   cat >>"$HTMLLog" <<EOF
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="980" style="max-width:980px;margin:14px auto;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="980" style="max-width:980px;margin:8px auto;">
     <tr>
-      <td style="background:${_hdr_bg};padding:12px 14px;color:#ffffff;font:bold 18px Arial,Helvetica,sans-serif;">
+      <td style="background:${_hdr_bg};padding:4px 8px;color:#ffffff;font:bold 16px Arial,Helvetica,sans-serif;line-height:18px;mso-line-height-rule:exactly;">
         ${SFDC_ORG} Deployment $([ "$Report" = "SUCCEEDED" ] && echo "Success" || echo "Failure") Report
       </td>
     </tr>
   </table>
 EOF
 
-  # ---------- Main card ----------
+  # ---------- Main card (single container) ----------
   cat >>"$HTMLLog" <<'CARD_TOP'
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="980" style="max-width:980px;background:#ffffff;border:1px solid #e6e6e6;">
     <tr><td style="padding:12px 14px;">
 CARD_TOP
 
-  # ---------- Run Details (single strip; centered chips) ----------
+  # ---------- Run Details (single strip; centered gray chips; no VML) ----------
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
          style="background:${_run_strip};border-radius:10px;mso-border-alt:none;">
@@ -79,31 +79,27 @@ EOF
   </table>
 EOF
 
-  # ---------- Quick Links (4 tiles, width 220, Outlook VML) ----------
-  _tile(){ # $1=label $2=href $3=bg
-    cat >>"$HTMLLog" <<EOF
-    <td width="25%" style="padding:4px;">
-      <!--[if mso]>
-        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="$2"
-          style="height:36px;v-text-anchor:middle;width:220px;" arcsize="12%" stroke="f" fillcolor="$3">
-          <w:anchorlock/>
-          <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:bold;text-decoration:underline;">$1</center>
-        </v:roundrect>
-      <![endif]-->
-      <!--[if !mso]><!-- -->
-        <a href="$2" style="display:block;background:$3;line-height:36px;height:36px;text-align:center;color:#ffffff;font:bold 12px Arial;text-decoration:underline;">$1</a>
-      <!--<![endif]-->
-    </td>
+  # ---------- Quick Links (no VML; table buttons; full text wraps) ----------
+  cat >>"$HTMLLog" <<EOF
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:6px 0 8px 0;">
+    <tr>
+      <td width="25%" align="center" bgcolor="#2f80ed" style="padding:8px;">
+        <a href="${OPEN_LOGS_URL}" style="color:#ffffff;text-decoration:underline;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:14px;">Open Logs</a>
+      </td>
+      <td width="25%" align="center" bgcolor="#27ae60" style="padding:8px;">
+        <a href="${ORIG_PMD_URL}" style="color:#ffffff;text-decoration:underline;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:14px;">Combined Original PMD</a>
+      </td>
+      <td width="25%" align="center" bgcolor="#6c63ff" style="padding:8px;">
+        <a href="#" style="color:#ffffff;text-decoration:underline;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:14px;">Combined Current PMD</a>
+      </td>
+      <td width="25%" align="center" bgcolor="#b23aee" style="padding:8px;">
+        <a href="${FORCE_DEPLOY_URL}" style="color:#ffffff;text-decoration:underline;font:bold 12px Arial;display:block;white-space:normal;word-break:break-word;line-height:14px;">ForceDeploy</a>
+      </td>
+    </tr>
+  </table>
 EOF
-  }
-  echo '  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:6px 0 8px 0;"><tr>' >>"$HTMLLog"
-  _tile "Open Logs"               "$OPEN_LOGS_URL"  "#2f80ed"
-  _tile "Combined Original PMD"   "$ORIG_PMD_URL"   "#27ae60"
-  _tile "Combined Current PMD"    "#"               "#6c63ff"
-  _tile "ForceDeploy"             "$FORCE_DEPLOY_URL" "#b23aee"
-  echo '  </tr></table>' >>"$HTMLLog"
 
-  # ---------- Status Summary (consistent sizes, real counts) ----------
+  # ---------- Status Summary (consistent sizes; real counts with fallback) ----------
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr><td style="padding:6px 4px 4px 4px;font:800 13px Arial;color:#1a365d;">STATUS SUMMARY</td></tr>
@@ -152,7 +148,7 @@ EOF
   if [ -f /tmp/CodeAnalysisReport.txt ]; then
     echo '<div style="font:bold 12px Arial;color:#c62828;margin:0 4px 8px;">No PMD Report – No Class/Trigger in Changeset</div>' >>"$HTMLLog"
   else
-    # ----- Classes table -----
+    # ----- Classes table (adds Δ HIGH) -----
     echo '<table role="presentation" cellpadding="8" cellspacing="0" border="0" width="100%" style="border-collapse:separate;border-spacing:0 4px;">' >>"$HTMLLog"
     echo '<tr style="background:#eaf2ff;"><th align="left"  style="font:11px Arial;color:#274690;padding:8px;">CLASS NAME</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">ORIGINAL (HIGH)</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">CURRENT (HIGH)</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">Δ HIGH</th></tr>' >>"$HTMLLog"
 
@@ -167,24 +163,22 @@ EOF
       OriginalPmd=$( [ -f "$pmd_html" ] && grep "Original PMD Warnings Total" "$pmd_html" | cut -d ":" -f 2 || echo "0")
       Currentpmd=$(  [ -f "$pmd_html" ] && grep "Current PMD Warnings Total"  "$pmd_html" | cut -d ":" -f 2 || echo "0")
 
-      pattern="ApexUnitTestShouldNotUseSeeAllDataTrue:\|UnusedLocalVariable:\|ClassNamingConventions:\|FieldDeclarationsShouldBeAtStart:\|FieldNamingConventions:\|FormalParameterNamingConventions:\|LocalVariableNamingConventions:\|MethodNamingConventions:\|PropertyNamingConventions:\|ExcessiveClassLength:\|ExcessiveParameterList:\|ApexDoc:\|ApexCSRF:\|AvoidDirectAccessTriggerMap:\|AvoidHardcodingId:\|AvoidNonExistentAnnotations:\|EmptyCatchBlock:\|EmptyIfStmt:\|EmptyStatementBlock:\|EmptyTryOrFinallyBlock:\|EmptyWhileStmt:\|InaccessibleAuraEnabledGetter:\|MethodWithSameNameAsEnclosingClass:\|OverrideBothEqualsAndHashcode:\|TestMethodsMustBeInTestClasses:\|AvoidDmlStatementsInLoops:\|AvoidSoqlInLoops:\|AvoidSoslInLoops:\|OperationWithLimitsInLoop:\|ApexBadCrypto:\|ApexDangerousMethods:\|ApexInsecureEndpoint:\|ApexOpenRedirect:\|ApexSharingViolations:\|ApexSOQLInjection:\|ApexSuggestUsingNamedCred:"
+      pattern="ApexUnitTestShouldNotUseSeeAllDataTrue:\|UnusedLocalVariable:\|ClassNamingConventions:\|FieldDeclarationsShouldBeAtStart:\|FieldNamingConventions:\|FormalParameterNamingConventions:\|LocalVariableNamingConventions:\|MethodNamingConventions:\|PropertyNamingConventions:\|ExcessiveClassLength:\|ExcessiveParameterList:\|ApexDoc:\|ApexCSRF:\|AvoidDirectAccessTriggerMap:\|AvoidHardcodingId:\|AvoidHardcodingId:\|AvoidNonExistentAnnotations:\|EmptyCatchBlock:\|EmptyIfStmt:\|EmptyStatementBlock:\|EmptyTryOrFinallyBlock:\|EmptyWhileStmt:\|InaccessibleAuraEnabledGetter:\|MethodWithSameNameAsEnclosingClass:\|OverrideBothEqualsAndHashcode:\|TestMethodsMustBeInTestClasses:\|AvoidDmlStatementsInLoops:\|AvoidSoqlInLoops:\|AvoidSoslInLoops:\|OperationWithLimitsInLoop:\|ApexBadCrypto:\|ApexDangerousMethods:\|ApexInsecureEndpoint:\|ApexOpenRedirect:\|ApexSharingViolations:\|ApexSOQLInjection:\|ApexSuggestUsingNamedCred:"
       CurrseverityCnt=$( [ -f "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" ] && grep -o $pattern "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" | wc -l || echo 0 )
       OrgseverityCnt=$(  [ -f "PMDReport/orgpmdoutput/src/classes/$orgTxt" ] && grep -o $pattern "PMDReport/orgpmdoutput/src/classes/$orgTxt" | wc -l || echo 0 )
-      delta=$(( CurrseverityCnt - OrgseverityCnt ))
-      sign=""
-      [ $delta -gt 0 ] && sign="+$delta" || sign="$delta"
+      delta=$(( CurrseverityCnt - OrgseverityCnt )); [ $delta -gt 0 ] && delta="+$delta"
 
       link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$classeHtml"
       display="$base.cls"
       if [ "${CurrseverityCnt:-0}" -gt "${OrgseverityCnt:-0}" ]; then
-        echo "<tr style=\"background:#ffffff;border:1px solid #e6eefc;\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:#c62828;font-weight:bold;\">$display</a></td><td align=\"right\" style=\"color:#c62828;\">${OriginalPmd}-($OrgseverityCnt)</td><td align=\"right\" style=\"color:#c62828;\"><b>${Currentpmd}-($CurrseverityCnt)</b></td><td align=\"right\" style=\"color:#c62828;\">$sign</td></tr>" >>"$HTMLLog"
+        echo "<tr style=\"background:#ffffff;border:1px solid #e6eefc;\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:#c62828;font-weight:bold;\">$display</a></td><td align=\"right\" style=\"color:#c62828;\">${OriginalPmd}-($OrgseverityCnt)</td><td align=\"right\" style=\"color:#c62828;\"><b>${Currentpmd}-($CurrseverityCnt)</b></td><td align=\"right\" style=\"color:#c62828;\">$delta</td></tr>" >>"$HTMLLog"
       else
-        echo "<tr style=\"background:#ffffff;border:1px solid #e6eefc;\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:#0b5ed7;\">$display</a></td><td align=\"right\" style=\"color:#0b5ed7;\">${OriginalPmd}-($OrgseverityCnt)</td><td align=\"right\" style=\"color:#0b5ed7;\">${Currentpmd}-($CurrseverityCnt)</td><td align=\"right\" style=\"color:#0b5ed7;\">$sign</td></tr>" >>"$HTMLLog"
+        echo "<tr style=\"background:#ffffff;border:1px solid #e6eefc;\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:#0b5ed7;\">$display</a></td><td align=\"right\" style=\"color:#0b5ed7;\">${OriginalPmd}-($OrgseverityCnt)</td><td align=\"right\" style=\"color:#0b5ed7;\">${Currentpmd}-($CurrseverityCnt)</td><td align=\"right\" style=\"color:#0b5ed7;\">$delta</td></tr>" >>"$HTMLLog"
       fi
     done
     echo "</table>" >>"$HTMLLog"
 
-    # ----- Triggers table (same high-severity logic + Δ High) -----
+    # ----- Triggers table (same Δ HIGH logic) -----
     echo '<table role="presentation" cellpadding="8" cellspacing="0" border="0" width="100%" style="border-collapse:separate;border-spacing:0 4px;margin-top:6px;"><tr style="background:#eaf2ff;"><th align="left" style="font:11px Arial;color:#274690;padding:8px;">TRIGGER NAME</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">ORIGINAL (HIGH)</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">CURRENT (HIGH)</th><th align="right" style="font:11px Arial;color:#274690;padding:8px;">Δ HIGH</th></tr>' >>"$HTMLLog"
     for triggerName in `ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null`
     do
@@ -200,22 +194,20 @@ EOF
       pattern="ApexUnitTestShouldNotUseSeeAllDataTrue:\|UnusedLocalVariable:\|ClassNamingConventions:\|FieldDeclarationsShouldBeAtStart:\|FieldNamingConventions:\|FormalParameterNamingConventions:\|LocalVariableNamingConventions:\|MethodNamingConventions:\|PropertyNamingConventions:\|ExcessiveClassLength:\|ExcessiveParameterList:\|ApexDoc:\|ApexCSRF:\|AvoidDirectAccessTriggerMap:\|AvoidHardcodingId:\|AvoidNonExistentAnnotations:\|EmptyCatchBlock:\|EmptyIfStmt:\|EmptyStatementBlock:\|EmptyTryOrFinallyBlock:\|EmptyWhileStmt:\|InaccessibleAuraEnabledGetter:\|MethodWithSameNameAsEnclosingClass:\|OverrideBothEqualsAndHashcode:\|TestMethodsMustBeInTestClasses:\|AvoidDmlStatementsInLoops:\|AvoidSoqlInLoops:\|AvoidSoslInLoops:\|OperationWithLimitsInLoop:\|ApexBadCrypto:\|ApexDangerousMethods:\|ApexInsecureEndpoint:\|ApexOpenRedirect:\|ApexSharingViolations:\|ApexSOQLInjection:\|ApexSuggestUsingNamedCred:"
       CurrseverityCnt=$( [ -f "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" ] && grep -o $pattern "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" | wc -l || echo 0 )
       OrgseverityCnt=$(  [ -f "PMDReport/orgpmdoutput/src/triggers/$orgTxt" ] && grep -o $pattern "PMDReport/orgpmdoutput/src/triggers/$orgTxt" | wc -l || echo 0 )
-      delta=$(( CurrseverityCnt - OrgseverityCnt ))
-      sign=""
-      [ $delta -gt 0 ] && sign="+$delta" || sign="$delta"
+      delta=$(( CurrseverityCnt - OrgseverityCnt )); [ $delta -gt 0 ] && delta="+$delta"
 
       link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$trigHtml"
       display="$tbase.trigger"
       if [ "${CurrseverityCnt:-0}" -gt "${OrgseverityCnt:-0}" ]; then
-        echo "<tr style=\"background:#ffffff;border:1px solid #e6eefc;\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:#c62828;font-weight:bold;\">$display</a></td><td align=\"right\" style=\"color:#c62828;\">${OriginalPmd}-($OrgseverityCnt)</td><td align=\"right\" style=\"color:#c62828;\"><b>${Currentpmd}-($CurrseverityCnt)</b></td><td align=\"right\" style=\"color:#c62828;\">$sign</td></tr>" >>"$HTMLLog"
+        echo "<tr style=\"background:#ffffff;border:1px solid #e6eefc;\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:#c62828;font-weight:bold;\">$display</a></td><td align=\"right\" style=\"color:#c62828;\">${OriginalPmd}-($OrgseverityCnt)</td><td align=\"right\" style=\"color:#c62828;\"><b>${Currentpmd}-($CurrseverityCnt)</b></td><td align=\"right\" style=\"color:#c62828;\">$delta</td></tr>" >>"$HTMLLog"
       else
-        echo "<tr style=\"background:#ffffff;border:1px solid #e6eefc;\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:#0b5ed7;\">$display</a></td><td align=\"right\" style=\"color:#0b5ed7;\">${OriginalPmd}-($OrgseverityCnt)</td><td align=\"right\" style=\"color:#0b5ed7;\">${Currentpmd}-($CurrseverityCnt)</td><td align=\"right\" style=\"color:#0b5ed7;\">$sign</td></tr>" >>"$HTMLLog"
+        echo "<tr style=\"background:#ffffff;border:1px solid #e6eefc;\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:#0b5ed7;\">$display</a></td><td align=\"right\" style=\"color:#0b5ed7;\">${OriginalPmd}</td><td align=\"right\" style=\"color:#0b5ed7;\">${Currentpmd}</td><td align=\"right\" style=\"color:#0b5ed7;\">$delta</td></tr>" >>"$HTMLLog"
       fi
     done
     echo "</table>" >>"$HTMLLog"
   fi
 
-  # ---------- Changeset / Failures (unchanged logic; two-tone rows) ----------
+  # ---------- Changeset / Failures (two-tone rows; same logic) ----------
   SAVEIFS=$IFS; IFS=$(echo -en "\n\b")
   if [ "$Report" = "SUCCEEDED" ]; then
     find changeSetDeploy/force-app/main/default -type f \
@@ -243,7 +235,6 @@ EOF
       errorMsg=$(echo "$failure" | jq -r '.problem' | tr '\n' ' ' | tr '\r' ' ' | sed -e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
       echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:6px;\"><tr><td style=\"background:#fff4cc;padding:6px 8px;border:1px solid #f0e1a6;\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">$i. $fileDisp -- Error: $errorMsg</pre></td></tr>" >>"$HTMLLog"
       gitFile=$(find src -type f -iname "$(basename "$fileName")" | head -n 1)
-      if [ -z "$gitFile" ]; then ext=$(echo "$fileName" | sed 's/.*\.//'); if ! echo "cls page trigger component" | grep -qw "$ext"; then metaCandidate="$(basename "$fileName")-meta.xml"; fallbackFile=$(find src -type f -iname "$metaCandidate" | head -n 1); [ -n "$fallbackFile" ] && gitFile="$fallbackFile"; fi; fi
       if [ -n "$gitFile" ]; then
         LastAuthor=$(git log -1 "$gitFile" 2>/dev/null | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')
         echo "<tr><td style=\"background:#e0e0e0;padding:6px 8px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">GIT log >>> $gitFile
@@ -256,11 +247,11 @@ $LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
   fi
   IFS=$SAVEIFS
 
-  # ---------- Footer (slim) ----------
+  # ---------- Footer (compact; Outlook-safe) ----------
   cat >>"$HTMLLog" <<'CARD_END'
     </td></tr></table>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="980" style="max-width:980px;margin:10px auto 22px;background:#111111;">
-      <tr><td style="padding:8px 10px;text-align:center;color:#ffffff;font:bold 12px Arial;">End of Report</td></tr>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="980" style="max-width:980px;margin:8px auto 14px;background:#111111;">
+      <tr><td style="padding:6px 8px;text-align:center;color:#ffffff;font:bold 12px Arial;line-height:16px;mso-line-height-rule:exactly;">End of Report</td></tr>
     </table>
 </td></tr></table>
 </body></html>
