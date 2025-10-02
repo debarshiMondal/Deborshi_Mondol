@@ -1,33 +1,58 @@
-html_report patch
+  # ---- Quick Links (ultra-compact, single-line, rectangular) ----
+  cat >>"$HTMLLog" <<EOF
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 6px 0;">
+    <tr>
+      <td align="left" style="padding:0;">
+        <!-- content-sized inner table keeps boxes left-aligned and compact -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0;padding:0;">
+          <tr>
+            <!-- Box 1 -->
+            <td bgcolor="${_ql1}" style="padding:0;">
+              <a href="${OPEN_LOGS_URL}"
+                 style="display:block;height:22px;line-height:22px;mso-line-height-rule:exactly;
+                        padding:0 10px;margin:0;border-radius:0;
+                        font:bold 12px Arial,Helvetica,sans-serif;text-decoration:none;color:${_ql_text};white-space:nowrap;">
+                Open Logs
+              </a>
+            </td>
+            <td style="width:${_ql_gap}px;font-size:0;line-height:0;">&nbsp;</td>
 
-HTML_REPORT() {
-  Report=$1
+            <!-- Box 2 -->
+            <td bgcolor="${_ql2}" style="padding:0;">
+              <a href="${ORIG_PMD_URL}"
+                 style="display:block;height:22px;line-height:22px;mso-line-height-rule:exactly;
+                        padding:0 10px;margin:0;border-radius:0;
+                        font:bold 12px Arial,Helvetica,sans-serif;text-decoration:none;color:${_ql_text};white-space:nowrap;">
+                Combined Original PMD
+              </a>
+            </td>
+            <td style="width:${_ql_gap}px;font-size:0;line-height:0;">&nbsp;</td>
 
-  # --- isolate output + add a visible marker to detect the new template ---
-  : "${HTMLLog:=/tmp/${SFDC_ORG}.deploy.html}"
-  HTML_OUT="$(mktemp "/tmp/${SFDC_ORG}.email.XXXXXX.html")"
-  TEMPLATE_TAG="__NEW_EMAIL_TEMPLATE_V4__"
+            <!-- Box 3 -->
+            <td bgcolor="${_ql3}" style="padding:0;">
+              <a href="#"
+                 style="display:block;height:22px;line-height:22px;mso-line-height-rule:exactly;
+                        padding:0 10px;margin:0;border-radius:0;
+                        font:bold 12px Arial,Helvetica,sans-serif;text-decoration:none;color:${_ql_text};white-space:nowrap;">
+                Combined Current PMD
+              </a>
+            </td>
+            <td style="width:${_ql_gap}px;font-size:0;line-height:0;">&nbsp;</td>
 
-  # from now on, write to $HTML_OUT (NOT $HTMLLog); at the very end we’ll send $HTML_OUT
-
-
-
-cat > "$HTML_OUT" <<EOF
-<!DOCTYPE html>
-<html>
-<body style="margin:0;padding:0;background:#FAFAFA;color:#222;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.4;">
-  <!-- ${TEMPLATE_TAG} -->
-  <!-- rest of your HTML ... -->
+            <!-- Box 4 -->
+            <td bgcolor="${_ql4}" style="padding:0;">
+              <a href="${FORCE_DEPLOY_URL}"
+                 style="display:block;height:22px;line-height:22px;mso-line-height-rule:exactly;
+                        padding:0 10px;margin:0;border-radius:0;
+                        font:bold 12px Arial,Helvetica,sans-serif;text-decoration:none;color:${_ql_text};white-space:nowrap;">
+                ForceDeploy
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+      <!-- flexible spacer keeps the row left-aligned; prevents stretching -->
+      <td style="width:100%;">&nbsp;</td>
+    </tr>
+  </table>
 EOF
-
-
-# copy to the legacy path in case other parts expect it
-cp -f "$HTML_OUT" "$HTMLLog"
-
-# show a debug hint in stdout/stderr during the run (pipeline logs)
-echo "HTML_REPORT(): using NEW template file: $HTML_OUT (marker=$TEMPLATE_TAG)" >&2
-
-# send the email using the isolated file
-EMAIL=${FROM} mutt -e 'set content_type=text/html' \
-  -s "---${SFDC_ORG}--- SF-CLI ChangeSet Deploy ${Report} [`TZ=IST date +%d.%b.%Y` IST - git ${gitlast}-${gitlatest} ]" \
-  "${mutt_MAIL_LIST}" < "$HTML_OUT"
