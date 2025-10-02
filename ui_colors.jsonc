@@ -1,0 +1,156 @@
+{
+  // =====================================================================
+  // UI Color Configuration for HTML_REPORT()
+  // Edit these values to rebrand the email without touching the script.
+  // This file is JSONC (JSON + comments). The function strips comments,
+  // validates, and reads the resulting strict JSON.
+  // =====================================================================
+
+  "meta": {
+    "version": "1.1",
+    "owner": "Release Eng",
+    "notes": "Every color used by HTML_REPORT(). Symmetric success/failure sections."
+  },
+
+  // ------------------------------- HEADER -------------------------------
+  "header": {
+    // Top banner background when deployment SUCCEEDED
+    "success_bg": "#2e7d32",
+    // Top banner background when deployment FAILED
+    "failure_bg": "#c62828",
+    // Header text color
+    "text": "#ffffff"
+  },
+
+  // ----------------------------- PAGE / PLATE ---------------------------
+  "plate": {
+    // Whole page background (outside the card)
+    "page_bg": "#f6f8fa",
+    // Main white card background
+    "background": "#ffffff",
+    // Main card border color
+    "border": "#e6e6e6"
+  },
+
+  // ----------------------------- RUN DETAILS ----------------------------
+  "run_details": {
+    // Background strip under header (success)
+    "strip_success_bg": "#e8f5e9",
+    // Background strip under header (failure)
+    "strip_failure_bg": "#fff2b6",
+    // "Run Details" title color
+    "title_text": "#1a365d"
+  },
+
+  // -------------------------------- CHIPS -------------------------------
+  "chips": {
+    // Chip background (success case) - Gunmetal
+    "success_bg": "#2A3439",
+    // Chip background (failure case) - Ecru
+    "failure_bg": "#C2B280",
+    // Chip text color for success bg
+    "success_text": "#ffffff",
+    // Chip text color for failure bg
+    "failure_text": "#111111",
+    // Chip border
+    "border": "#d0d0d0"
+  },
+
+  // ---------------------------- QUICK LINKS -----------------------------
+  "quick_links": {
+    // 4 colored link tiles (from left to right)
+    "tile_1_bg": "#722F37",      // Wine
+    "tile_2_bg": "#2A3439",      // Gunmetal
+    "tile_3_bg": "#614051",      // Eggplant
+    "tile_4_bg": "#4A0E0E",      // Oxblood
+    // Link text color
+    "text": "#ffffff",
+    // Spacing between tiles (px string)
+    "gap_px": "4"
+  },
+
+  // --------------------------- STATUS SUMMARY ---------------------------
+  "status_summary": {
+    // Left card background (deployment) based on result
+    "deployment_success_bg": "#e8f5e9",
+    "deployment_failure_bg": "#fff4cc",
+    // Middle card background (PMD)
+    "pmd_bg": "#e7f1ff",
+    // Right card background (time)
+    "time_bg": "#f3f4f7",
+    // Section title color ("STATUS SUMMARY")
+    "title_text": "#1a365d",
+    // Label color (small titles like "DEPLOYMENT")
+    "label_text": "#666666",
+    // Value color (numbers, durations)
+    "value_text": "#111111",
+    // Corner rounding used across summary boxes
+    "corner_radius": "8px"
+  },
+
+  // ----------------------------- PMD REVIEW -----------------------------
+  "pmd_review": {
+    // Table header row background (for both classes/triggers tables)
+    "header_bg": "#eaf2ff",
+    // Table header text color
+    "header_text": "#274690",
+    // Each data row border color
+    "row_border": "#e6eefc",
+    // Link color for non-high rows (blue)
+    "link_normal": "#0b5ed7",
+    // Link color & high text for high-severity rows (red)
+    "link_high": "#c62828",
+    "text_high": "#c62828",
+    // Optional alternate text color for non-high rows
+    "text_normal": "#0b5ed7"
+  },
+
+  // ------------------------------ SUCCESS SECTION ------------------------------
+  // Used when Report == SUCCEEDED (Changeset file list)
+  "success_section": {
+    // Green file row background + border
+    "file_row_bg": "#e8f5e9",
+    "file_row_border": "#d8eeda",
+    // Gray author row background + border
+    "author_row_bg": "#e0e0e0",
+    "author_row_border": "#d1d1d1",
+    // Section title color ("Changeset file/s ...")
+    "title_text": "#1a365d"
+  },
+
+  // ------------------------------ FAILURE SECTION ------------------------------
+  // Used when Report == FAILED (All Component Failures)
+  "failure_section": {
+    // Khaki error row background + border
+    "error_row_bg": "#fff4cc",
+    "error_row_border": "#f0e1a6",
+    // Gray author row background + border
+    "author_row_bg": "#e0e0e0",
+    "author_row_border": "#d1d1d1",
+    // Section title color ("All Component Failures:")
+    "title_text": "#1a365d"
+  },
+
+  // ------------------------------ LEGACY (optional) ----------------------------
+  // Kept for backward compatibility; values mirror success/failure blocks
+  "changeset": {
+    "file_row_bg": "#e8f5e9",
+    "file_row_border": "#d8eeda",
+    "author_row_bg": "#e0e0e0",
+    "author_row_border": "#d1d1d1",
+    "title_text": "#1a365d"
+  },
+  "failures": {
+    "error_row_bg": "#fff4cc",
+    "error_row_border": "#f0e1a6",
+    "author_row_bg": "#e0e0e0",
+    "author_row_border": "#d1d1d1",
+    "title_text": "#1a365d"
+  },
+
+  // -------------------------------- FOOTER ------------------------------
+  "footer": {
+    "bg": "#111111",
+    "text": "#ffffff"
+  }
+}
