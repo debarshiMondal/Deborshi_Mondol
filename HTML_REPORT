@@ -1,19 +1,18 @@
 # ---------------------------------------------------------------------------
 # HTML_REPORT()
-# - Loads colors from JSONC (${UI_COLORS_JSONC:-ui_colors.jsonc})
-# - Strips comments -> strict JSON -> validates -> reads colors
-# - Generates Outlook-safe HTML email (presentation-only changes)
+# - Loads UI colors from JSONC (with comments) via ${UI_COLORS_JSONC:-ui_colors.jsonc}
+# - Strips comments using portable sed -> strict JSON -> validates -> reads
+# - Renders Outlook-safe HTML (presentation-only; core deploy logic unchanged)
 # ---------------------------------------------------------------------------
 HTML_REPORT() {
   Report=$1
   : > "$HTMLLog"
 
-  # ----------- CONFIG: where to read JSONC and where to place strict JSON ----
-  UI_COLORS_JSONC=${property}/ui_colors.jsonc
+  # ---- config paths ----
   UI_COLORS_JSONC="${UI_COLORS_JSONC:-ui_colors.jsonc}"
   UI_COLORS_JSON_STRICT="/tmp/ui_colors.$$.$RANDOM.json"
 
-  # ----------- small helpers -------------------------------------------------
+  # ---- helpers ----
   _esc(){ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
   _fatal(){
     echo "[FATAL] $1"
@@ -22,29 +21,19 @@ HTML_REPORT() {
     exit 1
   }
 
-  # ----------- ensure jq and JSONC file exist --------------------------------
+  # ---- prerequisites ----
   command -v jq >/dev/null 2>&1 || _fatal "jq not found (needed for UI colors)."
   [ -f "$UI_COLORS_JSONC" ] || _fatal "UI colors JSONC not found at: $UI_COLORS_JSONC"
 
-  # ----------- strip comments from JSONC -> strict JSON ----------------------
-  awk 'BEGIN{inblock=0}
-    {
-      line=$0
-      if(inblock==1){
-        if(match(line,/\\*\\//)){ line=substr(line,RSTART+2); inblock=0 } else { next }
-      }
-      sub(/\\/\\/.*$/, "", line)
-      while(match(line,/\\/\\*/)){
-        pre=substr(line,1,RSTART-1); post=substr(line,RSTART+2)
-        if(match(post,/\\*\\//)){ post=substr(post,RSTART+2); line=pre post } else { inblock=1; line=pre; break }
-      }
-      print line
-    }' "$UI_COLORS_JSONC" | sed '/^[[:space:]]*$/d' > "$UI_COLORS_JSON_STRICT" \
-    || _fatal "Failed producing strict JSON from $UI_COLORS_JSONC"
+  # ---- strip JSONC comments -> strict JSON (sed-only) ----
+  # 1) remove /* ... */ blocks (multi-line), 2) remove // line comments, 3) drop blank lines
+  sed -E ':a; s@/\*[^*]*\*+([^/*][^*]*\*+)*/@@g; ta' "$UI_COLORS_JSONC" \
+  | sed -E 's@//[[:space:]]*.*$@@' \
+  | sed '/^[[:space:]]*$/d' > "$UI_COLORS_JSON_STRICT" \
+  || _fatal "Failed producing strict JSON from $UI_COLORS_JSONC"
 
-  # ----------- validate strict JSON -----------------------------------------
+  # ---- validate strict JSON ----
   jq empty "$UI_COLORS_JSON_STRICT" 2>/dev/null || _fatal "ui_colors.jsonc invalid after stripping comments."
-
   HEX_RE='^#[0-9A-Fa-f]{6}$'
   _getc(){ jq -r "$1 // empty" "$UI_COLORS_JSON_STRICT"; }
   _ishex(){ [[ "$1" =~ $HEX_RE ]]; }
@@ -54,7 +43,7 @@ HTML_REPORT() {
     '.plate.page_bg' '.plate.background' '.plate.border'
     '.run_details.strip_success_bg' '.run_details.strip_failure_bg' '.run_details.title_text'
     '.chips.success_bg' '.chips.failure_bg' '.chips.success_text' '.chips.failure_text' '.chips.border'
-    '.quick_links.tile_1_bg' '.quick_links.tile_2_bg' '.quick_links.tile_3_bg' '.quick_links.tile_4_bg' '.quick_links.text'
+    '.quick_links.tile_1_bg' '.quick_links.tile_2_bg' '.quick_links.tile_3_bg' '.quick_links.tile_4_bg' '.quick_links.text' '.quick_links.gap_px'
     '.status_summary.deployment_success_bg' '.status_summary.deployment_failure_bg'
     '.status_summary.pmd_bg' '.status_summary.time_bg'
     '.status_summary.title_text' '.status_summary.label_text' '.status_summary.value_text' '.status_summary.corner_radius'
@@ -64,47 +53,51 @@ HTML_REPORT() {
     '.failure_section.error_row_bg' '.failure_section.error_row_border' '.failure_section.author_row_bg' '.failure_section.author_row_border' '.failure_section.title_text'
     '.footer.bg' '.footer.text'
   )
-
   bad=0
   for k in "${required_keys[@]}"; do
     v=$(_getc "$k")
-    if [ -z "$v" ] || ! _ishex "$v"; then
-      # legacy fallbacks for sections
+    # allow legacy fallback for section keys
+    if [ -z "$v" ]; then
       if [[ "$k" == .success_section* ]]; then
         case "$k" in
-          *.file_row_bg)       v=$(_getc '.changeset.file_row_bg');;
-          *.file_row_border)   v=$(_getc '.changeset.file_row_border');;
-          *.author_row_bg)     v=$(_getc '.changeset.author_row_bg');;
+          *.file_row_bg) v=$(_getc '.changeset.file_row_bg');;
+          *.file_row_border) v=$(_getc '.changeset.file_row_border');;
+          *.author_row_bg) v=$(_getc '.changeset.author_row_bg');;
           *.author_row_border) v=$(_getc '.changeset.author_row_border');;
-          *.title_text)        v=$(_getc '.changeset.title_text');;
+          *.title_text) v=$(_getc '.changeset.title_text');;
         esac
       elif [[ "$k" == .failure_section* ]]; then
         case "$k" in
-          *.error_row_bg)      v=$(_getc '.failures.error_row_bg');;
-          *.error_row_border)  v=$(_getc '.failures.error_row_border');;
-          *.author_row_bg)     v=$(_getc '.failures.author_row_bg');;
+          *.error_row_bg) v=$(_getc '.failures.error_row_bg');;
+          *.error_row_border) v=$(_getc '.failures.error_row_border');;
+          *.author_row_bg) v=$(_getc '.failures.author_row_bg');;
           *.author_row_border) v=$(_getc '.failures.author_row_border');;
-          *.title_text)        v=$(_getc '.failures.title_text');;
+          *.title_text) v=$(_getc '.failures.title_text');;
         esac
       fi
-      if [ -z "$v" ] || ! _ishex "$v"; then echo "[FATAL] Missing/invalid color for key $k"; bad=1; fi
+    fi
+    # hex or px value for gap/corner
+    if [[ "$k" =~ gap_px|corner_radius ]]; then
+      [ -n "$v" ] || { echo "[FATAL] Missing value for $k"; bad=1; }
+    else
+      { _ishex "$v"; } || { echo "[FATAL] Missing/invalid color for key $k"; bad=1; }
     fi
   done
   [ $bad -eq 0 ] || _fatal "ui_colors.jsonc failed validation."
 
-  # ----------- read all colors ----------------------------------------------
+  # ---- read colors ----
   _hdr_s=$(_getc '.header.success_bg'); _hdr_f=$(_getc '.header.failure_bg'); _hdr_txt=$(_getc '.header.text')
   _page_bg=$(_getc '.plate.page_bg'); _plate_bg=$(_getc '.plate.background'); _plate_border=$(_getc '.plate.border')
   _run_s=$(_getc '.run_details.strip_success_bg'); _run_f=$(_getc '.run_details.strip_failure_bg'); _run_title=$(_getc '.run_details.title_text')
   _chip_bg_s=$(_getc '.chips.success_bg'); _chip_bg_f=$(_getc '.chips.failure_bg'); _chip_txt_s=$(_getc '.chips.success_text'); _chip_txt_f=$(_getc '.chips.failure_text'); _chip_border=$(_getc '.chips.border')
-  _ql1=$(_getc '.quick_links.tile_1_bg'); _ql2=$(_getc '.quick_links.tile_2_bg'); _ql3=$(_getc '.quick_links.tile_3_bg'); _ql4=$(_getc '.quick_links.tile_4_bg'); _ql_text=$(_getc '.quick_links.text'); _ql_gap=$(_getc '.quick_links.gap_px'); [ -z "$_ql_gap" ] && _ql_gap="4"
+  _ql1=$(_getc '.quick_links.tile_1_bg'); _ql2=$(_getc '.quick_links.tile_2_bg'); _ql3=$(_getc '.quick_links.tile_3_bg'); _ql4=$(_getc '.quick_links.tile_4_bg'); _ql_text=$(_getc '.quick_links.text'); _ql_gap=$(_getc '.quick_links.gap_px')
   _status_s=$(_getc '.status_summary.deployment_success_bg'); _status_f=$(_getc '.status_summary.deployment_failure_bg'); _status_pmd=$(_getc '.status_summary.pmd_bg'); _status_time=$(_getc '.status_summary.time_bg')
-  _status_title=$(_getc '.status_summary.title_text'); _status_label=$(_getc '.status_summary.label_text'); _status_value=$(_getc '.status_summary.value_text'); _status_radius=$(_getc '.status_summary.corner_radius'); [ -z "$_status_radius" ] && _status_radius="8px"
+  _status_title=$(_getc '.status_summary.title_text'); _status_label=$(_getc '.status_summary.label_text'); _status_value=$(_getc '.status_summary.value_text'); _status_radius=$(_getc '.status_summary.corner_radius')
   _pmd_hdr_bg=$(_getc '.pmd_review.header_bg'); _pmd_hdr_text=$(_getc '.pmd_review.header_text'); _pmd_row_border=$(_getc '.pmd_review.row_border'); _pmd_link_normal=$(_getc '.pmd_review.link_normal'); _pmd_link_high=$(_getc '.pmd_review.link_high'); _pmd_text_high=$(_getc '.pmd_review.text_high'); _pmd_text_normal=$(_getc '.pmd_review.text_normal')
   _succ_file_bg=$(_getc '.success_section.file_row_bg'); _succ_file_border=$(_getc '.success_section.file_row_border'); _succ_auth_bg=$(_getc '.success_section.author_row_bg'); _succ_auth_border=$(_getc '.success_section.author_row_border'); _succ_title=$(_getc '.success_section.title_text')
   _fail_err_bg=$(_getc '.failure_section.error_row_bg'); _fail_err_border=$(_getc '.failure_section.error_row_border'); _fail_auth_bg=$(_getc '.failure_section.author_row_bg'); _fail_auth_border=$(_getc '.failure_section.author_row_border'); _fail_title=$(_getc '.failure_section.title_text')
 
-  # ----------- runtime values (unchanged logic) ------------------------------
+  # ---- runtime values (no logic change) ----
   _RUN_IST="$(TZ=Asia/Kolkata date +'%d.%b.%Y %H:%M IST')"
   _API="${SetAPI:-N/A}"
   _BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo N/A)"
@@ -115,14 +108,14 @@ HTML_REPORT() {
   ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
   FORCE_DEPLOY_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/$(basename ${HTMLFDLog:-$HTMLLog}).${DATE}"
 
-  # choose per outcome
+  # ---- pick theme per outcome ----
   if [ "$Report" = "SUCCEEDED" ]; then
     _hdr_bg="$_hdr_s"; _run_strip="$_run_s"; _status_bg="$_status_s"; _chip_bg="$_chip_bg_s"; _chip_txt="$_chip_txt_s"
   else
     _hdr_bg="$_hdr_f"; _run_strip="$_run_f"; _status_bg="$_status_f"; _chip_bg="$_chip_bg_f"; _chip_txt="$_chip_txt_f"
   fi
 
-  # ----------- HTML top ------------------------------------------------------
+  # ---- HTML top ----
   cat >>"$HTMLLog" <<HTML_TOP
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <style type="text/css">
@@ -134,7 +127,7 @@ HTML_REPORT() {
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_page_bg};"><tr><td align="center">
 HTML_TOP
 
-  # Header
+  # ---- Header ----
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="1100" style="max-width:1100px;margin:8px auto;">
     <tr>
@@ -145,13 +138,13 @@ HTML_TOP
   </table>
 EOF
 
-  # Main plate
+  # ---- Plate ----
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="1100" style="max-width:1100px;background:${_plate_bg};border:1px solid ${_plate_border};">
     <tr><td style="padding:12px 14px;">
 EOF
 
-  # Run Details
+  # ---- Run Details ----
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
          style="background:${_run_strip};border-radius:10px;mso-border-alt:none;">
@@ -187,10 +180,10 @@ EOF
   </table>
 EOF
 
-  # small vertical gap before compact colored boxes
+  # ---- small gap before compact colored boxes ----
   echo '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:8px;line-height:8px;font-size:0;">&nbsp;</td></tr></table>' >>"$HTMLLog"
 
-  # Quick Links (compact, left-aligned, auto width, tiny gaps)
+  # ---- Quick Links (compact, left-aligned) ----
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 8px 0;">
     <tr>
@@ -220,7 +213,7 @@ EOF
   </table>
 EOF
 
-  # Status Summary
+  # ---- Status Summary ----
   _status_counts() {
     if [ "$Report" = "SUCCEEDED" ]; then
       echo "Passed: ${COMP_PASS:-N/A}"
@@ -270,7 +263,7 @@ EOF
   </table>
 EOF
 
-  # PMD REVIEW
+  # ---- PMD REVIEW ----
   echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\"><tr><td style=\"padding:10px 4px 6px 4px;font:800 13px Arial;color:${_status_title};\">PMD REVIEW</td></tr></table>" >>"$HTMLLog"
 
   if [ -f /tmp/CodeAnalysisReport.txt ]; then
@@ -332,7 +325,7 @@ EOF
     echo "</table>" >>"$HTMLLog"
   fi
 
-  # SUCCESS / FAILURE SECTIONS (unchanged core logic)
+  # ---- Success/Failure sections (core logic preserved) ----
   SAVEIFS=$IFS; IFS=$(echo -en "\n\b")
   if [ "$Report" = "SUCCEEDED" ]; then
     find changeSetDeploy/force-app/main/default -type f \
@@ -372,7 +365,7 @@ $LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
   fi
   IFS=$SAVEIFS
 
-  # Footer
+  # ---- Footer & close ----
   cat >>"$HTMLLog" <<EOF
     </td></tr></table>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="1100" style="max-width:1100px;margin:8px auto 14px;background:${_foot_bg};">
@@ -382,10 +375,10 @@ $LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
 </body></html>
 EOF
 
-  # send mail (unchanged)
+  # ---- send ----
   EMAIL=${FROM} mutt -e 'set content_type=text/html' \
     -s "---${SFDC_ORG}--- SF-CLI ChangeSet Deploy ${Report} [`TZ=IST date +%d.%b.%Y` IST - git ${gitlast}-${gitlatest} ]" "${mutt_MAIL_LIST}" < "$HTMLLog"
 
-  # cleanup
+  # ---- cleanup ----
   rm -f "$UI_COLORS_JSON_STRICT" 2>/dev/null
 }
