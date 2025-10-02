@@ -1,57 +1,85 @@
-  # ---- Quick Links (ultra-compact, single-line, rectangular) ----
+  # ---- Quick Links (compact, Outlook-safe, one line, rectangular) ----
   cat >>"$HTMLLog" <<EOF
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 6px 0;">
+  <!-- QUICKLINKS_COMPACT_FINAL -->
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+         style="margin:0 0 6px 0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
     <tr>
-      <td align="left" style="padding:0;">
-        <!-- content-sized inner table keeps boxes left-aligned and compact -->
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0;padding:0;">
-          <tr>
+      <td align="left" style="padding:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+               style="margin:0;padding:0;mso-table-lspace:0pt;mso-table-rspace:0pt;table-layout:auto;">
+          <tr style="height:22px;line-height:22px;mso-line-height-rule:exactly;">
             <!-- Box 1 -->
-            <td bgcolor="${_ql1}" style="padding:0;">
-              <a href="${OPEN_LOGS_URL}"
-                 style="display:block;height:22px;line-height:22px;mso-line-height-rule:exactly;
-                        padding:0 10px;margin:0;border-radius:0;
-                        font:bold 12px Arial,Helvetica,sans-serif;text-decoration:none;color:${_ql_text};white-space:nowrap;">
-                Open Logs
-              </a>
+            <td style="padding:0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                     style="background:${_ql1};mso-table-lspace:0pt;mso-table-rspace:0pt;">
+                <tr style="height:22px;">
+                  <td nowrap height="22"
+                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
+                    <a href="${OPEN_LOGS_URL}"
+                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
+                      Open&nbsp;Logs
+                    </a>
+                  </td>
+                </tr>
+              </table>
             </td>
+
             <td style="width:${_ql_gap}px;font-size:0;line-height:0;">&nbsp;</td>
 
             <!-- Box 2 -->
-            <td bgcolor="${_ql2}" style="padding:0;">
-              <a href="${ORIG_PMD_URL}"
-                 style="display:block;height:22px;line-height:22px;mso-line-height-rule:exactly;
-                        padding:0 10px;margin:0;border-radius:0;
-                        font:bold 12px Arial,Helvetica,sans-serif;text-decoration:none;color:${_ql_text};white-space:nowrap;">
-                Combined Original PMD
-              </a>
+            <td style="padding:0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                     style="background:${_ql2};mso-table-lspace:0pt;mso-table-rspace:0pt;">
+                <tr style="height:22px;">
+                  <td nowrap height="22"
+                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
+                    <a href="${ORIG_PMD_URL}"
+                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
+                      Combined&nbsp;Original&nbsp;PMD
+                    </a>
+                  </td>
+                </tr>
+              </table>
             </td>
+
             <td style="width:${_ql_gap}px;font-size:0;line-height:0;">&nbsp;</td>
 
             <!-- Box 3 -->
-            <td bgcolor="${_ql3}" style="padding:0;">
-              <a href="#"
-                 style="display:block;height:22px;line-height:22px;mso-line-height-rule:exactly;
-                        padding:0 10px;margin:0;border-radius:0;
-                        font:bold 12px Arial,Helvetica,sans-serif;text-decoration:none;color:${_ql_text};white-space:nowrap;">
-                Combined Current PMD
-              </a>
+            <td style="padding:0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                     style="background:${_ql3};mso-table-lspace:0pt;mso-table-rspace:0pt;">
+                <tr style="height:22px;">
+                  <td nowrap height="22"
+                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
+                    <a href="#"
+                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
+                      Combined&nbsp;Current&nbsp;PMD
+                    </a>
+                  </td>
+                </tr>
+              </table>
             </td>
+
             <td style="width:${_ql_gap}px;font-size:0;line-height:0;">&nbsp;</td>
 
             <!-- Box 4 -->
-            <td bgcolor="${_ql4}" style="padding:0;">
-              <a href="${FORCE_DEPLOY_URL}"
-                 style="display:block;height:22px;line-height:22px;mso-line-height-rule:exactly;
-                        padding:0 10px;margin:0;border-radius:0;
-                        font:bold 12px Arial,Helvetica,sans-serif;text-decoration:none;color:${_ql_text};white-space:nowrap;">
-                ForceDeploy
-              </a>
+            <td style="padding:0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                     style="background:${_ql4};mso-table-lspace:0pt;mso-table-rspace:0pt;">
+                <tr style="height:22px;">
+                  <td nowrap height="22"
+                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
+                    <a href="${FORCE_DEPLOY_URL}"
+                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
+                      ForceDeploy
+                    </a>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
         </table>
       </td>
-      <!-- flexible spacer keeps the row left-aligned; prevents stretching -->
       <td style="width:100%;">&nbsp;</td>
     </tr>
   </table>
