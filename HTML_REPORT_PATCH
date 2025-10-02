@@ -1,8 +1,8 @@
-  # ---- Quick Links (compact, consistent gaps, Outlook-safe) ----
-  GAP=$(( ${_ql_gap:-6} + 4 ))  # bump gap by +4px across the row
+  # ---- Quick Links (compact, stronger gaps, Outlook-safe) ----
+  GAP=$(( ${_ql_gap:-6} + 6 ))  # make the gaps more prominent
 
   cat >>"$HTMLLog" <<EOF
-  <!-- QUICKLINKS_COMPACT_GAP_FIX -->
+  <!-- QUICKLINKS_GAP_STRONG -->
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
          style="margin:0 0 6px 0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
     <tr>
@@ -12,7 +12,7 @@
           <tr style="height:22px;line-height:22px;mso-line-height-rule:exactly;">
 
             <!-- Box 1 -->
-            <td style="padding:0;">
+            <td style="padding:0 ${GAP}px 0 0; mso-padding-alt:0 ${GAP}px 0 0;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0"
                      style="background:${_ql1};mso-table-lspace:0pt;mso-table-rspace:0pt;">
                 <tr style="height:22px;">
@@ -26,12 +26,10 @@
                 </tr>
               </table>
             </td>
-
-            <!-- consistent spacer -->
-            <td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;mso-line-height-rule:exactly;padding:0;margin:0;">&nbsp;</td>
+            <!--[if mso]><td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;">&nbsp;</td><![endif]-->
 
             <!-- Box 2 -->
-            <td style="padding:0;">
+            <td style="padding:0 ${GAP}px 0 0; mso-padding-alt:0 ${GAP}px 0 0;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0"
                      style="background:${_ql2};mso-table-lspace:0pt;mso-table-rspace:0pt;">
                 <tr style="height:22px;">
@@ -45,12 +43,10 @@
                 </tr>
               </table>
             </td>
-
-            <!-- consistent spacer -->
-            <td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;mso-line-height-rule:exactly;padding:0;margin:0;">&nbsp;</td>
+            <!--[if mso]><td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;">&nbsp;</td><![endif]-->
 
             <!-- Box 3 -->
-            <td style="padding:0;">
+            <td style="padding:0 ${GAP}px 0 0; mso-padding-alt:0 ${GAP}px 0 0;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0"
                      style="background:${_ql3};mso-table-lspace:0pt;mso-table-rspace:0pt;">
                 <tr style="height:22px;">
@@ -64,12 +60,10 @@
                 </tr>
               </table>
             </td>
+            <!--[if mso]><td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;">&nbsp;</td><![endif]-->
 
-            <!-- consistent spacer -->
-            <td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;mso-line-height-rule:exactly;padding:0;margin:0;">&nbsp;</td>
-
-            <!-- Box 4 -->
-            <td style="padding:0;">
+            <!-- Box 4 (no right padding, it’s last) -->
+            <td style="padding:0; mso-padding-alt:0;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0"
                      style="background:${_ql4};mso-table-lspace:0pt;mso-table-rspace:0pt;">
                 <tr style="height:22px;">
