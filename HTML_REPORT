@@ -9,7 +9,7 @@ HTML_REPORT() {
   : > "$HTMLLog"
 
   # ----------- CONFIG: where to read JSONC and where to place strict JSON ----
-  UI_COLORS_JSONC=/etc/sfdc/ui_colors.jsonc
+  UI_COLORS_JSONC=${property}/ui_colors.jsonc
   UI_COLORS_JSONC="${UI_COLORS_JSONC:-ui_colors.jsonc}"
   UI_COLORS_JSON_STRICT="/tmp/ui_colors.$$.$RANDOM.json"
 
