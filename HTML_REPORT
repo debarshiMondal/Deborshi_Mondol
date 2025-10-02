@@ -25,15 +25,30 @@ HTML_REPORT() {
   command -v jq >/dev/null 2>&1 || _fatal "jq not found (needed for UI colors)."
   [ -f "$UI_COLORS_JSONC" ] || _fatal "UI colors JSONC not found at: $UI_COLORS_JSONC"
 
-  # ---- strip JSONC comments -> strict JSON (sed-only) ----
-  # 1) remove /* ... */ blocks (multi-line), 2) remove // line comments, 3) drop blank lines
+  # ---- strip JSONC comments -> strict JSON (sed-only, portable) ----
+  # 1) remove /* ... */ blocks (multi-line)
+  # 2) remove // line comments
+  # 3) drop blank lines
+  # 4) trim CRLF (if any)
+  # NOTE: This assumes no 'https://...' values in JSONC (our colors file has none).
   sed -E ':a; s@/\*[^*]*\*+([^/*][^*]*\*+)*/@@g; ta' "$UI_COLORS_JSONC" \
+  | sed -E 's@\r$@@' \
   | sed -E 's@//[[:space:]]*.*$@@' \
   | sed '/^[[:space:]]*$/d' > "$UI_COLORS_JSON_STRICT" \
   || _fatal "Failed producing strict JSON from $UI_COLORS_JSONC"
 
+  # ---- quick diagnostics ----
+  if [ ! -s "$UI_COLORS_JSON_STRICT" ]; then
+    _fatal "Empty strict JSON after stripping ($UI_COLORS_JSONC). Check path or comment syntax."
+  fi
+
   # ---- validate strict JSON ----
-  jq empty "$UI_COLORS_JSON_STRICT" 2>/dev/null || _fatal "ui_colors.jsonc invalid after stripping comments."
+  if ! jq empty "$UI_COLORS_JSON_STRICT" >/dev/null 2>&1; then
+    echo "----- ui_colors.jsonc (first 60 lines after strip) -----" >&2
+    head -n 60 "$UI_COLORS_JSON_STRICT" >&2
+    _fatal "ui_colors.jsonc invalid after stripping comments."
+  fi
+
   HEX_RE='^#[0-9A-Fa-f]{6}$'
   _getc(){ jq -r "$1 // empty" "$UI_COLORS_JSON_STRICT"; }
   _ishex(){ [[ "$1" =~ $HEX_RE ]]; }
@@ -56,27 +71,26 @@ HTML_REPORT() {
   bad=0
   for k in "${required_keys[@]}"; do
     v=$(_getc "$k")
-    # allow legacy fallback for section keys
+    # legacy fallbacks for section keys
     if [ -z "$v" ]; then
       if [[ "$k" == .success_section* ]]; then
         case "$k" in
-          *.file_row_bg) v=$(_getc '.changeset.file_row_bg');;
-          *.file_row_border) v=$(_getc '.changeset.file_row_border');;
-          *.author_row_bg) v=$(_getc '.changeset.author_row_bg');;
+          *.file_row_bg)       v=$(_getc '.changeset.file_row_bg');;
+          *.file_row_border)   v=$(_getc '.changeset.file_row_border');;
+          *.author_row_bg)     v=$(_getc '.changeset.author_row_bg');;
           *.author_row_border) v=$(_getc '.changeset.author_row_border');;
-          *.title_text) v=$(_getc '.changeset.title_text');;
+          *.title_text)        v=$(_getc '.changeset.title_text');;
         esac
       elif [[ "$k" == .failure_section* ]]; then
         case "$k" in
-          *.error_row_bg) v=$(_getc '.failures.error_row_bg');;
-          *.error_row_border) v=$(_getc '.failures.error_row_border');;
-          *.author_row_bg) v=$(_getc '.failures.author_row_bg');;
+          *.error_row_bg)      v=$(_getc '.failures.error_row_bg');;
+          *.error_row_border)  v=$(_getc '.failures.error_row_border');;
+          *.author_row_bg)     v=$(_getc '.failures.author_row_bg');;
           *.author_row_border) v=$(_getc '.failures.author_row_border');;
-          *.title_text) v=$(_getc '.failures.title_text');;
+          *.title_text)        v=$(_getc '.failures.title_text');;
         esac
       fi
     fi
-    # hex or px value for gap/corner
     if [[ "$k" =~ gap_px|corner_radius ]]; then
       [ -n "$v" ] || { echo "[FATAL] Missing value for $k"; bad=1; }
     else
@@ -96,6 +110,7 @@ HTML_REPORT() {
   _pmd_hdr_bg=$(_getc '.pmd_review.header_bg'); _pmd_hdr_text=$(_getc '.pmd_review.header_text'); _pmd_row_border=$(_getc '.pmd_review.row_border'); _pmd_link_normal=$(_getc '.pmd_review.link_normal'); _pmd_link_high=$(_getc '.pmd_review.link_high'); _pmd_text_high=$(_getc '.pmd_review.text_high'); _pmd_text_normal=$(_getc '.pmd_review.text_normal')
   _succ_file_bg=$(_getc '.success_section.file_row_bg'); _succ_file_border=$(_getc '.success_section.file_row_border'); _succ_auth_bg=$(_getc '.success_section.author_row_bg'); _succ_auth_border=$(_getc '.success_section.author_row_border'); _succ_title=$(_getc '.success_section.title_text')
   _fail_err_bg=$(_getc '.failure_section.error_row_bg'); _fail_err_border=$(_getc '.failure_section.error_row_border'); _fail_auth_bg=$(_getc '.failure_section.author_row_bg'); _fail_auth_border=$(_getc '.failure_section.author_row_border'); _fail_title=$(_getc '.failure_section.title_text')
+  _foot_bg=$(_getc '.footer.bg'); _foot_text=$(_getc '.footer.text')
 
   # ---- runtime values (no logic change) ----
   _RUN_IST="$(TZ=Asia/Kolkata date +'%d.%b.%Y %H:%M IST')"
