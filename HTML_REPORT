@@ -1,14 +1,9 @@
-# ---------------------------------------------------------------------------
-# HTML_REPORT()
-# - Presentation-only rewrite (no core deploy logic changed)
-# - Outlook-safe HTML (no VML), compact rectangular boxes, tiny gaps
-# - Colors/theme loaded from JSONC (with comments) via $UI_COLORS_JSONC or ./ui_colors.jsonc
-# ---------------------------------------------------------------------------
 HTML_REPORT() {
   Report=$1
   : > "$HTMLLog"
 
   # ---- config paths ----
+  UI_COLORS_JSONC=${property}/ui_colors.jsonc
   UI_COLORS_JSONC="${UI_COLORS_JSONC:-ui_colors.jsonc}"
   UI_COLORS_JSON_STRICT="/tmp/ui_colors.$$.$RANDOM.json"
 
@@ -26,16 +21,28 @@ HTML_REPORT() {
   [ -f "$UI_COLORS_JSONC" ] || _fatal "UI colors JSONC not found at: $UI_COLORS_JSONC"
 
   # ---- strip JSONC comments -> strict JSON (sed-only, portable) ----
-  # 1) remove /* ... */ multi-line blocks  2) remove // line comments
-  # 3) drop blank lines  4) trim CRLF at EOL (if any)
+  # 1) remove /* ... */ blocks (multi-line)
+  # 2) remove // line comments
+  # 3) drop blank lines
+  # 4) trim CRLF (if any)
+  # NOTE: This assumes no 'https://...' values in JSONC (our colors file has none).
   sed -E ':a; s@/\*[^*]*\*+([^/*][^*]*\*+)*/@@g; ta' "$UI_COLORS_JSONC" \
   | sed -E 's@\r$@@' \
   | sed -E 's@//[[:space:]]*.*$@@' \
   | sed '/^[[:space:]]*$/d' > "$UI_COLORS_JSON_STRICT" \
   || _fatal "Failed producing strict JSON from $UI_COLORS_JSONC"
 
-  [ -s "$UI_COLORS_JSON_STRICT" ] || _fatal "Empty strict JSON after stripping ($UI_COLORS_JSONC)."
-  jq empty "$UI_COLORS_JSON_STRICT" >/dev/null 2>&1 || _fatal "ui_colors.jsonc invalid after stripping comments."
+  # ---- quick diagnostics ----
+  if [ ! -s "$UI_COLORS_JSON_STRICT" ]; then
+    _fatal "Empty strict JSON after stripping ($UI_COLORS_JSONC). Check path or comment syntax."
+  fi
+
+  # ---- validate strict JSON ----
+  if ! jq empty "$UI_COLORS_JSON_STRICT" >/dev/null 2>&1; then
+    echo "----- ui_colors.jsonc (first 60 lines after strip) -----" >&2
+    head -n 60 "$UI_COLORS_JSON_STRICT" >&2
+    _fatal "ui_colors.jsonc invalid after stripping comments."
+  fi
 
   HEX_RE='^#[0-9A-Fa-f]{6}$'
   _getc(){ jq -r "$1 // empty" "$UI_COLORS_JSON_STRICT"; }
@@ -59,7 +66,7 @@ HTML_REPORT() {
   bad=0
   for k in "${required_keys[@]}"; do
     v=$(_getc "$k")
-    # legacy key fallback (if your JSONC still uses .changeset/.failures)
+    # legacy fallbacks for section keys
     if [ -z "$v" ]; then
       if [[ "$k" == .success_section* ]]; then
         case "$k" in
@@ -82,7 +89,7 @@ HTML_REPORT() {
     if [[ "$k" =~ gap_px|corner_radius ]]; then
       [ -n "$v" ] || { echo "[FATAL] Missing value for $k"; bad=1; }
     else
-      _ishex "$v" || { echo "[FATAL] Missing/invalid color for key $k"; bad=1; }
+      { _ishex "$v"; } || { echo "[FATAL] Missing/invalid color for key $k"; bad=1; }
     fi
   done
   [ $bad -eq 0 ] || _fatal "ui_colors.jsonc failed validation."
@@ -130,7 +137,7 @@ HTML_REPORT() {
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_page_bg};"><tr><td align="center">
 HTML_TOP
 
-  # ---- Header (compact) ----
+  # ---- Header ----
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="1100" style="max-width:1100px;margin:8px auto;">
     <tr>
@@ -147,30 +154,28 @@ EOF
     <tr><td style="padding:12px 14px;">
 EOF
 
-  # ---- Run Details (chips compact; two-line content but no vertical padding) ----
+  # ---- Run Details ----
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
          style="background:${_run_strip};border-radius:10px;mso-border-alt:none;">
     <tr><td style="padding:4px 10px;font:800 12px Arial;color:${_run_title};line-height:14px;">Run Details</td></tr>
     <tr><td style="padding:0 8px 4px 8px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="table-layout:fixed;">
-        <tr>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
 EOF
 
   _chip(){ # $1 label, $2 value
     cat >>"$HTMLLog" <<EOF
-          <td style="padding:0 3px;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-                   style="border:1px solid ${_chip_border};background:${_chip_bg};">
-              <tr>
-                <td align="center" valign="middle" height="28"
-                    style="height:28px;line-height:14px;mso-line-height-rule:exactly;padding:0 6px;">
-                  <div style="font:10px Arial;color:${_chip_txt};margin:0;padding:0;line-height:12px;">$1</div>
-                  <div style="font:bold 12px Arial;color:${_chip_txt};margin:0;padding:0;line-height:14px;word-wrap:break-word;word-break:break-word;white-space:normal;">$2</div>
-                </td>
-              </tr>
-            </table>
-          </td>
+        <td width="20%" style="padding:3px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                 bgcolor="${_chip_bg}" style="background:${_chip_bg};border:1px solid ${_chip_border};">
+            <tr>
+              <td align="center" valign="middle" height="32" style="height:32px;padding:3px 6px;">
+                <div style="font:10px Arial;color:${_chip_txt};line-height:12px;">$1</div>
+                <div style="font:bold 12px Arial;color:${_chip_txt};line-height:14px;word-wrap:break-word;word-break:break-word;white-space:normal;max-width:100%;">$2</div>
+              </td>
+            </tr>
+          </table>
+        </td>
 EOF
   }
   _chip "RUN (IST)"   "$(_esc <<<"$_RUN_IST")"
@@ -180,45 +185,94 @@ EOF
   _chip "REQUEST ID"  "$(_esc <<<"$_REQID")"
 
   cat >>"$HTMLLog" <<'EOF'
-        </tr>
-      </table>
+      </tr></table>
     </td></tr>
   </table>
 EOF
 
-  # ---- tiny gap before colored action boxes ----
-  echo '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:6px;line-height:6px;font-size:0;">&nbsp;</td></tr></table>' >>"$HTMLLog"
+  # ---- small gap before compact colored boxes ----
+  echo '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:8px;line-height:8px;font-size:0;">&nbsp;</td></tr></table>' >>"$HTMLLog"
 
-  # ---- Quick Links (ultra-compact, one line, rectangular, tiny gaps) ----
+  # ---- Quick Links (compact, stronger gaps, Outlook-safe) ----
+  GAP=$(( ${_ql_gap:-6} + 6 ))  # make the gaps more prominent
+
   cat >>"$HTMLLog" <<EOF
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 6px 0;">
+  <!-- QUICKLINKS_GAP_STRONG -->
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+         style="margin:0 0 6px 0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
     <tr>
-      <td align="left" style="padding:0;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0;padding:0;table-layout:auto;">
-          <tr>
-            <td bgcolor="${_ql1}" style="padding:0;">
-              <a href="${OPEN_LOGS_URL}"
-                 style="display:block;height:22px;line-height:22px;mso-line-height-rule:exactly;padding:0 10px;margin:0;border-radius:0;
-                        font:bold 12px Arial,Helvetica,sans-serif;text-decoration:none;color:${_ql_text};white-space:nowrap;">Open Logs</a>
+      <td align="left" style="padding:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+               style="margin:0;padding:0;mso-table-lspace:0pt;mso-table-rspace:0pt;table-layout:auto;">
+          <tr style="height:22px;line-height:22px;mso-line-height-rule:exactly;">
+
+            <!-- Box 1 -->
+            <td style="padding:0 ${GAP}px 0 0; mso-padding-alt:0 ${GAP}px 0 0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                     style="background:${_ql1};mso-table-lspace:0pt;mso-table-rspace:0pt;">
+                <tr style="height:22px;">
+                  <td nowrap height="22"
+                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
+                    <a href="${OPEN_LOGS_URL}"
+                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
+                      Open&nbsp;Logs
+                    </a>
+                  </td>
+                </tr>
+              </table>
             </td>
-            <td style="width:${_ql_gap}px;font-size:0;line-height:0;">&nbsp;</td>
-            <td bgcolor="${_ql2}" style="padding:0;">
-              <a href="${ORIG_PMD_URL}"
-                 style="display:block;height:22px;line-height:22px;mso-line-height-rule:exactly;padding:0 10px;margin:0;border-radius:0;
-                        font:bold 12px Arial,Helvetica,sans-serif;text-decoration:none;color:${_ql_text};white-space:nowrap;">Combined Original PMD</a>
+            <!--[if mso]><td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;">&nbsp;</td><![endif]-->
+
+            <!-- Box 2 -->
+            <td style="padding:0 ${GAP}px 0 0; mso-padding-alt:0 ${GAP}px 0 0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                     style="background:${_ql2};mso-table-lspace:0pt;mso-table-rspace:0pt;">
+                <tr style="height:22px;">
+                  <td nowrap height="22"
+                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
+                    <a href="${ORIG_PMD_URL}"
+                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
+                      Combined&nbsp;Original&nbsp;PMD
+                    </a>
+                  </td>
+                </tr>
+              </table>
             </td>
-            <td style="width:${_ql_gap}px;font-size:0;line-height:0;">&nbsp;</td>
-            <td bgcolor="${_ql3}" style="padding:0;">
-              <a href="#"
-                 style="display:block;height:22px;line-height:22px;mso-line-height-rule:exactly;padding:0 10px;margin:0;border-radius:0;
-                        font:bold 12px Arial,Helvetica,sans-serif;text-decoration:none;color:${_ql_text};white-space:nowrap;">Combined Current PMD</a>
+            <!--[if mso]><td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;">&nbsp;</td><![endif]-->
+
+            <!-- Box 3 -->
+            <td style="padding:0 ${GAP}px 0 0; mso-padding-alt:0 ${GAP}px 0 0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                     style="background:${_ql3};mso-table-lspace:0pt;mso-table-rspace:0pt;">
+                <tr style="height:22px;">
+                  <td nowrap height="22"
+                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
+                    <a href="#"
+                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
+                      Combined&nbsp;Current&nbsp;PMD
+                    </a>
+                  </td>
+                </tr>
+              </table>
             </td>
-            <td style="width:${_ql_gap}px;font-size:0;line-height:0;">&nbsp;</td>
-            <td bgcolor="${_ql4}" style="padding:0;">
-              <a href="${FORCE_DEPLOY_URL}"
-                 style="display:block;height:22px;line-height:22px;mso-line-height-rule:exactly;padding:0 10px;margin:0;border-radius:0;
-                        font:bold 12px Arial,Helvetica,sans-serif;text-decoration:none;color:${_ql_text};white-space:nowrap;">ForceDeploy</a>
+            <!--[if mso]><td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;">&nbsp;</td><![endif]-->
+
+            <!-- Box 4 (no right padding, it’s last) -->
+            <td style="padding:0; mso-padding-alt:0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                     style="background:${_ql4};mso-table-lspace:0pt;mso-table-rspace:0pt;">
+                <tr style="height:22px;">
+                  <td nowrap height="22"
+                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
+                    <a href="${FORCE_DEPLOY_URL}"
+                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
+                      ForceDeploy
+                    </a>
+                  </td>
+                </tr>
+              </table>
             </td>
+
           </tr>
         </table>
       </td>
@@ -283,7 +337,7 @@ EOF
   if [ -f /tmp/CodeAnalysisReport.txt ]; then
     echo '<div style="font:bold 12px Arial;color:#c62828;margin:0 4px 8px;">No PMD Report – No Class/Trigger in Changeset</div>' >>"$HTMLLog"
   else
-    # Classes
+    # Classes table
     echo "<table role=\"presentation\" cellpadding=\"8\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:separate;border-spacing:0 4px;\">" >>"$HTMLLog"
     echo "<tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\"  style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CLASS NAME</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CURRENT (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">Δ HIGH</th></tr>" >>"$HTMLLog"
 
@@ -312,7 +366,7 @@ EOF
     done
     echo "</table>" >>"$HTMLLog"
 
-    # Triggers
+    # Triggers table
     echo "<table role=\"presentation\" cellpadding=\"8\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:separate;border-spacing:0 4px;margin-top:6px;\"><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">TRIGGER NAME</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CURRENT (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">Δ HIGH</th></tr>" >>"$HTMLLog"
 
     for triggerName in `ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null`; do
