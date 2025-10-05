@@ -92,20 +92,32 @@ HTML_REPORT() {
   _fail_err_bg=$(_getc '.failure_section.error_row_bg'); _fail_err_border=$(_getc '.failure_section.error_row_border'); _fail_auth_bg=$(_getc '.failure_section.author_row_bg'); _fail_auth_border=$(_getc '.failure_section.author_row_border'); _fail_title=$(_getc '.failure_section.title_text')
   _foot_bg=$(_getc '.footer.bg'); _foot_text=$(_getc '.footer.text')
 
-  # ---- runtime values (no logic change) ----
+  # ---- runtime values ----
   _RUN_IST="$(TZ=Asia/Kolkata date +'%d.%b.%Y %H:%M IST')"
   _API="${SetAPI:-N/A}"
   _BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo N/A)"
   _REPO="$(git config --get remote.origin.url 2>/dev/null || echo N/A)"
-  # short repo disp like org/repo (fallback to full if not matched)
-  _REPO_DISP="$(echo "$_REPO" | sed -E 's#(.*[:/])?([^/]+/[^/]+?)(\.git)?$#\2#')"
-  [ -n "$_REPO_DISP" ] || _REPO_DISP="$_REPO"
-  _REQID="${REQUEST_ID:-${DEPLOYMENT_ID:-${DEPLOY_ID:-N/A}}}"
-  _DEPUSER="${DEPLOY_USER:-${SF_USERNAME:-${USER:-$(whoami 2>/dev/null || echo unknown)}}}"
+  _REPO_DISP="$(echo "$_REPO" | sed -E 's#(.*[:/])?([^/]+/[^/]+?)(\.git)?$#\2#')"; [ -n "$_REPO_DISP" ] || _REPO_DISP="$_REPO"
+
+  # --- NEW: derive Request ID and Deploy User from JSON/text logs (fallback to env) ---
+  _REQID="${REQUEST_ID:-${DEPLOYMENT_ID:-${DEPLOY_ID:-}}}"
+  _DEPUSER="${DEPLOY_USER:-${SF_USERNAME:-}}"
+  if [ -f "$LOG.json" ]; then
+    _REQID_JQ=$(jq -r '.result.id // .result.deployId // .id // empty' "$LOG.json" 2>/dev/null); [ -n "$_REQID_JQ" ] && _REQID="$_REQID_JQ"
+    _DEPUSER_JQ=$(jq -r '.result.username // .result.orgUsername // .username // empty' "$LOG.json" 2>/dev/null); [ -n "$_DEPUSER_JQ" ] && _DEPUSER="$_DEPUSER_JQ"
+  fi
+  if [ -z "$_REQID" ] && [ -s "$LOG" ]; then
+    _REQID=$(grep -m1 -Eo 'Request (Id|ID): [^ ]+|Deploy (ID|Id): [^ ]+' "$LOG" 2>/dev/null | awk '{print $NF}')
+  fi
+  if [ -z "$_DEPUSER" ] && [ -s "$LOG" ]; then
+    _DEPUSER=$(grep -m1 -E 'Target Org( Username)?:' "$LOG" 2>/dev/null | awk -F': ' '{print $2}')
+  fi
+  [ -n "$_REQID" ]   || _REQID="N/A"
+  [ -n "$_DEPUSER" ] || _DEPUSER="${USER:-$(whoami 2>/dev/null || echo unknown)}"
 
   OPEN_LOGS_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
   ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
-  FORCE_DEPLOY_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/$(basename ${HTMLFDLog:-$HTMLLog}).${DATE}"
+  FORCE_DEPLOY_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/$(basename "${HTMLFDLog:-$HTMLLog}").${DATE}"
 
   # ---- pick theme per outcome ----
   if [ "$Report" = "SUCCEEDED" ]; then
@@ -143,18 +155,16 @@ EOF
     <tr><td style="padding:12px 14px;">
 EOF
 
-  # ---- Run Details (auto-width chips that fit content; Outlook-safe) ----
+  # ---- Run Details (chips) ----
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
          style="background:${_run_strip};border-radius:10px;mso-border-alt:none;">
     <tr><td style="padding:4px 10px 2px 10px;font:800 12px Arial;color:${_run_title};line-height:14px;">Run Details</td></tr>
     <tr><td style="padding:0 8px 6px 8px;">
-      <!-- content-sized row: each chip is its own small table, left-aligned with tiny gaps -->
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0;padding:0;">
         <tr style="height:32px;line-height:32px;mso-line-height-rule:exactly;">
 EOF
 
-  # one compact chip (auto width, two-line inside, exact height)
   _chip_auto(){ # $1=label, $2=value
     cat >>"$HTMLLog" <<EOF
           <td style="padding:0 5px 0 0;">
@@ -174,7 +184,8 @@ EOF
   _chip_auto "RUN (IST)"    "$(_esc <<<"$_RUN_IST")"
   _chip_auto "API"          "$(_esc <<<"$_API")"
   _chip_auto "BRANCH"       "$(_esc <<<"$_BRANCH")"
-  _chip_auto "REPO"         "$(_esc <<<"$_REPO_DISP")"
+  # NEW: show FULL repo URL rather than short display
+  _chip_auto "REPO"         "$(_esc <<<"$_REPO")"
   _chip_auto "REQUEST ID"   "$(_esc <<<"$_REQID")"
   _chip_auto "DEPLOY USER"  "$(_esc <<<"$_DEPUSER")"
 
@@ -185,14 +196,12 @@ EOF
   </table>
 EOF
 
-  # ---- small gap before compact colored boxes ----
+  # ---- small gap ----
   echo '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:8px;line-height:8px;font-size:0;">&nbsp;</td></tr></table>' >>"$HTMLLog"
 
-  # ---- Quick Links (compact, stronger gaps, Outlook-safe) ----
-  GAP=$(( ${_ql_gap:-6} + 6 ))  # make the gaps more prominent
-
+  # ---- Quick Links ----
+  GAP=$(( ${_ql_gap:-6} + 6 ))
   cat >>"$HTMLLog" <<EOF
-  <!-- QUICKLINKS_GAP_STRONG -->
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
          style="margin:0 0 6px 0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
     <tr>
@@ -200,74 +209,37 @@ EOF
         <table role="presentation" cellpadding="0" cellspacing="0" border="0"
                style="margin:0;padding:0;mso-table-lspace:0pt;mso-table-rspace:0pt;table-layout:auto;">
           <tr style="height:22px;line-height:22px;mso-line-height-rule:exactly;">
-
-            <!-- Box 1 -->
             <td style="padding:0 ${GAP}px 0 0; mso-padding-alt:0 ${GAP}px 0 0;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-                     style="background:${_ql1};mso-table-lspace:0pt;mso-table-rspace:0pt;">
-                <tr style="height:22px;">
-                  <td nowrap height="22"
-                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
-                    <a href="${OPEN_LOGS_URL}"
-                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
-                      Open&nbsp;Logs
-                    </a>
-                  </td>
-                </tr>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql1};mso-table-lspace:0pt;mso-table-rspace:0pt;">
+                <tr style="height:22px;"><td nowrap height="22" style="height:22px;padding:0 10px;line-height:22px;">
+                  <a class="cta" href="${OPEN_LOGS_URL}" style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">Open&nbsp;Logs</a>
+                </td></tr>
               </table>
             </td>
             <!--[if mso]><td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;">&nbsp;</td><![endif]-->
-
-            <!-- Box 2 -->
             <td style="padding:0 ${GAP}px 0 0; mso-padding-alt:0 ${GAP}px 0 0;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-                     style="background:${_ql2};mso-table-lspace:0pt;mso-table-rspace:0pt;">
-                <tr style="height:22px;">
-                  <td nowrap height="22"
-                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
-                    <a href="${ORIG_PMD_URL}"
-                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
-                      Combined&nbsp;Original&nbsp;PMD
-                    </a>
-                  </td>
-                </tr>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql2};mso-table-lspace:0pt;mso-table-rspace:0pt;">
+                <tr style="height:22px;"><td nowrap height="22" style="height:22px;padding:0 10px;line-height:22px;">
+                  <a class="cta" href="${ORIG_PMD_URL}" style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">Combined&nbsp;Original&nbsp;PMD</a>
+                </td></tr>
               </table>
             </td>
             <!--[if mso]><td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;">&nbsp;</td><![endif]-->
-
-            <!-- Box 3 -->
             <td style="padding:0 ${GAP}px 0 0; mso-padding-alt:0 ${GAP}px 0 0;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-                     style="background:${_ql3};mso-table-lspace:0pt;mso-table-rspace:0pt;">
-                <tr style="height:22px;">
-                  <td nowrap height="22"
-                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
-                    <a href="#"
-                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
-                      Combined&nbsp;Current&nbsp;PMD
-                    </a>
-                  </td>
-                </tr>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql3};mso-table-lspace:0pt;mso-table-rspace:0pt;">
+                <tr style="height:22px;"><td nowrap height="22" style="height:22px;padding:0 10px;line-height:22px;">
+                  <a class="cta" href="#" style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">Combined&nbsp;Current&nbsp;PMD</a>
+                </td></tr>
               </table>
             </td>
             <!--[if mso]><td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;">&nbsp;</td><![endif]-->
-
-            <!-- Box 4 (no right padding, last) -->
             <td style="padding:0; mso-padding-alt:0;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-                     style="background:${_ql4};mso-table-lspace:0pt;mso-table-rspace:0pt;">
-                <tr style="height:22px;">
-                  <td nowrap height="22"
-                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
-                    <a href="${FORCE_DEPLOY_URL}"
-                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
-                      ForceDeploy
-                    </a>
-                  </td>
-                </tr>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql4};mso-table-lspace:0pt;mso-table-rspace:0pt;">
+                <tr style="height:22px;"><td nowrap height="22" style="height:22px;padding:0 10px;line-height:22px;">
+                  <a class="cta" href="${FORCE_DEPLOY_URL}" style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">ForceDeploy</a>
+                </td></tr>
               </table>
             </td>
-
           </tr>
         </table>
       </td>
@@ -276,7 +248,7 @@ EOF
   </table>
 EOF
 
-  # ---- Status Summary (unchanged) ----
+  # ---- Status Summary ----
   _status_counts() {
     if [ "$Report" = "SUCCEEDED" ]; then
       echo "Passed: ${COMP_PASS:-N/A}"
@@ -285,14 +257,11 @@ EOF
     fi
   }
   cat >>"$HTMLLog" <<EOF
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-    <tr><td style="padding:6px 4px 4px 4px;font:800 13px Arial;color:${_status_title};">STATUS SUMMARY</td></tr>
-  </table>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:6px 4px 4px 4px;font:800 13px Arial;color:${_status_title};">STATUS SUMMARY</td></tr></table>
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
       <td width="33%" valign="top" style="padding:4px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" height="92"
-               style="background:${_status_bg};border-radius:${_status_radius};">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" height="92" style="background:${_status_bg};border-radius:${_status_radius};">
           <tr><td style="padding:8px;" valign="top">
             <div style="font:10px Arial;color:${_status_label};">DEPLOYMENT</div>
             <div style="font:bold 14px Arial;color:${_status_value};">$([ "$Report" = "SUCCEEDED" ] && echo "Succeeded" || echo "Failed")</div>
@@ -301,8 +270,7 @@ EOF
         </table>
       </td>
       <td width="33%" valign="top" style="padding:4px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" height="92"
-               style="background:${_status_pmd};border-radius:${_status_radius};">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" height="92" style="background:${_status_pmd};border-radius:${_status_radius};">
           <tr><td style="padding:8px;" valign="top">
             <div style="font:10px Arial;color:${_status_label};">PMD — CURRENT CHANGESET</div>
             <div style="font:bold 13px Arial;color:${_status_value};">Classes: ${CLASS_COUNT:-N/A} &nbsp; • &nbsp; Triggers: ${TRIGGER_COUNT:-N/A}</div>
@@ -311,8 +279,7 @@ EOF
         </table>
       </td>
       <td width="33%" valign="top" style="padding:4px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" height="92"
-               style="background:${_status_time};border-radius:${_status_radius};">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" height="92" style="background:${_status_time};border-radius:${_status_radius};">
           <tr><td style="padding:8px;" valign="top">
             <div style="font:10px Arial;color:${_status_label};">DEPLOYMENT TIME</div>
             <div style="font:bold 14px Arial;color:${_status_value};">${TOTAL_DURATION:-N/A}</div>
@@ -324,7 +291,7 @@ EOF
   </table>
 EOF
 
-  # ---- PMD REVIEW (unchanged from your last) ----
+  # ---- PMD REVIEW ----
   echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\"><tr><td style=\"padding:10px 4px 6px 4px;font:800 13px Arial;color:${_status_title};\">PMD REVIEW</td></tr></table>" >>"$HTMLLog"
 
   if [ -f /tmp/CodeAnalysisReport.txt ]; then
@@ -344,8 +311,8 @@ EOF
 
       OriginalPmd=$( [ -f "$pmd_html" ] && grep "Original PMD Warnings Total" "$pmd_html" | cut -d ":" -f 2 || echo "0")
       Currentpmd=$(  [ -f "$pmd_html" ] && grep "Current PMD Warnings Total"  "$pmd_html" | cut -d ":" -f 2 || echo "0")
-      CurrseverityCnt=$( [ -f "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" ] && grep -o $pattern "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" | wc -l || echo 0 )
-      OrgseverityCnt=$(  [ -f "PMDReport/orgpmdoutput/src/classes/$orgTxt" ] && grep -o $pattern "PMDReport/orgpmdoutput/src/classes/$orgTxt" | wc -l || echo 0 )
+      CurrseverityCnt=$( [ -f "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" ] && grep -Eo "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" | wc -l || echo 0 )
+      OrgseverityCnt=$(  [ -f "PMDReport/orgpmdoutput/src/classes/$orgTxt" ] && grep -Eo "$pattern" "PMDReport/orgpmdoutput/src/classes/$orgTxt" | wc -l || echo 0 )
       delta=$(( CurrseverityCnt - OrgseverityCnt )); [ $delta -gt 0 ] && delta="+$delta"
 
       link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$classeHtml"
@@ -369,8 +336,8 @@ EOF
 
       OriginalPmd=$( [ -f "$t_html" ] && grep "Original PMD Warnings Total" "$t_html" | cut -d ":" -f 2 || echo "0")
       Currentpmd=$(  [ -f "$t_html" ] && grep "Current PMD Warnings Total"  "$t_html" | cut -d ":" -f 2 || echo "0")
-      CurrseverityCnt=$( [ -f "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" ] && grep -o $pattern "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" | wc -l || echo 0 )
-      OrgseverityCnt=$(  [ -f "PMDReport/orgpmdoutput/src/triggers/$orgTxt" ] && grep -o $pattern "PMDReport/orgpmdoutput/src/triggers/$orgTxt" | wc -l || echo 0 )
+      CurrseverityCnt=$( [ -f "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" ] && grep -Eo "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" | wc -l || echo 0 )
+      OrgseverityCnt=$(  [ -f "PMDReport/orgpmdoutput/src/triggers/$orgTxt" ] && grep -Eo "$pattern" "PMDReport/orgpmdoutput/src/triggers/$orgTxt" | wc -l || echo 0 )
       delta=$(( CurrseverityCnt - OrgseverityCnt )); [ $delta -gt 0 ] && delta="+$delta"
 
       link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$trigHtml"
@@ -378,19 +345,19 @@ EOF
       if [ "${CurrseverityCnt:-0}" -gt "${OrgseverityCnt:-0}" ]; then
         echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_high};font-weight:bold;\">$display</a></td><td align=\"right\" style=\"color:${_pmd_text_high};\">${OriginalPmd}-($OrgseverityCnt)</td><td align=\"right\" style=\"color:${_pmd_text_high};\"><b>${Currentpmd}-($CurrseverityCnt)</b></td><td align=\"right\" style=\"color:${_pmd_text_high};\">$delta</td></tr>" >>"$HTMLLog"
       else
-        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_normal};\">$display</a></td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${OriginalPmd}</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${Currentpmd}</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">$delta</td></tr>" >>"$HTMLLog"
+        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_normal};\">$display</a></td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${Currentpmd}</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${Currentpmd}</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">$delta</td></tr>" >>"$HTMLLog"
       fi
     done
     echo "</table>" >>"$HTMLLog"
   fi
 
-  # ---- Success/Failure sections (core logic preserved) ----
+  # ---- Success/Failure sections ----
   SAVEIFS=$IFS; IFS=$(echo -en "\n\b")
   if [ "$Report" = "SUCCEEDED" ]; then
     find changeSetDeploy/force-app/main/default -type f \
-      | egrep -v "customSettings|staticResourceFolders.txt" \
+      | grep -Ev "customSettings|staticResourceFolders.txt" \
       | sed 's|^changeSetDeploy/force-app/main/default|src|' | sort -u > "${DEPLOYEDFILE}"
-    changesetFile=$(find changeSetDeploy/force-app/main/default -type f | egrep -v "customSettings|staticResourceFolders.txt" | wc -l)
+    changesetFile=$(find changeSetDeploy/force-app/main/default -type f | grep -Ev "customSettings|staticResourceFolders.txt" | wc -l)
     echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:8px;\"><tr><td style=\"font:bold 13px Arial;color:${_succ_title};padding:4px;\">Changeset file/s ...[${changesetFile}]</td></tr></table>" >>"$HTMLLog"
     NUM=1
     while read -r FILE; do
@@ -400,20 +367,20 @@ EOF
       [[ "$FILE" =~ "src/customMetadata/" ]]     && FILE=$(echo "${FILE}" | sed -e "s/^src/src\/env\/${SFDC_ORG}/g")
       echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:6px;\">
               <tr><td style=\"background:${_succ_file_bg};padding:6px 8px;border:1px solid ${_succ_file_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">[$((NUM++))] ${FILE}</pre></td></tr>
-              <tr><td style=\"background:${_succ_auth_bg};padding:6px 8px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">Last author... $(git log -1 ${FILE} | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')</pre></td></tr>
+              <tr><td style=\"background:${_succ_auth_bg};padding:6px 8px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">Last author... $(git log -1 -- "${FILE}" | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')</pre></td></tr>
             </table>" >>"$HTMLLog"
     done < "${DEPLOYEDFILE}"
   else
     echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:8px;\"><tr><td style=\"font:bold 13px Arial;color:${_fail_title};padding:4px;\">All Component Failures:</td></tr></table>" >>"$HTMLLog"
     i=1
-    for failure in $(jq -c '.result.details.componentFailures[]' "$LOG.filtered"); do
+    for failure in $(jq -c '.result.details.componentFailures[]?' "$LOG.filtered" 2>/dev/null); do
       fileName=$(echo "$failure" | jq -r '.fileName')
       fileDisp=$(echo "$fileName" | sed 's|^changeSetDeploy/force-app/main/default/||')
       errorMsg=$(echo "$failure" | jq -r '.problem' | tr '\n' ' ' | tr '\r' ' ' | sed -e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
       echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:6px;\"><tr><td style=\"background:${_fail_err_bg};padding:6px 8px;border:1px solid ${_fail_err_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">$i. $fileDisp -- Error: $errorMsg</pre></td></tr>" >>"$HTMLLog"
-      gitFile=$(find src -type f -iname "$(basename "$fileName")" | head -n 1)
+      gitFile=$(find src -type f -iname "$(basename "$fileName")" 2>/dev/null | head -n 1)
       if [ -n "$gitFile" ]; then
-        LastAuthor=$(git log -1 "$gitFile" 2>/dev/null | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')
+        LastAuthor=$(git log -1 -- "$gitFile" 2>/dev/null | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')
         echo "<tr><td style=\"background:${_succ_auth_bg};padding:6px 8px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;word-break:break-word;\">GIT log >>> $gitFile
 $LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
       else
