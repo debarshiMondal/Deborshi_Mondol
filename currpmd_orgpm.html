@@ -1,0 +1,675 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>COSCaseDetailController.cls – Original vs Current PMD</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#0a0f1a; --ink:#e5e7eb; --dim:#a1a1aa; --line:#1f2937;
+    --card:#0b1220; --card2:#0d1426; --accent:#ef4444; --ok:#22c55e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font:14px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans",sans-serif}
+  .wrap{max-width:1200px;margin:0 auto;padding:20px}
+  header{border-bottom:1px solid var(--line);padding:18px 0 14px}
+  .title{margin:0;font-weight:900;font-size:22px;letter-spacing:.2px}
+  .subtitle{color:var(--dim);font-size:12px}
+  .chip{
+    display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;
+    border:1px solid #14532d;background:#0b2b1a;color:#86efac;font-size:12px;font-weight:700
+  }
+  .grid{display:grid;gap:16px;margin-top:18px;grid-template-columns:repeat(2,minmax(0,1fr))}
+  @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  .card{border:1px solid var(--line);border-radius:14px;overflow:hidden;
+        background:linear-gradient(180deg,var(--card),#091020);box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  .head{display:flex;justify-content:space-between;align-items:center;background:var(--card2);padding:12px 14px;border-bottom:1px solid var(--line)}
+  .head h2{margin:0;font-size:16px}
+  .stat{font-weight:800}
+  .stat.ok{color:var(--ok)}
+  .stat.bad{color:var(--accent)}
+  .pad{padding:12px}
+  .list{width:100%;border-collapse:collapse}
+  .list td{padding:8px 10px;border-bottom:1px dashed #1b2437;vertical-align:top}
+  .list tr:hover{background:rgba(239,68,68,.08)}
+  .list td.dim{color:var(--dim)}
+  .list td.bad{background:Tomato;color:#000;font-weight:700}
+  footer{margin-top:22px;background:#000;color:#fff;padding:16px 20px;text-align:center;border-top:1px solid #111}
+  .end{font-weight:800;letter-spacing:.3px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 class="title">Class: COSCaseDetailController.cls</h1>
+      <div class="subtitle">Original vs Current PMD • Generated: 05 Oct 2025, 11:27 AM PDT</div>
+    </header>
+
+    <section class="grid">
+      <div class="card">
+        <div class="head">
+          <h2>Original PMD Warnings</h2>
+          <div class="stat 298">298</div>
+        </div>
+        <div class="pad">
+<table class="list"><tbody>
+<tr><td class="bad">COSCaseDetailController.cls:9:	ApexSharingViolations:	Apex classes should declare a sharing model if DML or SOQL/SOSL is used</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:9:	ExcessiveClassLength:	Avoid really long classes.</td></tr>
+<tr><td>COSCaseDetailController.cls:9:	StdCyclomaticComplexity:	The class 'COSCaseDetailController' has a Standard Cyclomatic Complexity of 4 (Highest = 100).</td></tr>
+<tr><td>COSCaseDetailController.cls:9:	CognitiveComplexity:	The class 'COSCaseDetailController' has a total cognitive complexity of 733 (highest 379), current threshold is 50</td></tr>
+<tr><td>COSCaseDetailController.cls:9:	CyclomaticComplexity:	The class 'COSCaseDetailController' has a total cyclomatic complexity of 373 (highest 140).</td></tr>
+<tr><td>COSCaseDetailController.cls:9:	ExcessivePublicCount:	This class has a bunch of public methods and attributes</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:85:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:89:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:90:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:91:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:92:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:93:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:96:	StdCyclomaticComplexity:	The constructor 'COSCaseDetailController' has a Standard Cyclomatic Complexity of 32.</td></tr>
+<tr><td>COSCaseDetailController.cls:96:	CognitiveComplexity:	The constructor 'COSCaseDetailController()' has a cognitive complexity of 84, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:96:	CyclomaticComplexity:	The constructor 'COSCaseDetailController()' has a cyclomatic complexity of 48.</td></tr>
+<tr><td>COSCaseDetailController.cls:96:	NcssConstructorCount:	The constructor has an NCSS line count of 114</td></tr>
+<tr><td>COSCaseDetailController.cls:114:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:118:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:120:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:126:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:138:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:147:	UnusedLocalVariable:	Variable 'returnURL' defined but not used</td></tr>
+<tr><td>COSCaseDetailController.cls:152:	ApexXSSFromURLParam:	Apex classes should escape/sanitize Strings obtained from URL parameters</td></tr>
+<tr><td>COSCaseDetailController.cls:155:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:165:	ApexXSSFromURLParam:	Apex classes should escape/sanitize Strings obtained from URL parameters</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:166:	LocalVariableNamingConventions:	The local variable name 'contact_Id' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:168:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:175:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:186:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:192:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:199:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:209:	UnusedLocalVariable:	Variable 'myDate' defined but not used</td></tr>
+<tr><td>COSCaseDetailController.cls:211:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:228:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:228:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:247:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:249:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:251:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:299:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:301:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:304:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:307:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:319:	CognitiveComplexity:	The method 'addConfidentialFile(String, String, String)' has a cognitive complexity of 15, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:322:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:326:	ApexXSSFromURLParam:	Apex classes should escape/sanitize Strings obtained from URL parameters</td></tr>
+<tr><td>COSCaseDetailController.cls:331:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:338:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:344:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:347:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:350:	ApexXSSFromURLParam:	Apex classes should escape/sanitize Strings obtained from URL parameters</td></tr>
+<tr><td>COSCaseDetailController.cls:352:	ApexXSSFromURLParam:	Apex classes should escape/sanitize Strings obtained from URL parameters</td></tr>
+<tr><td>COSCaseDetailController.cls:356:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:359:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:366:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:377:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:380:	ApexXSSFromURLParam:	Apex classes should escape/sanitize Strings obtained from URL parameters</td></tr>
+<tr><td>COSCaseDetailController.cls:385:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:385:	DebugsShouldUseLoggingLevel:	Calls to System.debug should specify a logging level.</td></tr>
+<tr><td>COSCaseDetailController.cls:389:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:390:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:392:	ApexXSSFromURLParam:	Apex classes should escape/sanitize Strings obtained from URL parameters</td></tr>
+<tr><td>COSCaseDetailController.cls:414:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:425:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:436:	StdCyclomaticComplexity:	The method 'getPickListValues' has a Standard Cyclomatic Complexity of 30.</td></tr>
+<tr><td>COSCaseDetailController.cls:436:	NcssMethodCount:	The method 'getPickListValues()' has an NCSS line count of 130</td></tr>
+<tr><td>COSCaseDetailController.cls:436:	CognitiveComplexity:	The method 'getPickListValues(List<lt;String>gt;, String)' has a cognitive complexity of 58, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:436:	CyclomaticComplexity:	The method 'getPickListValues(List<lt;String>gt;, String)' has a cyclomatic complexity of 37.</td></tr>
+<tr><td>COSCaseDetailController.cls:440:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:447:	LocalVariableNamingConventions:	The local variable name 'HwSet' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:448:	LocalVariableNamingConventions:	The local variable name 'SwSet' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:449:	LocalVariableNamingConventions:	The local variable name 'ExpSet' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:450:	LocalVariableNamingConventions:	The local variable name 'NwSwSet' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:452:	LocalVariableNamingConventions:	The local variable name 'HwList' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:453:	LocalVariableNamingConventions:	The local variable name 'SwList' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:454:	LocalVariableNamingConventions:	The local variable name 'ExpList' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:455:	LocalVariableNamingConventions:	The local variable name 'NwSwList' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:459:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:460:	LocalVariableNamingConventions:	The local variable name 'Hw' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:465:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:466:	LocalVariableNamingConventions:	The local variable name 'Sw' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:470:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:471:	LocalVariableNamingConventions:	The local variable name 'Exp' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:475:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:476:	LocalVariableNamingConventions:	The local variable name 'NwSw' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:544:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:544:	DebugsShouldUseLoggingLevel:	Calls to System.debug should specify a logging level.</td></tr>
+<tr><td>COSCaseDetailController.cls:548:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:548:	DebugsShouldUseLoggingLevel:	Calls to System.debug should specify a logging level.</td></tr>
+<tr><td>COSCaseDetailController.cls:555:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:558:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:563:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:569:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:598:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:632:	ApexDoc:	Missing or mismatched ApexDoc @param</td></tr>
+<tr><td>COSCaseDetailController.cls:632:	CognitiveComplexity:	The method 'getHostOSList(String, String)' has a cognitive complexity of 15, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:638:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:639:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:676:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:701:	LocalVariableNamingConventions:	The local variable name 'Columns' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:702:	LocalVariableNamingConventions:	The local variable name 'user_prefs' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:702:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:726:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:745:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:769:	UnusedLocalVariable:	Variable 'folderIdImg' defined but not used</td></tr>
+<tr><td>COSCaseDetailController.cls:774:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:781:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:782:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:796:	OperationWithLimitsInLoop:	Avoid operations in loops that may hit governor limits</td></tr>
+<tr><td>COSCaseDetailController.cls:796:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:798:	OperationWithLimitsInLoop:	Avoid operations in loops that may hit governor limits</td></tr>
+<tr><td>COSCaseDetailController.cls:798:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:803:	OperationWithLimitsInLoop:	Avoid operations in loops that may hit governor limits</td></tr>
+<tr><td>COSCaseDetailController.cls:803:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:853:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:871:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:916:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:917:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:929:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:934:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:946:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:972:	LocalVariableNamingConventions:	The local variable name 'hideMsgStatus_Cache' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:980:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:985:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1001:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1019:	StdCyclomaticComplexity:	The method 'getCurrentCaseDatails' has a Standard Cyclomatic Complexity of 100.</td></tr>
+<tr><td>COSCaseDetailController.cls:1019:	NcssMethodCount:	The method 'getCurrentCaseDatails()' has an NCSS line count of 397</td></tr>
+<tr><td>COSCaseDetailController.cls:1019:	CognitiveComplexity:	The method 'getCurrentCaseDatails(String, String, String)' has a cognitive complexity of 379, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:1019:	CyclomaticComplexity:	The method 'getCurrentCaseDatails(String, String, String)' has a cyclomatic complexity of 140.</td></tr>
+<tr><td>COSCaseDetailController.cls:1049:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1057:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1058:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1062:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1072:	UnusedLocalVariable:	Variable 'tensIP' defined but not used</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1084:	LocalVariableNamingConventions:	The local variable name 'ColDatails' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:1116:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1121:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1121:	DebugsShouldUseLoggingLevel:	Calls to System.debug should specify a logging level.</td></tr>
+<tr><td>COSCaseDetailController.cls:1131:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1131:	DebugsShouldUseLoggingLevel:	Calls to System.debug should specify a logging level.</td></tr>
+<tr><td>COSCaseDetailController.cls:1135:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1135:	DebugsShouldUseLoggingLevel:	Calls to System.debug should specify a logging level.</td></tr>
+<tr><td>COSCaseDetailController.cls:1161:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1164:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1193:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1196:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1202:	LocalVariableNamingConventions:	The local variable name 'cdn_lastModify' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1214:	LocalVariableNamingConventions:	The local variable name 'ColDatails' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:1233:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1238:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1243:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1245:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1259:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1259:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1266:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1266:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1266:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1266:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1266:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1266:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1266:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1266:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1266:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1266:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1283:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1321:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1321:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1321:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1321:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1336:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1343:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1348:	OperationWithLimitsInLoop:	Avoid operations in loops that may hit governor limits</td></tr>
+<tr><td>COSCaseDetailController.cls:1348:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1356:	OperationWithLimitsInLoop:	Avoid operations in loops that may hit governor limits</td></tr>
+<tr><td>COSCaseDetailController.cls:1356:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1369:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1378:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1411:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1415:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1422:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1423:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1432:	UnusedLocalVariable:	Variable 'finalDocumentIds' defined but not used</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1433:	OperationWithLimitsInLoop:	Avoid operations in loops that may hit governor limits</td></tr>
+<tr><td>COSCaseDetailController.cls:1433:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1437:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1443:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1451:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1452:	OperationWithLimitsInLoop:	Avoid operations in loops that may hit governor limits</td></tr>
+<tr><td>COSCaseDetailController.cls:1452:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1455:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1457:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1474:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1511:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1514:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1515:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1520:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1526:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1542:	StdCyclomaticComplexity:	The method 'getAttachments' has a Standard Cyclomatic Complexity of 12.</td></tr>
+<tr><td>COSCaseDetailController.cls:1542:	NcssMethodCount:	The method 'getAttachments()' has an NCSS line count of 41</td></tr>
+<tr><td>COSCaseDetailController.cls:1542:	CognitiveComplexity:	The method 'getAttachments(String)' has a cognitive complexity of 26, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:1542:	CyclomaticComplexity:	The method 'getAttachments(String)' has a cyclomatic complexity of 16.</td></tr>
+<tr><td>COSCaseDetailController.cls:1546:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1548:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1552:	UnusedLocalVariable:	Variable 'finalDocumentIds' defined but not used</td></tr>
+<tr><td>COSCaseDetailController.cls:1553:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1565:	IfStmtsMustUseBraces:	Avoid using if statements without curly braces</td></tr>
+<tr><td>COSCaseDetailController.cls:1565:	IfElseStmtsMustUseBraces:	Avoid using if...else statements without curly braces</td></tr>
+<tr><td>COSCaseDetailController.cls:1571:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1594:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1594:	StdCyclomaticComplexity:	The method 'getActivities' has a Standard Cyclomatic Complexity of 14.</td></tr>
+<tr><td>COSCaseDetailController.cls:1594:	NcssMethodCount:	The method 'getActivities()' has an NCSS line count of 54</td></tr>
+<tr><td>COSCaseDetailController.cls:1594:	CognitiveComplexity:	The method 'getActivities(String, Boolean)' has a cognitive complexity of 33, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:1594:	CyclomaticComplexity:	The method 'getActivities(String, Boolean)' has a cyclomatic complexity of 15.</td></tr>
+<tr><td>COSCaseDetailController.cls:1628:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1633:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1650:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1651:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1655:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1659:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1663:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1667:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1671:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1675:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1679:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1683:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1688:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1688:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1695:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1695:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1703:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1703:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1713:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1713:	ExcessivePublicCount:	This class has a bunch of public methods and attributes</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1714:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1718:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1722:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1726:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1730:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1734:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1738:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1742:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1746:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1750:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1754:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1758:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1762:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1767:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1767:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1767:	NcssConstructorCount:	The constructor has an NCSS line count of 23</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1790:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1790:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1790:	CyclomaticComplexity:	The constructor 'ObjectWrapper1(String, SObject, Object, String, Boolean, String, String, Set<lt;String>gt;, List<lt;attachment>gt;)' has a cyclomatic complexity of 11.</td></tr>
+<tr><td>COSCaseDetailController.cls:1790:	NcssConstructorCount:	The constructor has an NCSS line count of 36</td></tr>
+<tr><td>COSCaseDetailController.cls:1807:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1808:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1808:	DebugsShouldUseLoggingLevel:	Calls to System.debug should specify a logging level.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1827:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1827:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1827:	NcssConstructorCount:	The constructor has an NCSS line count of 23</td></tr>
+<tr><td>COSCaseDetailController.cls:1846:	IfStmtsMustUseBraces:	Avoid using if statements without curly braces</td></tr>
+<tr><td>COSCaseDetailController.cls:1846:	IfElseStmtsMustUseBraces:	Avoid using if...else statements without curly braces</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1850:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1852:	IfStmtsMustUseBraces:	Avoid using if statements without curly braces</td></tr>
+<tr><td>COSCaseDetailController.cls:1852:	IfElseStmtsMustUseBraces:	Avoid using if...else statements without curly braces</td></tr>
+<tr><td>COSCaseDetailController.cls:1853:	IfStmtsMustUseBraces:	Avoid using if statements without curly braces</td></tr>
+<tr><td>COSCaseDetailController.cls:1853:	IfElseStmtsMustUseBraces:	Avoid using if...else statements without curly braces</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1859:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1860:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1864:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1868:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1872:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1876:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1880:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1880:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1891:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1891:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1906:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1907:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1908:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1910:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1927:	CognitiveComplexity:	The method 'feedBodyWithRevisedUrl(String, String)' has a cognitive complexity of 15, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:1953:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1969:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1969:	CognitiveComplexity:	The method 'feedBodyWithRevisedUrlForIpFeed(String, String)' has a cognitive complexity of 15, current threshold is 15</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2011:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2011:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:2022:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2035:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:2035:	StdCyclomaticComplexity:	The method 'populateTIPfieldsForDisplay' has a Standard Cyclomatic Complexity of 10.</td></tr>
+<tr><td>COSCaseDetailController.cls:2035:	CognitiveComplexity:	The method 'populateTIPfieldsForDisplay(String)' has a cognitive complexity of 18, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:2035:	CyclomaticComplexity:	The method 'populateTIPfieldsForDisplay(String)' has a cyclomatic complexity of 22.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2035:	FormalParameterNamingConventions:	The method parameter name 'CaseID' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:2036:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2038:	LocalVariableNamingConventions:	The local variable name 'WrapperList' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2045:	LocalVariableNamingConventions:	The local variable name 'user_prefs' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:2045:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:2051:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2089:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2092:	ApexDoc:	Missing ApexDoc comment</td></tr>
+</tbody></table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="head">
+          <h2>Current PMD Warnings</h2>
+          <div class="stat bad">300</div>
+        </div>
+        <div class="pad">
+<table class="list"><tbody>
+<tr><td class="bad">COSCaseDetailController.cls:9:	ApexSharingViolations:	Apex classes should declare a sharing model if DML or SOQL/SOSL is used</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:9:	ExcessiveClassLength:	Avoid really long classes.</td></tr>
+<tr><td>COSCaseDetailController.cls:9:	StdCyclomaticComplexity:	The class 'COSCaseDetailController' has a Standard Cyclomatic Complexity of 4 (Highest = 100).</td></tr>
+<tr><td>COSCaseDetailController.cls:9:	CognitiveComplexity:	The class 'COSCaseDetailController' has a total cognitive complexity of 735 (highest 379), current threshold is 50</td></tr>
+<tr><td>COSCaseDetailController.cls:9:	CyclomaticComplexity:	The class 'COSCaseDetailController' has a total cyclomatic complexity of 377 (highest 140).</td></tr>
+<tr><td>COSCaseDetailController.cls:9:	ExcessivePublicCount:	This class has a bunch of public methods and attributes</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:85:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:89:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:90:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:91:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:92:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:93:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:96:	StdCyclomaticComplexity:	The constructor 'COSCaseDetailController' has a Standard Cyclomatic Complexity of 32.</td></tr>
+<tr><td>COSCaseDetailController.cls:96:	CognitiveComplexity:	The constructor 'COSCaseDetailController()' has a cognitive complexity of 85, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:96:	CyclomaticComplexity:	The constructor 'COSCaseDetailController()' has a cyclomatic complexity of 51.</td></tr>
+<tr><td>COSCaseDetailController.cls:96:	NcssConstructorCount:	The constructor has an NCSS line count of 114</td></tr>
+<tr><td>COSCaseDetailController.cls:114:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:118:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:120:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:126:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:138:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:147:	UnusedLocalVariable:	Variable 'returnURL' defined but not used</td></tr>
+<tr><td>COSCaseDetailController.cls:152:	ApexXSSFromURLParam:	Apex classes should escape/sanitize Strings obtained from URL parameters</td></tr>
+<tr><td>COSCaseDetailController.cls:155:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:165:	ApexXSSFromURLParam:	Apex classes should escape/sanitize Strings obtained from URL parameters</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:166:	LocalVariableNamingConventions:	The local variable name 'contact_Id' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:168:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:175:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:186:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:192:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:199:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:209:	UnusedLocalVariable:	Variable 'myDate' defined but not used</td></tr>
+<tr><td>COSCaseDetailController.cls:211:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:228:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:228:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:251:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:253:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:255:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:303:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:305:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:308:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:311:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:323:	CognitiveComplexity:	The method 'addConfidentialFile(String, String, String)' has a cognitive complexity of 15, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:326:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:330:	ApexXSSFromURLParam:	Apex classes should escape/sanitize Strings obtained from URL parameters</td></tr>
+<tr><td>COSCaseDetailController.cls:335:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:342:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:348:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:351:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:354:	ApexXSSFromURLParam:	Apex classes should escape/sanitize Strings obtained from URL parameters</td></tr>
+<tr><td>COSCaseDetailController.cls:356:	ApexXSSFromURLParam:	Apex classes should escape/sanitize Strings obtained from URL parameters</td></tr>
+<tr><td>COSCaseDetailController.cls:360:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:363:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:370:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:381:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:384:	ApexXSSFromURLParam:	Apex classes should escape/sanitize Strings obtained from URL parameters</td></tr>
+<tr><td>COSCaseDetailController.cls:389:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:389:	DebugsShouldUseLoggingLevel:	Calls to System.debug should specify a logging level.</td></tr>
+<tr><td>COSCaseDetailController.cls:393:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:394:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:396:	ApexXSSFromURLParam:	Apex classes should escape/sanitize Strings obtained from URL parameters</td></tr>
+<tr><td>COSCaseDetailController.cls:418:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:429:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:433:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:437:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:448:	StdCyclomaticComplexity:	The method 'getPickListValues' has a Standard Cyclomatic Complexity of 30.</td></tr>
+<tr><td>COSCaseDetailController.cls:448:	NcssMethodCount:	The method 'getPickListValues()' has an NCSS line count of 130</td></tr>
+<tr><td>COSCaseDetailController.cls:448:	CognitiveComplexity:	The method 'getPickListValues(List<lt;String>gt;, String)' has a cognitive complexity of 58, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:448:	CyclomaticComplexity:	The method 'getPickListValues(List<lt;String>gt;, String)' has a cyclomatic complexity of 37.</td></tr>
+<tr><td>COSCaseDetailController.cls:452:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:459:	LocalVariableNamingConventions:	The local variable name 'HwSet' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:460:	LocalVariableNamingConventions:	The local variable name 'SwSet' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:461:	LocalVariableNamingConventions:	The local variable name 'ExpSet' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:462:	LocalVariableNamingConventions:	The local variable name 'NwSwSet' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:464:	LocalVariableNamingConventions:	The local variable name 'HwList' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:465:	LocalVariableNamingConventions:	The local variable name 'SwList' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:466:	LocalVariableNamingConventions:	The local variable name 'ExpList' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:467:	LocalVariableNamingConventions:	The local variable name 'NwSwList' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:471:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:472:	LocalVariableNamingConventions:	The local variable name 'Hw' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:477:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:478:	LocalVariableNamingConventions:	The local variable name 'Sw' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:482:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:483:	LocalVariableNamingConventions:	The local variable name 'Exp' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:487:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:488:	LocalVariableNamingConventions:	The local variable name 'NwSw' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:556:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:556:	DebugsShouldUseLoggingLevel:	Calls to System.debug should specify a logging level.</td></tr>
+<tr><td>COSCaseDetailController.cls:560:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:560:	DebugsShouldUseLoggingLevel:	Calls to System.debug should specify a logging level.</td></tr>
+<tr><td>COSCaseDetailController.cls:567:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:570:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:575:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:581:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:610:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:644:	ApexDoc:	Missing or mismatched ApexDoc @param</td></tr>
+<tr><td>COSCaseDetailController.cls:644:	CognitiveComplexity:	The method 'getHostOSList(String, String)' has a cognitive complexity of 15, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:650:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:651:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:688:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:713:	LocalVariableNamingConventions:	The local variable name 'Columns' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:714:	LocalVariableNamingConventions:	The local variable name 'user_prefs' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:714:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:738:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:757:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:781:	UnusedLocalVariable:	Variable 'folderIdImg' defined but not used</td></tr>
+<tr><td>COSCaseDetailController.cls:786:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:793:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:794:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:808:	OperationWithLimitsInLoop:	Avoid operations in loops that may hit governor limits</td></tr>
+<tr><td>COSCaseDetailController.cls:808:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:810:	OperationWithLimitsInLoop:	Avoid operations in loops that may hit governor limits</td></tr>
+<tr><td>COSCaseDetailController.cls:810:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:815:	OperationWithLimitsInLoop:	Avoid operations in loops that may hit governor limits</td></tr>
+<tr><td>COSCaseDetailController.cls:815:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:865:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:883:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:928:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:929:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:941:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:946:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:958:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:984:	LocalVariableNamingConventions:	The local variable name 'hideMsgStatus_Cache' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:992:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:997:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1013:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1031:	StdCyclomaticComplexity:	The method 'getCurrentCaseDatails' has a Standard Cyclomatic Complexity of 100.</td></tr>
+<tr><td>COSCaseDetailController.cls:1031:	NcssMethodCount:	The method 'getCurrentCaseDatails()' has an NCSS line count of 397</td></tr>
+<tr><td>COSCaseDetailController.cls:1031:	CognitiveComplexity:	The method 'getCurrentCaseDatails(String, String, String)' has a cognitive complexity of 379, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:1031:	CyclomaticComplexity:	The method 'getCurrentCaseDatails(String, String, String)' has a cyclomatic complexity of 140.</td></tr>
+<tr><td>COSCaseDetailController.cls:1061:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1069:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1070:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1074:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1084:	UnusedLocalVariable:	Variable 'tensIP' defined but not used</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1096:	LocalVariableNamingConventions:	The local variable name 'ColDatails' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:1128:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1133:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1133:	DebugsShouldUseLoggingLevel:	Calls to System.debug should specify a logging level.</td></tr>
+<tr><td>COSCaseDetailController.cls:1143:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1143:	DebugsShouldUseLoggingLevel:	Calls to System.debug should specify a logging level.</td></tr>
+<tr><td>COSCaseDetailController.cls:1147:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1147:	DebugsShouldUseLoggingLevel:	Calls to System.debug should specify a logging level.</td></tr>
+<tr><td>COSCaseDetailController.cls:1173:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1176:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1205:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1208:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1214:	LocalVariableNamingConventions:	The local variable name 'cdn_lastModify' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1226:	LocalVariableNamingConventions:	The local variable name 'ColDatails' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:1245:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1250:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1255:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1257:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1271:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1271:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1278:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1278:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1278:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1278:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1278:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1278:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1278:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1278:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1278:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1278:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1295:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1333:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1333:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1333:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1333:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1348:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1355:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1360:	OperationWithLimitsInLoop:	Avoid operations in loops that may hit governor limits</td></tr>
+<tr><td>COSCaseDetailController.cls:1360:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1368:	OperationWithLimitsInLoop:	Avoid operations in loops that may hit governor limits</td></tr>
+<tr><td>COSCaseDetailController.cls:1368:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1381:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1390:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1423:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1427:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1434:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1435:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1444:	UnusedLocalVariable:	Variable 'finalDocumentIds' defined but not used</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1445:	OperationWithLimitsInLoop:	Avoid operations in loops that may hit governor limits</td></tr>
+<tr><td>COSCaseDetailController.cls:1445:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1449:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1455:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1463:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1464:	OperationWithLimitsInLoop:	Avoid operations in loops that may hit governor limits</td></tr>
+<tr><td>COSCaseDetailController.cls:1464:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1467:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1469:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1486:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1523:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1526:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1527:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1532:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1538:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1554:	StdCyclomaticComplexity:	The method 'getAttachments' has a Standard Cyclomatic Complexity of 12.</td></tr>
+<tr><td>COSCaseDetailController.cls:1554:	NcssMethodCount:	The method 'getAttachments()' has an NCSS line count of 41</td></tr>
+<tr><td>COSCaseDetailController.cls:1554:	CognitiveComplexity:	The method 'getAttachments(String)' has a cognitive complexity of 26, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:1554:	CyclomaticComplexity:	The method 'getAttachments(String)' has a cyclomatic complexity of 16.</td></tr>
+<tr><td>COSCaseDetailController.cls:1558:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1560:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1564:	UnusedLocalVariable:	Variable 'finalDocumentIds' defined but not used</td></tr>
+<tr><td>COSCaseDetailController.cls:1565:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:1577:	IfStmtsMustUseBraces:	Avoid using if statements without curly braces</td></tr>
+<tr><td>COSCaseDetailController.cls:1577:	IfElseStmtsMustUseBraces:	Avoid using if...else statements without curly braces</td></tr>
+<tr><td>COSCaseDetailController.cls:1583:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1606:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1606:	StdCyclomaticComplexity:	The method 'getActivities' has a Standard Cyclomatic Complexity of 14.</td></tr>
+<tr><td>COSCaseDetailController.cls:1606:	NcssMethodCount:	The method 'getActivities()' has an NCSS line count of 54</td></tr>
+<tr><td>COSCaseDetailController.cls:1606:	CognitiveComplexity:	The method 'getActivities(String, Boolean)' has a cognitive complexity of 33, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:1606:	CyclomaticComplexity:	The method 'getActivities(String, Boolean)' has a cyclomatic complexity of 15.</td></tr>
+<tr><td>COSCaseDetailController.cls:1640:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1645:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1662:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1663:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1667:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1671:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1675:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1679:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1683:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1687:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1691:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1695:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1700:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1700:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1707:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1707:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1715:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1715:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1725:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1725:	ExcessivePublicCount:	This class has a bunch of public methods and attributes</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1726:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1730:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1734:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1738:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1742:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1746:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1750:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1754:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1758:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1762:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1766:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1770:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1774:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1779:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1779:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1779:	NcssConstructorCount:	The constructor has an NCSS line count of 23</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1802:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1802:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1802:	CyclomaticComplexity:	The constructor 'ObjectWrapper1(String, SObject, Object, String, Boolean, String, String, Set<lt;String>gt;, List<lt;attachment>gt;)' has a cyclomatic complexity of 11.</td></tr>
+<tr><td>COSCaseDetailController.cls:1802:	NcssConstructorCount:	The constructor has an NCSS line count of 36</td></tr>
+<tr><td>COSCaseDetailController.cls:1819:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td>COSCaseDetailController.cls:1820:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td>COSCaseDetailController.cls:1820:	DebugsShouldUseLoggingLevel:	Calls to System.debug should specify a logging level.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1839:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1839:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1839:	NcssConstructorCount:	The constructor has an NCSS line count of 23</td></tr>
+<tr><td>COSCaseDetailController.cls:1858:	IfStmtsMustUseBraces:	Avoid using if statements without curly braces</td></tr>
+<tr><td>COSCaseDetailController.cls:1858:	IfElseStmtsMustUseBraces:	Avoid using if...else statements without curly braces</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1862:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1864:	IfStmtsMustUseBraces:	Avoid using if statements without curly braces</td></tr>
+<tr><td>COSCaseDetailController.cls:1864:	IfElseStmtsMustUseBraces:	Avoid using if...else statements without curly braces</td></tr>
+<tr><td>COSCaseDetailController.cls:1865:	IfStmtsMustUseBraces:	Avoid using if statements without curly braces</td></tr>
+<tr><td>COSCaseDetailController.cls:1865:	IfElseStmtsMustUseBraces:	Avoid using if...else statements without curly braces</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1871:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1872:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1876:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1880:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1884:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1888:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1892:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1892:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1903:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1903:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1918:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1919:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1920:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1922:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1939:	CognitiveComplexity:	The method 'feedBodyWithRevisedUrl(String, String)' has a cognitive complexity of 15, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:1965:	AvoidDebugStatements:	Avoid debug statements since they impact on performance</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:1981:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:1981:	CognitiveComplexity:	The method 'feedBodyWithRevisedUrlForIpFeed(String, String)' has a cognitive complexity of 15, current threshold is 15</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2023:	ExcessiveParameterList:	Avoid long parameter lists.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2023:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:2034:	AvoidDeeplyNestedIfStmts:	Deeply nested if..then statements are hard to read</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2047:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td>COSCaseDetailController.cls:2047:	StdCyclomaticComplexity:	The method 'populateTIPfieldsForDisplay' has a Standard Cyclomatic Complexity of 10.</td></tr>
+<tr><td>COSCaseDetailController.cls:2047:	CognitiveComplexity:	The method 'populateTIPfieldsForDisplay(String)' has a cognitive complexity of 18, current threshold is 15</td></tr>
+<tr><td>COSCaseDetailController.cls:2047:	CyclomaticComplexity:	The method 'populateTIPfieldsForDisplay(String)' has a cyclomatic complexity of 22.</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2047:	FormalParameterNamingConventions:	The method parameter name 'CaseID' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:2048:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2050:	LocalVariableNamingConventions:	The local variable name 'WrapperList' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2057:	LocalVariableNamingConventions:	The local variable name 'user_prefs' doesn't match '[a-z][a-zA-Z0-9]*'</td></tr>
+<tr><td>COSCaseDetailController.cls:2057:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td>COSCaseDetailController.cls:2063:	ApexCRUDViolation:	Validate CRUD permission before SOQL/DML operation</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2101:	ApexDoc:	Missing ApexDoc comment</td></tr>
+<tr><td class="bad">COSCaseDetailController.cls:2104:	ApexDoc:	Missing ApexDoc comment</td></tr>
+</tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <footer><div class="end">End of the Report.</div></footer>
+  </div>
+</body>
+</html>
