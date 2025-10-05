@@ -99,7 +99,7 @@ HTML_REPORT() {
   _REPO="$(git config --get remote.origin.url 2>/dev/null || echo N/A)"
   _REPO_DISP="$(echo "$_REPO" | sed -E 's#(.*[:/])?([^/]+/[^/]+?)(\.git)?$#\2#')"; [ -n "$_REPO_DISP" ] || _REPO_DISP="$_REPO"
 
-  # --- NEW: derive Request ID and Deploy User from JSON/text logs (fallback to env) ---
+  # --- Request ID & Deploy User from JSON/text logs (fallbacks) ---
   _REQID="${REQUEST_ID:-${DEPLOYMENT_ID:-${DEPLOY_ID:-}}}"
   _DEPUSER="${DEPLOY_USER:-${SF_USERNAME:-}}"
   if [ -f "$LOG.json" ]; then
@@ -114,6 +114,55 @@ HTML_REPORT() {
   fi
   [ -n "$_REQID" ]   || _REQID="N/A"
   [ -n "$_DEPUSER" ] || _DEPUSER="${USER:-$(whoami 2>/dev/null || echo unknown)}"
+
+  # --- Component pass/fail counts (for Deployment card) ---
+  if [ -f "$LOG.json" ]; then
+    COMP_PASS=${COMP_PASS:-$(jq -r '[.result.details.componentSuccesses[]?] | length' "$LOG.json" 2>/dev/null || echo 0)}
+    COMP_FAIL=${COMP_FAIL:-$(jq -r '[.result.details.componentFailures[]?] | length' "$LOG.json" 2>/dev/null || echo 0)}
+  fi
+  : "${COMP_PASS:=0}"
+  : "${COMP_FAIL:=0}"
+
+  # --- PMD: class/trigger counts + severity totals (for PMD card) ---
+  CLASS_COUNT=${CLASS_COUNT:-$(find changeSetDeploy/force-app/main/default/classes -maxdepth 1 -name '*.cls' 2>/dev/null | wc -l | tr -d ' ')}
+  TRIGGER_COUNT=${TRIGGER_COUNT:-$(find changeSetDeploy/force-app/main/default/triggers -maxdepth 1 -name '*.trigger' 2>/dev/null | wc -l | tr -d ' ')}
+  pmd_pat='ApexUnitTestShouldNotUseSeeAllDataTrue:|UnusedLocalVariable:|ClassNamingConventions:|FieldDeclarationsShouldBeAtStart:|FieldNamingConventions:|FormalParameterNamingConventions:|LocalVariableNamingConventions:|MethodNamingConventions:|PropertyNamingConventions:|ExcessiveClassLength:|ExcessiveParameterList:|ApexDoc:|ApexCSRF:|AvoidDirectAccessTriggerMap:|AvoidHardcodingId:|AvoidNonExistentAnnotations:|EmptyCatchBlock:|EmptyIfStmt:|EmptyStatementBlock:|EmptyTryOrFinallyBlock:|EmptyWhileStmt:|InaccessibleAuraEnabledGetter:|MethodWithSameNameAsEnclosingClass:|OverrideBothEqualsAndHashcode:|TestMethodsMustBeInTestClasses:|AvoidDmlStatementsInLoops:|AvoidSoqlInLoops:|AvoidSoslInLoops:|OperationWithLimitsInLoop:|ApexBadCrypto:|ApexDangerousMethods:|ApexInsecureEndpoint:|ApexOpenRedirect:|ApexSharingViolations:|ApexSOQLInjection:|ApexSuggestUsingNamedCred:'
+  CLASS_SEV_TOTAL=0
+  TRIGGER_SEV_TOTAL=0
+  if [ "$CLASS_COUNT" -gt 0 ]; then
+    CLASS_SEV_TOTAL=$(grep -Eo "$pmd_pat" PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/*.txt 2>/dev/null | wc -l | tr -d ' ')
+  fi
+  if [ "$TRIGGER_COUNT" -gt 0 ]; then
+    TRIGGER_SEV_TOTAL=$(grep -Eo "$pmd_pat" PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/*.txt 2>/dev/null | wc -l | tr -d ' ')
+  fi
+  if [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; then
+    PMD_CARD_LINE='<div style="font:bold 12px Arial;color:#c62828;">No PMD report: 0 classes or triggers in changeset.</div>'
+  else
+    PMD_CARD_LINE="<div style=\"font:bold 13px Arial;color:${_status_value};\">Classes: ${CLASS_COUNT} &nbsp; • &nbsp; Triggers: ${TRIGGER_COUNT}</div>
+                   <div style=\"font:12px Arial;color:${_status_value};\">Severity — Classes: ${CLASS_SEV_TOTAL} &nbsp; • &nbsp; Triggers: ${TRIGGER_SEV_TOTAL}</div>"
+  fi
+
+  # --- Deployment Duration (compute from JSON, fallback to START/END vars) ---
+  TOTAL_DURATION=${TOTAL_DURATION:-}
+  START_TIME_IST=${START_TIME_IST:-}
+  END_TIME_IST=${END_TIME_IST:-}
+  if [ -f "$LOG.json" ]; then
+    _start_iso=$(jq -r '.result.startTime // .result.createdDate // empty' "$LOG.json" 2>/dev/null)
+    _end_iso=$(jq -r '.result.completedDate // .result.endTime // empty' "$LOG.json" 2>/dev/null)
+    [ -n "$_start_iso" ] && _start_epoch=$(date -d "$_start_iso" +%s 2>/dev/null)
+    [ -n "$_end_iso" ]   && _end_epoch=$(date -d "$_end_iso" +%s 2>/dev/null)
+  fi
+  [ -z "$_start_epoch" ] && [ -n "$START_TIME_IST" ] && _start_epoch=$(date -d "$START_TIME_IST" +%s 2>/dev/null)
+  [ -z "$_end_epoch" ]   && [ -n "$END_TIME_IST" ]   && _end_epoch=$(date -d "$END_TIME_IST" +%s 2>/dev/null)
+  if [ -n "$_start_epoch" ] && [ -n "$_end_epoch" ] && [ "$_end_epoch" -ge "$_start_epoch" ]; then
+    _dur=$((_end_epoch - _start_epoch))
+    TOTAL_DURATION=$(printf '%02d:%02d:%02d' $((_dur/3600)) $(((_dur%3600)/60)) $((_dur%60)))
+    START_TIME_IST=${START_TIME_IST:-"$(TZ=Asia/Kolkata date -d "@$_start_epoch" +'%d.%b.%Y %H:%M IST')"}
+    END_TIME_IST=${END_TIME_IST:-"$(TZ=Asia/Kolkata date -d "@$_end_epoch" +'%d.%b.%Y %H:%M IST')"}
+  fi
+  : "${TOTAL_DURATION:=N/A}"
+  : "${START_TIME_IST:=N/A}"
+  : "${END_TIME_IST:=N/A}"
 
   OPEN_LOGS_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
   ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
@@ -183,9 +232,9 @@ EOF
 
   _chip_auto "RUN (IST)"    "$(_esc <<<"$_RUN_IST")"
   _chip_auto "API"          "$(_esc <<<"$_API")"
+  _chip_auto "ORG"          "$(_esc <<<"$SFDC_ORG")"   # NEW chip
   _chip_auto "BRANCH"       "$(_esc <<<"$_BRANCH")"
-  # NEW: show FULL repo URL rather than short display
-  _chip_auto "REPO"         "$(_esc <<<"$_REPO")"
+  _chip_auto "REPO"         "$(_esc <<<"$_REPO")"      # Full URL
   _chip_auto "REQUEST ID"   "$(_esc <<<"$_REQID")"
   _chip_auto "DEPLOY USER"  "$(_esc <<<"$_DEPUSER")"
 
@@ -249,41 +298,36 @@ EOF
 EOF
 
   # ---- Status Summary ----
-  _status_counts() {
-    if [ "$Report" = "SUCCEEDED" ]; then
-      echo "Passed: ${COMP_PASS:-N/A}"
-    else
-      echo "Passed: ${COMP_PASS:-N/A} &nbsp; • &nbsp; Failed: ${COMP_FAIL:-N/A}"
-    fi
-  }
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:6px 4px 4px 4px;font:800 13px Arial;color:${_status_title};">STATUS SUMMARY</td></tr></table>
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
+      <!-- Deployment card -->
       <td width="33%" valign="top" style="padding:4px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" height="92" style="background:${_status_bg};border-radius:${_status_radius};">
           <tr><td style="padding:8px;" valign="top">
             <div style="font:10px Arial;color:${_status_label};">DEPLOYMENT</div>
             <div style="font:bold 14px Arial;color:${_status_value};">$([ "$Report" = "SUCCEEDED" ] && echo "Succeeded" || echo "Failed")</div>
-            <div style="font:12px Arial;color:${_status_value};">$(_status_counts)</div>
+            <div style="font:12px Arial;color:${_status_value};">Passed: ${COMP_PASS} &nbsp; • &nbsp; Failed: ${COMP_FAIL}</div>
           </td></tr>
         </table>
       </td>
+      <!-- PMD card -->
       <td width="33%" valign="top" style="padding:4px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" height="92" style="background:${_status_pmd};border-radius:${_status_radius};">
           <tr><td style="padding:8px;" valign="top">
             <div style="font:10px Arial;color:${_status_label};">PMD — CURRENT CHANGESET</div>
-            <div style="font:bold 13px Arial;color:${_status_value};">Classes: ${CLASS_COUNT:-N/A} &nbsp; • &nbsp; Triggers: ${TRIGGER_COUNT:-N/A}</div>
-            <div style="font:12px Arial;color:${_status_value};">High (Classes): ${PMD_HIGH_CLS:-N/A} &nbsp; • &nbsp; High (Triggers): ${PMD_HIGH_TRG:-N/A}</div>
+            ${PMD_CARD_LINE}
           </td></tr>
         </table>
       </td>
+      <!-- Time card -->
       <td width="33%" valign="top" style="padding:4px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" height="92" style="background:${_status_time};border-radius:${_status_radius};">
           <tr><td style="padding:8px;" valign="top">
-            <div style="font:10px Arial;color:${_status_label};">DEPLOYMENT TIME</div>
-            <div style="font:bold 14px Arial;color:${_status_value};">${TOTAL_DURATION:-N/A}</div>
-            <div style="font:12px Arial;color:${_status_value};">Start: ${START_TIME_IST:-N/A} &nbsp; • &nbsp; End: ${END_TIME_IST:-N/A}</div>
+            <div style="font:10px Arial;color:${_status_label};">DEPLOYMENT DURATION</div>
+            <div style="font:bold 14px Arial;color:${_status_value};">${TOTAL_DURATION}</div>
+            <div style="font:12px Arial;color:${_status_value};">Start: ${START_TIME_IST} &nbsp; • &nbsp; End: ${END_TIME_IST}</div>
           </td></tr>
         </table>
       </td>
@@ -294,8 +338,8 @@ EOF
   # ---- PMD REVIEW ----
   echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\"><tr><td style=\"padding:10px 4px 6px 4px;font:800 13px Arial;color:${_status_title};\">PMD REVIEW</td></tr></table>" >>"$HTMLLog"
 
-  if [ -f /tmp/CodeAnalysisReport.txt ]; then
-    echo '<div style="font:bold 12px Arial;color:#c62828;margin:0 4px 8px;">No PMD Report – No Class/Trigger in Changeset</div>' >>"$HTMLLog"
+  if [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; then
+    echo '<div style="font:bold 12px Arial;color:#c62828;margin:0 4px 8px;">No PMD report: 0 classes or triggers in changeset.</div>' >>"$HTMLLog"
   else
     echo "<table role=\"presentation\" cellpadding=\"8\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:separate;border-spacing:0 4px;\">" >>"$HTMLLog"
     echo "<tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\"  style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CLASS NAME</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CURRENT (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">Δ HIGH</th></tr>" >>"$HTMLLog"
@@ -345,7 +389,7 @@ EOF
       if [ "${CurrseverityCnt:-0}" -gt "${OrgseverityCnt:-0}" ]; then
         echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_high};font-weight:bold;\">$display</a></td><td align=\"right\" style=\"color:${_pmd_text_high};\">${OriginalPmd}-($OrgseverityCnt)</td><td align=\"right\" style=\"color:${_pmd_text_high};\"><b>${Currentpmd}-($CurrseverityCnt)</b></td><td align=\"right\" style=\"color:${_pmd_text_high};\">$delta</td></tr>" >>"$HTMLLog"
       else
-        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_normal};\">$display</a></td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${Currentpmd}</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${Currentpmd}</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">$delta</td></tr>" >>"$HTMLLog"
+        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;word-break:break-word;white-space:normal;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_normal};\">$display</a></td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${OriginalPmd}</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${Currentpmd}</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">$delta</td></tr>" >>"$HTMLLog"
       fi
     done
     echo "</table>" >>"$HTMLLog"
