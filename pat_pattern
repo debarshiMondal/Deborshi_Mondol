@@ -1,0 +1,2 @@
+PAT_FILE="build/property/pmd_high_patterns.txt";
+pattern="$(grep -Ehv '^\s*($|#)' "$PAT_FILE" | tr -d '\r' | paste -sd'|' -)"; [ -n "$pattern" ] || _fatal "PMD patterns file is empty: $PAT_FILE"
