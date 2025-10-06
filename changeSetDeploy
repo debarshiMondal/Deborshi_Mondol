@@ -1,0 +1,104 @@
+ChangeSetDeploy()
+{
+
+#Return from function if changeSetDeploy/force-app/main/default/ has no deployable
+changesetFile=$(find changeSetDeploy/force-app/main/default/ -type f | egrep -v "package.xml|staticResourceFolders.txt" | wc -l)
+  if [ ${changesetFile} -eq 0 ]
+   then
+   return 1
+  fi
+
+echo "Deploy $SFDC_ORG ... Press <Ctrl>+C to cancel within 20 sec"
+sleep 20
+
+# ---- capture START (IST) just before the deploy kicks off ----
+START_TIME_IST="$(TZ=Asia/Kolkata date +'%m/%d/%Y %I:%M:%S %p IST')"
+START_EPOCH="$(TZ=Asia/Kolkata date +%s)"
+
+#Changeset deploy
+sf project deploy start --concise --source-dir changeSetDeploy/force-app --target-org $SFDC_ORG 2>&1 | tee $LOG
+
+# ---- capture END (IST) immediately after the deploy completes ----
+END_TIME_IST="$(TZ=Asia/Kolkata date +'%m/%d/%Y %I:%M:%S %p IST')"
+END_EPOCH="$(TZ=Asia/Kolkata date +%s)"
+
+antReturnCode=`egrep -o "Status: Succeeded|ALREADY_IN_PROCESS|EXCEEDED_MAX_SIZE_REQUEST|UNKNOWN_EXCEPTION|Failed to send request" $LOG | sort -u`
+
+case $antReturnCode in
+
+	"Status: Succeeded") HTML_REPORT SUCCEEDED
+	PublishLOG changeset
+	echo $gitlatest > $LastSuccessbuild
+	if [[ $GIT_FORCE -eq 1 ]]
+	then
+	echo $gitlatest > $LastSuccessbuildFull
+	git log -n1 --format=format:"%H" src/commonLabel/CustomLabels.labels-meta.xml > build/LastCommonCL.txt
+	fi
+	echo 1 > ${TRIGGER}
+
+	;;
+
+	"ALREADY_IN_PROCESS") HTML_REPORT LOCKED
+	PublishLOG changeset
+        #Don't trigger Relay
+        #retry
+        RecRun
+        #Unlock, Set RelayTrigger & Exit
+        FAIL_EXIT
+	;;
+
+       "EXCEEDED_MAX_SIZE_REQUEST") HTML_REPORT EXCEEDED_MAX_SIZE_REQUEST
+        PublishLOG changeset
+        #Don't trigger Relay
+        #retry
+        RecRun
+        #Unlock, Set RelayTrigger & Exit
+        FAIL_EXIT
+        ;;
+	
+	"Failed to send request") HTML_REPORT Failed_to_send_request
+        PublishLOG changeset
+        #Don't trigger Relay
+        #retry
+        RecRun
+        #Unlock, Set RelayTrigger & Exit
+        FAIL_EXIT
+        ;;
+
+        "UNKNOWN_EXCEPTION") HTML_REPORT UNKNOWN_EXCEPTION
+        PublishLOG changeset
+        #Don't trigger Relay
+        #retry
+        RecRun
+        #Unlock, Set RelayTrigger & Exit
+        FAIL_EXIT
+        ;;
+	*)
+	echo "Converting Error Log to Json...!!"
+
+	sf project deploy start --json --source-dir changeSetDeploy/force-app --target-org $SFDC_ORG > $LOG.filtered 2>/dev/null
+	#sed -e '/componentFailures/,$!d' $LOG.pre.filtered > $LOG.filtered
+	
+
+	SAVEIFS=$IFS
+	IFS=$(echo -en "\n\b")
+
+
+	
+	#restore IFS
+	IFS=$SAVEIFS
+
+
+    HTML_REPORT FAILED
+	PublishLOG changeset
+
+			
+	#retry
+	RecRun
+	
+
+	#Unlock, Set RelayTrigger & Exit
+	FAIL_EXIT
+	;;
+esac
+}
