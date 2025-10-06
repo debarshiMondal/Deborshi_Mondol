@@ -138,18 +138,31 @@ HTML_REPORT() {
   PMD_HIGH_TRG=$(_count_high_in_dir "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers")
   PMD_HIGH_TOTAL=$(( PMD_HIGH_CLS + PMD_HIGH_TRG ))
 
-  # Duration: use START/END from ChangeSetDeploy (IST), compute diff if epochs present
+  # Duration: compute from START/END epochs (IST), and trim times for display
   if [ -n "$START_EPOCH" ] && [ -n "$END_EPOCH" ]; then
     _dur=$(( END_EPOCH - START_EPOCH ))
     if [ $_dur -lt 0 ]; then _dur=0; fi
     _h=$((_dur/3600)); _m=$(((_dur%3600)/60)); _s=$((_dur%60))
     TOTAL_DURATION=$(printf "%02dh:%02dm:%02ds" "$_h" "$_m" "$_s")
+    START_TIME_ONLY="$(TZ=Asia/Kolkata date -d "@$START_EPOCH" '+%-I:%M %p IST')"
+    END_TIME_ONLY="$(TZ=Asia/Kolkata date -d "@$END_EPOCH"   '+%-I:%M %p IST')"
   else
     TOTAL_DURATION="${TOTAL_DURATION:-N/A}"
+    # best-effort trim from provided strings
+    if [ -n "$START_TIME_IST" ]; then
+      START_TIME_ONLY="$(TZ=Asia/Kolkata date -d "$START_TIME_IST" '+%-I:%M %p IST' 2>/dev/null || echo "$START_TIME_IST" | sed -E 's/.* ([0-9]{1,2}:[0-9]{2} [AP]M).*/\1 IST/')"
+    else
+      START_TIME_ONLY="N/A"
+    fi
+    if [ -n "$END_TIME_IST" ]; then
+      END_TIME_ONLY="$(TZ=Asia/Kolkata date -d "$END_TIME_IST" '+%-I:%M %p IST' 2>/dev/null || echo "$END_TIME_IST" | sed -E 's/.* ([0-9]{1,2}:[0-9]{2} [AP]M).*/\1 IST/')"
+    else
+      END_TIME_ONLY="N/A"
+    fi
   fi
-  # START/END times shown as captured by the deploy wrapper
-  START_TIME_IST="${START_TIME_IST:-N/A}"
-  END_TIME_IST="${END_TIME_IST:-N/A}"
+  # preserve full strings (may be used elsewhere)
+  START_TIME_IST="${START_TIME_IST:-$START_TIME_ONLY}"
+  END_TIME_IST="${END_TIME_IST:-$END_TIME_ONLY}"
 
   OPEN_LOGS_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
   ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
@@ -323,7 +336,7 @@ EOF
           <tr><td style="padding:8px;" valign="top">
             <div style="font:10px Arial;color:${_status_label};">DEPLOYMENT DURATION</div>
             <div style="font:bold 14px Arial;color:${_status_value};">${TOTAL_DURATION}</div>
-            <div style="font:12px Arial;color:${_status_value};">Start: ${START_TIME_IST} &nbsp; • &nbsp; End: ${END_TIME_IST}</div>
+            <div style="font:12px Arial;color:${_status_value};">Start: ${START_TIME_ONLY:-N/A} &nbsp; • &nbsp; End: ${END_TIME_ONLY:-N/A}</div>
           </td></tr>
         </table>
       </td>
@@ -337,21 +350,8 @@ EOF
   if [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; then
     echo '<div style="font:bold 12px Arial;color:#c62828;margin:0 4px 8px;">No PMD report: 0 classes or triggers in changeset.</div>' >>"$HTMLLog"
   else
-    # helper for author row (reuse success-section styling)
-    _emit_author_row(){
-      local gitFile="$1"
-      if [ -n "$gitFile" ] && [ -f "$gitFile" ]; then
-        local LastAuthor
-        LastAuthor=$(git log -1 "$gitFile" 2>/dev/null | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')
-        echo "<tr><td colspan=\"4\" style=\"background:${_succ_auth_bg};padding:6px 8px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;\">GIT log >>> $gitFile
-$LastAuthor</pre></td></tr>"
-      else
-        echo "<tr><td colspan=\"4\" style=\"background:${_succ_auth_bg};padding:6px 8px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;\">No Git log available</pre></td></tr>"
-      fi
-    }
-
-    # Classes table
-    echo "<table role=\"presentation\" cellpadding=\"8\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:separate;border-spacing:0 4px;\"><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CLASS NAME</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CURRENT (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">Δ HIGH</th></tr>" >>"$HTMLLog"
+    # Classes table (Author column added)
+    echo "<table role=\"presentation\" cellpadding=\"8\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:separate;border-spacing:0 4px;\"><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CLASS NAME</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CURRENT (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">Δ HIGH</th><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">AUTHOR</th></tr>" >>"$HTMLLog"
 
     for classePath in $(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null); do
       base="$(basename "$classePath" .cls)"
@@ -381,20 +381,35 @@ $LastAuthor</pre></td></tr>"
 
       link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${base}.cls_currpmd.html"
       display="${base}.cls"
-      if [ "$CurrseverityCnt" -gt "$OrgseverityCnt" ]; then
-        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_high};font-weight:bold;\">$display</a></td><td align=\"right\" style=\"color:${_pmd_text_high};\">${OriginalPmd}-(${OrgseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_text_high};\"><b>${CurrentPmd}-(${CurrseverityCnt})</b></td><td align=\"right\" style=\"color:${_pmd_text_high};\">$delta</td></tr>" >>"$HTMLLog"
-      else
-        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_normal};\">$display</a></td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${OriginalPmd}-(${OrgseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${CurrentPmd}-(${CurrseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">$delta</td></tr>" >>"$HTMLLog"
-      fi
 
-      # Author row for class (search in src)
+      # Author (last committer name)
       gitFile=$(find src -type f -name "${base}.cls" | head -n 1)
-      _emit_author_row "$gitFile" >>"$HTMLLog"
+      authorName=""
+      [ -n "$gitFile" ] && authorName="$(git log -1 --pretty='%an' "$gitFile" 2>/dev/null | head -n 1)"
+      [ -n "$authorName" ] || authorName="N/A"
+
+      if [ "$CurrseverityCnt" -gt "$OrgseverityCnt" ]; then
+        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\">
+                <td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_high};font-weight:bold;\">$display</a></td>
+                <td align=\"right\" style=\"color:${_pmd_text_high};\">${OriginalPmd}-(${OrgseverityCnt})</td>
+                <td align=\"right\" style=\"color:${_pmd_text_high};\"><b>${CurrentPmd}-(${CurrseverityCnt})</b></td>
+                <td align=\"right\" style=\"color:${_pmd_text_high};\">$delta</td>
+                <td align=\"left\"  style=\"color:${_pmd_link_normal};\">$authorName</td>
+              </tr>" >>"$HTMLLog"
+      else
+        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\">
+                <td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_normal};\">$display</a></td>
+                <td align=\"right\" style=\"color:${_pmd_link_normal};\">${OriginalPmd}-(${OrgseverityCnt})</td>
+                <td align=\"right\" style=\"color:${_pmd_link_normal};\">${CurrentPmd}-(${CurrseverityCnt})</td>
+                <td align=\"right\" style=\"color:${_pmd_link_normal};\">$delta</td>
+                <td align=\"left\"  style=\"color:${_pmd_link_normal};\">$authorName</td>
+              </tr>" >>"$HTMLLog"
+      fi
     done
     echo "</table>" >>"$HTMLLog"
 
-    # Triggers table
-    echo "<table role=\"presentation\" cellpadding=\"8\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:separate;border-spacing:0 4px;margin-top:6px;\"><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">TRIGGER NAME</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CURRENT (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">Δ HIGH</th></tr>" >>"$HTMLLog"
+    # Triggers table (Author column added)
+    echo "<table role=\"presentation\" cellpadding=\"8\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:separate;border-spacing:0 4px;margin-top:6px;\"><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">TRIGGER NAME</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CURRENT (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">Δ HIGH</th><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">AUTHOR</th></tr>" >>"$HTMLLog"
 
     for triggerPath in $(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null); do
       tbase="$(basename "$triggerPath" .trigger)"
@@ -422,15 +437,30 @@ $LastAuthor</pre></td></tr>"
 
       link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${tbase}.trigger_currpmd.html"
       display="${tbase}.trigger"
-      if [ "$CurrseverityCnt" -gt "$OrgseverityCnt" ]; then
-        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_high};font-weight:bold;\">$display</a></td><td align=\"right\" style=\"color:${_pmd_text_high};\">${OriginalPmd}-(${OrgseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_text_high};\"><b>${CurrentPmd}-(${CurrseverityCnt})</b></td><td align=\"right\" style=\"color:${_pmd_text_high};\">$delta</td></tr>" >>"$HTMLLog"
-      else
-        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_normal};\">$display</a></td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${OriginalPmd}-(${OrgseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${CurrentPmd}-(${CurrseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">$delta</td></tr>" >>"$HTMLLog"
-      fi
 
-      # Author row for trigger (search in src)
+      # Author (last committer name)
       gitFile=$(find src -type f -name "${tbase}.trigger" | head -n 1)
-      _emit_author_row "$gitFile" >>"$HTMLLog"
+      authorName=""
+      [ -n "$gitFile" ] && authorName="$(git log -1 --pretty='%an' "$gitFile" 2>/dev/null | head -n 1)"
+      [ -n "$authorName" ] || authorName="N/A"
+
+      if [ "$CurrseverityCnt" -gt "$OrgseverityCnt" ]; then
+        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\">
+                <td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_high};font-weight:bold;\">$display</a></td>
+                <td align=\"right\" style=\"color:${_pmd_text_high};\">${OriginalPmd}-(${OrgseverityCnt})</td>
+                <td align=\"right\" style=\"color:${_pmd_text_high};\"><b>${CurrentPmd}-(${CurrseverityCnt})</b></td>
+                <td align=\"right\" style=\"color:${_pmd_text_high};\">$delta</td>
+                <td align=\"left\"  style=\"color:${_pmd_link_normal};\">$authorName</td>
+              </tr>" >>"$HTMLLog"
+      else
+        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\">
+                <td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_normal};\">$display</a></td>
+                <td align=\"right\" style=\"color:${_pmd_link_normal};\">${OriginalPmd}-(${OrgseverityCnt})</td>
+                <td align=\"right\" style=\"color:${_pmd_link_normal};\">${CurrentPmd}-(${CurrseverityCnt})</td>
+                <td align=\"right\" style=\"color:${_pmd_link_normal};\">$delta</td>
+                <td align=\"left\"  style=\"color:${_pmd_link_normal};\">$authorName</td>
+              </tr>" >>"$HTMLLog"
+      fi
     done
     echo "</table>" >>"$HTMLLog"
   fi
@@ -467,13 +497,11 @@ $LastAuthor</pre></td></tr>"
         # Map actual component path from changeset to src to fetch git logs (more accurate than basename match)
         gitMap="src/$(echo "$fileDisp" | sed 's|^|/|; s|^/||')"
         gitMap=$(echo "$gitMap" | sed 's|^src/|src/|')
-        # env-specific remapping similar to success path
         [ "$gitMap" = "src/labels/CustomLabels.labels-meta.xml" ] && gitMap="src/env/${SFDC_ORG}/customLabel/CustomLabels.labels-meta.xml"
         echo "$gitMap" | grep -q "src/remoteSiteSettings/" && gitMap=$(echo "$gitMap" | sed -e "s|^src|src/env/${SFDC_ORG}|")
         echo "$gitMap" | grep -q "src/customMetadata/"      && gitMap=$(echo "$gitMap" | sed -e "s|^src|src/env/${SFDC_ORG}|")
 
         if [ ! -f "$gitMap" ]; then
-          # fallback: search by exact filename under src
           gitMap=$(find src -type f -name "$(basename "$fileName")" | head -n 1)
         fi
 
