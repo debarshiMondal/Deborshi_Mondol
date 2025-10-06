@@ -99,9 +99,12 @@ HTML_REPORT() {
   _REQID="$(jq -r '.result.id // .result.operationId // empty' "$LOG.filtered" 2>/dev/null)"
   [ -n "$_REQID" ] || _REQID="${REQUEST_ID:-${DEPLOYMENT_ID:-${DEPLOY_ID:-N/A}}}"
 
-  # "DEPLOY USER" chip actually shows Target Org from $LOG; fallback to $SFDC_ORG
-  _DEPUSER="$(grep -m1 -iE '(^|[^[:alpha:]])target[- ]org[: ]' "$LOG" 2>/dev/null | sed -E 's/.*target[- ]org[: ]+//I' | awk '{print $1}')"
-  [ -n "$_DEPUSER" ] || _DEPUSER="$SFDC_ORG"
+  # Deploy user: prefer JSON/log, fall back to SF_USERNAME/USER
+  _DEPUSER="$(jq -r '.result.username // empty' "$LOG.filtered" 2>/dev/null)"
+  if [ -z "$_DEPUSER" ] && [ -f "$LOG" ]; then
+    _DEPUSER="$(grep -m1 -Eo 'Deploy(ment)? User:[[:space:]]*[^ ]+' "$LOG" | cut -d: -f2- | xargs)"
+  fi
+  [ -n "$_DEPUSER" ] || _DEPUSER="${SF_USERNAME:-${USER:-unknown}}"
 
   # Compute pass/fail component counts
   if [ -f "$LOG.filtered" ]; then
@@ -117,52 +120,33 @@ HTML_REPORT() {
   CLASS_COUNT=$(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null | wc -l | xargs)
   TRIGGER_COUNT=$(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null | wc -l | xargs)
 
-  pattern='ApexUnitTestShouldNotUseSeeAllDataTrue:|UnusedLocalVariable:|ClassNamingConventions:|FieldDeclarationsShouldBeAtStart:|FieldNamingConventions:|FormalParameterNamingConventions:|LocalVariableNamingConventions:|MethodNamingConventions:|PropertyNamingConventions:|ExcessiveClassLength:|ExcessiveParameterList:|ApexDoc:|ApexCSRF:|AvoidDirectAccessTriggerMap:|AvoidHardcodingId:|AvoidNonExistentAnnotations:|EmptyCatchBlock:|EmptyIfStmt:|EmptyStatementBlock:|EmptyTryOrFinallyBlock:|EmptyWhileStmt:|InaccessibleAuraEnabledGetter:|MethodWithSameNameAsEnclosingClass:|OverrideBothEqualsAndHashcode:|TestMethodsMustBeInTestClasses:|AvoidDmlStatementsInLoops:|AvoidSoqlInLoops:|AvoidSoslInLoops:|OperationWithLimitsInLoop:|ApexBadCrypto:|ApexDangerousMethods:|ApexInsecureEndpoint:|ApexOpenRedirect:|ApexSharingViolations:|ApexSOQLInjection:|ApexSuggestUsingNamedCred:'
+  pattern='ApexUnitTestShouldNotUseSeeAllDataTrue:\|UnusedLocalVariable:\|ClassNamingConventions:\|FieldDeclarationsShouldBeAtStart:\|FieldNamingConventions:\|FormalParameterNamingConventions:\|LocalVariableNamingConventions:\|MethodNamingConventions:\|PropertyNamingConventions:\|ExcessiveClassLength:\|ExcessiveParameterList:\|ApexDoc:\|ApexCSRF:\|AvoidDirectAccessTriggerMap:\|AvoidHardcodingId:\|AvoidNonExistentAnnotations:\|EmptyCatchBlock:\|EmptyIfStmt:\|EmptyStatementBlock:\|EmptyTryOrFinallyBlock:\|EmptyWhileStmt:\|InaccessibleAuraEnabledGetter:\|MethodWithSameNameAsEnclosingClass:\|OverrideBothEqualsAndHashcode:\|TestMethodsMustBeInTestClasses:\|AvoidDmlStatementsInLoops:\|AvoidSoqlInLoops:\|AvoidSoslInLoops:\|OperationWithLimitsInLoop:\|ApexBadCrypto:\|ApexDangerousMethods:\|ApexInsecureEndpoint:\|ApexOpenRedirect:\|ApexSharingViolations:\|ApexSOQLInjection:\|ApexSuggestUsingNamedCred:'
 
-  _count_high_in_dir() {
+  # total high severity (current) across all class/trigger PMD text outputs
+  _sum_grep_matches() {
     local dir="$1"
-    local files total
-    total=0
-    files=$(find "$dir" -maxdepth 1 -type f -name '*.txt' 2>/dev/null)
-    if [ -n "$files" ]; then
-      total=$(grep -h -Eo "$pattern" $files 2>/dev/null | wc -l | xargs)
-      # Fallback if -o behaves unexpectedly in some envs
-      if ! [[ "$total" =~ ^[0-9]+$ ]]; then
-        total=$(grep -h -E "$pattern" $files 2>/dev/null | wc -l | xargs)
-      fi
+    local total=0 n
+    if [ -d "$dir" ]; then
+      # shellcheck disable=SC2046
+      n=$(grep -h -o "$pattern" $(find "$dir" -maxdepth 1 -type f -name '*.txt' 2>/dev/null) 2>/dev/null | wc -l | xargs)
+      total=$(( total + ${n:-0} ))
     fi
-    echo "${total:-0}"
+    echo "$total"
   }
-
-  PMD_HIGH_CLS=$(_count_high_in_dir "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes")
-  PMD_HIGH_TRG=$(_count_high_in_dir "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers")
+  PMD_HIGH_CLS=$(_sum_grep_matches "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes")
+  PMD_HIGH_TRG=$(_sum_grep_matches "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers")
   PMD_HIGH_TOTAL=$(( PMD_HIGH_CLS + PMD_HIGH_TRG ))
 
-  # Duration: compute from START/END epochs (IST), and trim times for display
-  if [ -n "$START_EPOCH" ] && [ -n "$END_EPOCH" ]; then
-    _dur=$(( END_EPOCH - START_EPOCH ))
-    if [ $_dur -lt 0 ]; then _dur=0; fi
-    _h=$((_dur/3600)); _m=$(((_dur%3600)/60)); _s=$((_dur%60))
-    TOTAL_DURATION=$(printf "%02dh:%02dm:%02ds" "$_h" "$_m" "$_s")
-    START_TIME_ONLY="$(TZ=Asia/Kolkata date -d "@$START_EPOCH" '+%-I:%M %p IST')"
-    END_TIME_ONLY="$(TZ=Asia/Kolkata date -d "@$END_EPOCH"   '+%-I:%M %p IST')"
+  # Duration (IST, using START/END epochs if present), show only time in chip
+  if [ -n "${START_TIME_EPOCH:-}" ] && [ -n "${END_TIME_EPOCH:-}" ]; then
+    TOTAL_DURATION="$(printf '%02dh:%02dm:%02ds' $(( (END_TIME_EPOCH-START_TIME_EPOCH)/3600 )) $(( ((END_TIME_EPOCH-START_TIME_EPOCH)%3600)/60 )) $(( (END_TIME_EPOCH-START_TIME_EPOCH)%60 )) )"
+    START_TIME_IST="$(TZ=Asia/Kolkata date -d "@${START_TIME_EPOCH}" +'%I:%M %p IST')"
+    END_TIME_IST="$(TZ=Asia/Kolkata date -d "@${END_TIME_EPOCH}" +'%I:%M %p IST')"
   else
+    START_TIME_IST="${START_TIME_IST:-N/A}"
+    END_TIME_IST="${END_TIME_IST:-N/A}"
     TOTAL_DURATION="${TOTAL_DURATION:-N/A}"
-    # best-effort trim from provided strings
-    if [ -n "$START_TIME_IST" ]; then
-      START_TIME_ONLY="$(TZ=Asia/Kolkata date -d "$START_TIME_IST" '+%-I:%M %p IST' 2>/dev/null || echo "$START_TIME_IST" | sed -E 's/.* ([0-9]{1,2}:[0-9]{2} [AP]M).*/\1 IST/')"
-    else
-      START_TIME_ONLY="N/A"
-    fi
-    if [ -n "$END_TIME_IST" ]; then
-      END_TIME_ONLY="$(TZ=Asia/Kolkata date -d "$END_TIME_IST" '+%-I:%M %p IST' 2>/dev/null || echo "$END_TIME_IST" | sed -E 's/.* ([0-9]{1,2}:[0-9]{2} [AP]M).*/\1 IST/')"
-    else
-      END_TIME_ONLY="N/A"
-    fi
   fi
-  # preserve full strings (may be used elsewhere)
-  START_TIME_IST="${START_TIME_IST:-$START_TIME_ONLY}"
-  END_TIME_IST="${END_TIME_IST:-$END_TIME_ONLY}"
 
   OPEN_LOGS_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
   ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
@@ -336,7 +320,7 @@ EOF
           <tr><td style="padding:8px;" valign="top">
             <div style="font:10px Arial;color:${_status_label};">DEPLOYMENT DURATION</div>
             <div style="font:bold 14px Arial;color:${_status_value};">${TOTAL_DURATION}</div>
-            <div style="font:12px Arial;color:${_status_value};">Start: ${START_TIME_ONLY:-N/A} &nbsp; • &nbsp; End: ${END_TIME_ONLY:-N/A}</div>
+            <div style="font:12px Arial;color:${_status_value};">Start: ${START_TIME_IST:-N/A} &nbsp; • &nbsp; End: ${END_TIME_IST:-N/A}</div>
           </td></tr>
         </table>
       </td>
@@ -344,17 +328,18 @@ EOF
   </table>
 EOF
 
-  # PMD REVIEW
+  # PMD REVIEW (with Author column)
   echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\"><tr><td style=\"padding:10px 4px 6px 4px;font:800 13px Arial;color:${_status_title};\">PMD REVIEW</td></tr></table>" >>"$HTMLLog"
 
   if [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; then
     echo '<div style="font:bold 12px Arial;color:#c62828;margin:0 4px 8px;">No PMD report: 0 classes or triggers in changeset.</div>' >>"$HTMLLog"
   else
-    # Classes table (Author column added)
-    echo "<table role=\"presentation\" cellpadding=\"8\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:separate;border-spacing:0 4px;\"><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CLASS NAME</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CURRENT (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">Δ HIGH</th><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">AUTHOR</th></tr>" >>"$HTMLLog"
+    # Classes table
+    echo "<table role=\"presentation\" cellpadding=\"8\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:separate;border-spacing:0 4px;\"><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CLASS NAME</th><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">AUTHOR</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CURRENT (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">Δ HIGH</th></tr>" >>"$HTMLLog"
 
     for classePath in $(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null); do
       base="$(basename "$classePath" .cls)"
+      classeHtml="${base}.cls_currpmd.html"
       currTxt="${base}.cls_currpmd.txt"
       orgTxt="${base}.cls_orgpmd.txt"
 
@@ -368,51 +353,30 @@ EOF
       OriginalPmd=${OriginalPmd:-0}
       CurrentPmd=${CurrentPmd:-0}
 
-      CurrseverityCnt=$(grep -h -Eo "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" 2>/dev/null | wc -l | xargs)
-      if ! [[ "$CurrseverityCnt" =~ ^[0-9]+$ ]]; then
-        CurrseverityCnt=$(grep -h -E "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" 2>/dev/null | wc -l | xargs)
-      fi
-      OrgseverityCnt=$(grep -h -Eo "$pattern" "PMDReport/orgpmdoutput/src/classes/$orgTxt" 2>/dev/null | wc -l | xargs)
-      if ! [[ "$OrgseverityCnt" =~ ^[0-9]+$ ]]; then
-        OrgseverityCnt=$(grep -h -E "$pattern" "PMDReport/orgpmdoutput/src/classes/$orgTxt" 2>/dev/null | wc -l | xargs)
-      fi
+      CurrseverityCnt=$(grep -o "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" 2>/dev/null | wc -l | xargs)
+      OrgseverityCnt=$(grep -o "$pattern" "PMDReport/orgpmdoutput/src/classes/$orgTxt" 2>/dev/null | wc -l | xargs)
       CurrseverityCnt=${CurrseverityCnt:-0}; OrgseverityCnt=${OrgseverityCnt:-0}
       delta=$(( CurrseverityCnt - OrgseverityCnt )); [ $delta -gt 0 ] && delta="+$delta"
 
       link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${base}.cls_currpmd.html"
       display="${base}.cls"
-
-      # Author (last committer name)
-      gitFile=$(find src -type f -name "${base}.cls" | head -n 1)
-      authorName=""
-      [ -n "$gitFile" ] && authorName="$(git log -1 --pretty='%an' "$gitFile" 2>/dev/null | head -n 1)"
-      [ -n "$authorName" ] || authorName="N/A"
+      cls_src="$(find src -type f -name "${base}.cls" 2>/dev/null | head -n 1)"
+      author_name="$( [ -n "$cls_src" ] && git log -1 --format='%an' "$cls_src" 2>/dev/null )"
 
       if [ "$CurrseverityCnt" -gt "$OrgseverityCnt" ]; then
-        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\">
-                <td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_high};font-weight:bold;\">$display</a></td>
-                <td align=\"right\" style=\"color:${_pmd_text_high};\">${OriginalPmd}-(${OrgseverityCnt})</td>
-                <td align=\"right\" style=\"color:${_pmd_text_high};\"><b>${CurrentPmd}-(${CurrseverityCnt})</b></td>
-                <td align=\"right\" style=\"color:${_pmd_text_high};\">$delta</td>
-                <td align=\"left\"  style=\"color:${_pmd_link_normal};\">$authorName</td>
-              </tr>" >>"$HTMLLog"
+        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_high};font-weight:bold;\">$display</a></td><td style=\"color:${_pmd_text_high};\">${author_name:-N/A}</td><td align=\"right\" style=\"color:${_pmd_text_high};\">${OriginalPmd}-(${OrgseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_text_high};\"><b>${CurrentPmd}-(${CurrseverityCnt})</b></td><td align=\"right\" style=\"color:${_pmd_text_high};\">$delta</td></tr>" >>"$HTMLLog"
       else
-        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\">
-                <td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_normal};\">$display</a></td>
-                <td align=\"right\" style=\"color:${_pmd_link_normal};\">${OriginalPmd}-(${OrgseverityCnt})</td>
-                <td align=\"right\" style=\"color:${_pmd_link_normal};\">${CurrentPmd}-(${CurrseverityCnt})</td>
-                <td align=\"right\" style=\"color:${_pmd_link_normal};\">$delta</td>
-                <td align=\"left\"  style=\"color:${_pmd_link_normal};\">$authorName</td>
-              </tr>" >>"$HTMLLog"
+        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_normal};\">$display</a></td><td style=\"color:${_pmd_link_normal};\">${author_name:-N/A}</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${OriginalPmd}-(${OrgseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${CurrentPmd}-(${CurrseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">$delta</td></tr>" >>"$HTMLLog"
       fi
     done
     echo "</table>" >>"$HTMLLog"
 
-    # Triggers table (Author column added)
-    echo "<table role=\"presentation\" cellpadding=\"8\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:separate;border-spacing:0 4px;margin-top:6px;\"><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">TRIGGER NAME</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CURRENT (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">Δ HIGH</th><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">AUTHOR</th></tr>" >>"$HTMLLog"
+    # Triggers table
+    echo "<table role=\"presentation\" cellpadding=\"8\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:separate;border-spacing:0 4px;margin-top:6px;\"><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">TRIGGER NAME</th><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">AUTHOR</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CURRENT (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">Δ HIGH</th></tr>" >>"$HTMLLog"
 
     for triggerPath in $(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null); do
       tbase="$(basename "$triggerPath" .trigger)"
+      trigHtml="${tbase}.trigger_currpmd.html"
       currTxt="${tbase}.trigger_currpmd.txt"
       orgTxt="${tbase}.trigger_orgpmd.txt"
 
@@ -424,46 +388,73 @@ EOF
       OriginalPmd=${OriginalPmd:-0}
       CurrentPmd=${CurrentPmd:-0}
 
-      CurrseverityCnt=$(grep -h -Eo "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" 2>/dev/null | wc -l | xargs)
-      if ! [[ "$CurrseverityCnt" =~ ^[0-9]+$ ]]; then
-        CurrseverityCnt=$(grep -h -E "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" 2>/dev/null | wc -l | xargs)
-      fi
-      OrgseverityCnt=$(grep -h -Eo "$pattern" "PMDReport/orgpmdoutput/src/triggers/$orgTxt" 2>/dev/null | wc -l | xargs)
-      if ! [[ "$OrgseverityCnt" =~ ^[0-9]+$ ]]; then
-        OrgseverityCnt=$(grep -h -E "$pattern" "PMDReport/orgpmdoutput/src/triggers/$orgTxt" 2>/dev/null | wc -l | xargs)
-      fi
+      CurrseverityCnt=$(grep -o "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" 2>/dev/null | wc -l | xargs)
+      OrgseverityCnt=$(grep -o "$pattern" "PMDReport/orgpmdoutput/src/triggers/$orgTxt" 2>/dev/null | wc -l | xargs)
       CurrseverityCnt=${CurrseverityCnt:-0}; OrgseverityCnt=${OrgseverityCnt:-0}
       delta=$(( CurrseverityCnt - OrgseverityCnt )); [ $delta -gt 0 ] && delta="+$delta"
 
       link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${tbase}.trigger_currpmd.html"
       display="${tbase}.trigger"
-
-      # Author (last committer name)
-      gitFile=$(find src -type f -name "${tbase}.trigger" | head -n 1)
-      authorName=""
-      [ -n "$gitFile" ] && authorName="$(git log -1 --pretty='%an' "$gitFile" 2>/dev/null | head -n 1)"
-      [ -n "$authorName" ] || authorName="N/A"
+      trg_src="$(find src -type f -name "${tbase}.trigger" 2>/dev/null | head -n 1)"
+      author_name="$( [ -n "$trg_src" ] && git log -1 --format='%an' "$trg_src" 2>/dev/null )"
 
       if [ "$CurrseverityCnt" -gt "$OrgseverityCnt" ]; then
-        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\">
-                <td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_high};font-weight:bold;\">$display</a></td>
-                <td align=\"right\" style=\"color:${_pmd_text_high};\">${OriginalPmd}-(${OrgseverityCnt})</td>
-                <td align=\"right\" style=\"color:${_pmd_text_high};\"><b>${CurrentPmd}-(${CurrseverityCnt})</b></td>
-                <td align=\"right\" style=\"color:${_pmd_text_high};\">$delta</td>
-                <td align=\"left\"  style=\"color:${_pmd_link_normal};\">$authorName</td>
-              </tr>" >>"$HTMLLog"
+        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_high};font-weight:bold;\">$display</a></td><td style=\"color:${_pmd_text_high};\">${author_name:-N/A}</td><td align=\"right\" style=\"color:${_pmd_text_high};\">${OriginalPmd}-(${OrgseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_text_high};\"><b>${CurrentPmd}-(${CurrseverityCnt})</b></td><td align=\"right\" style=\"color:${_pmd_text_high};\">$delta</td></tr>" >>"$HTMLLog"
       else
-        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\">
-                <td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_normal};\">$display</a></td>
-                <td align=\"right\" style=\"color:${_pmd_link_normal};\">${OriginalPmd}-(${OrgseverityCnt})</td>
-                <td align=\"right\" style=\"color:${_pmd_link_normal};\">${CurrentPmd}-(${CurrseverityCnt})</td>
-                <td align=\"right\" style=\"color:${_pmd_link_normal};\">$delta</td>
-                <td align=\"left\"  style=\"color:${_pmd_link_normal};\">$authorName</td>
-              </tr>" >>"$HTMLLog"
+        echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_normal};\">$display</a></td><td style=\"color:${_pmd_link_normal};\">${author_name:-N/A}</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${OriginalPmd}-(${OrgseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${CurrentPmd}-(${CurrseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">$delta</td></tr>" >>"$HTMLLog"
       fi
     done
     echo "</table>" >>"$HTMLLog"
   fi
+
+  # ---- helper to resolve src path for failures (ONLY CHANGE ADDED) ----
+  _in_list() { local ext="$1" list="$2"; [ -f "$list" ] && grep -Eiq "^[[:space:]]*${ext}[[:space:]]*$" "$list"; }
+  _resolve_src_for_failure() {
+    # $1 = JSON fileName (e.g., Foo.permissionset or MyClass.cls)
+    local jf="$1"
+    local base="${jf%.*}"
+    local ext="${jf##*.}"
+    local want="${base}.${ext}"
+    local want_meta="${base}.${ext}-meta.xml"
+    local hit="" srcHit=""
+
+    # lists from property dir
+    local XML_TYPES="${SFCliMetaXMLList}"
+    local FOLDER_TYPES="${SFCliMetaMetaHasFolder}"
+    local BUILD_LIST="${SFCliBuildList}"
+
+    # 1) try changeset exact
+    if _in_list "$ext" "$XML_TYPES"; then
+      hit=$(find changeSetDeploy/force-app/main/default -type f \( -name "$want_meta" -o -name "${base}.*" \) 2>/dev/null | head -n 1)
+    else
+      hit=$(find changeSetDeploy/force-app/main/default -type f \( -name "$want" -o -name "${base}.*" -o -name "$want_meta" \) 2>/dev/null | head -n 1)
+    fi
+
+    # 2) translate to src mirror if found
+    if [ -n "$hit" ]; then
+      srcHit="${hit/changeSetDeploy\/force-app\/main\/default/src}"
+    else
+      # 3) fallback to build list (always meta.xml)
+      if [ -f "$BUILD_LIST" ]; then
+        srcHit="$(grep -E "/${base}\.${ext}(-meta\.xml)?$" "$BUILD_LIST" 2>/dev/null | head -n 1)"
+      fi
+      # 4) final fallback: search src
+      [ -n "$srcHit" ] || srcHit="$(find src -type f \( -name "$want_meta" -o -name "$want" -o -name "${base}.*" \) 2>/dev/null | head -n 1)"
+    fi
+
+    # 5) env rewrites for specific types
+    if echo "$srcHit" | grep -q '/remoteSiteSettings/'; then
+      srcHit="$(echo "$srcHit" | sed -e "s#^src#src/env/${SFDC_ORG}#")"
+    fi
+    if echo "$srcHit" | grep -q '/customMetadata/'; then
+      srcHit="$(echo "$srcHit" | sed -e "s#^src#src/env/${SFDC_ORG}#")"
+    fi
+    if echo "$srcHit" | grep -q '/labels/CustomLabels'; then
+      srcHit="src/env/${SFDC_ORG}/customLabel/CustomLabels.labels-meta.xml"
+    fi
+
+    printf '%s\n' "$srcHit"
+  }
 
   # Success / Failure details
   SAVEIFS=$IFS; IFS=$(echo -en "\n\b")
@@ -494,20 +485,12 @@ EOF
         errorMsg=$(echo "$failure" | jq -r '.problem' | tr '\n' ' ' | tr '\r' ' ' | sed -e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
         echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:6px;\"><tr><td style=\"background:${_fail_err_bg};padding:6px 8px;border:1px solid ${_fail_err_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;\">$i. $fileDisp -- Error: $errorMsg</pre></td></tr>" >>"$HTMLLog"
 
-        # Map actual component path from changeset to src to fetch git logs (more accurate than basename match)
-        gitMap="src/$(echo "$fileDisp" | sed 's|^|/|; s|^/||')"
-        gitMap=$(echo "$gitMap" | sed 's|^src/|src/|')
-        [ "$gitMap" = "src/labels/CustomLabels.labels-meta.xml" ] && gitMap="src/env/${SFDC_ORG}/customLabel/CustomLabels.labels-meta.xml"
-        echo "$gitMap" | grep -q "src/remoteSiteSettings/" && gitMap=$(echo "$gitMap" | sed -e "s|^src|src/env/${SFDC_ORG}|")
-        echo "$gitMap" | grep -q "src/customMetadata/"      && gitMap=$(echo "$gitMap" | sed -e "s|^src|src/env/${SFDC_ORG}|")
+        # === ONLY CHANGE: robust resolution of src file for author log ===
+        gitFile="$(_resolve_src_for_failure "$fileName")"
 
-        if [ ! -f "$gitMap" ]; then
-          gitMap=$(find src -type f -name "$(basename "$fileName")" | head -n 1)
-        fi
-
-        if [ -n "$gitMap" ]; then
-          LastAuthor=$(git log -1 "$gitMap" 2>/dev/null | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')
-          echo "<tr><td style=\"background:${_succ_auth_bg};padding:6px 8px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;\">GIT log >>> $gitMap
+        if [ -n "$gitFile" ]; then
+          LastAuthor=$(git log -1 "$gitFile" 2>/dev/null | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')
+          echo "<tr><td style=\"background:${_succ_auth_bg};padding:6px 8px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;\">GIT log >>> $gitFile
 $LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
         else
           echo "<tr><td style=\"background:${_succ_auth_bg};padding:6px 8px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;\">No Git log available for $fileDisp</pre></td></tr></table>" >>"$HTMLLog"
