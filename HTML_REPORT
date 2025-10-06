@@ -99,18 +99,16 @@ HTML_REPORT() {
   _REQID="$(jq -r '.result.id // .result.operationId // empty' "$LOG.filtered" 2>/dev/null)"
   [ -n "$_REQID" ] || _REQID="${REQUEST_ID:-${DEPLOYMENT_ID:-${DEPLOY_ID:-N/A}}}"
 
-  # Deploy user: use TARGET ORG from $LOG (preferred), then fallbacks
-  _DEPUSER="$(jq -r '.result.targetOrg // .result.targetUsername // .result.username // empty' "$LOG.filtered" 2>/dev/null)"
-  if [ -z "$_DEPUSER" ] && [ -f "$LOG" ]; then
-    _DEPUSER="$(grep -m1 -E 'Target (Org|Username)\s*[:=]' "$LOG" | sed -E 's/.*[:=]\s*//')"
-  fi
-  [ -n "$_DEPUSER" ] || _DEPUSER="${SFDC_ORG}"
+  # "DEPLOY USER" chip actually shows Target Org from $LOG; fallback to $SFDC_ORG
+  _DEPUSER="$(grep -m1 -iE '(^|[^[:alpha:]])target[- ]org[: ]' "$LOG" 2>/dev/null | sed -E 's/.*target[- ]org[: ]+//I' | awk '{print $1}')"
+  [ -n "$_DEPUSER" ] || _DEPUSER="$SFDC_ORG"
 
   # Compute pass/fail component counts
   if [ -f "$LOG.filtered" ]; then
     COMP_PASS="$(jq -r 'try (.result.details.componentSuccesses|length) catch 0' "$LOG.filtered" 2>/dev/null)"
     COMP_FAIL="$(jq -r 'try (.result.details.componentFailures|length) catch 0' "$LOG.filtered" 2>/dev/null)"
   else
+    # Best-effort for success path: count files in changeset as "passed"
     COMP_PASS="$(find changeSetDeploy/force-app/main/default -type f | egrep -v 'customSettings|staticResourceFolders.txt' | wc -l | xargs)"
     COMP_FAIL=0
   fi
@@ -119,25 +117,39 @@ HTML_REPORT() {
   CLASS_COUNT=$(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null | wc -l | xargs)
   TRIGGER_COUNT=$(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null | wc -l | xargs)
 
-  pattern='ApexUnitTestShouldNotUseSeeAllDataTrue:\|UnusedLocalVariable:\|ClassNamingConventions:\|FieldDeclarationsShouldBeAtStart:\|FieldNamingConventions:\|FormalParameterNamingConventions:\|LocalVariableNamingConventions:\|MethodNamingConventions:\|PropertyNamingConventions:\|ExcessiveClassLength:\|ExcessiveParameterList:\|ApexDoc:\|ApexCSRF:\|AvoidDirectAccessTriggerMap:\|AvoidHardcodingId:\|AvoidNonExistentAnnotations:\|EmptyCatchBlock:\|EmptyIfStmt:\|EmptyStatementBlock:\|EmptyTryOrFinallyBlock:\|EmptyWhileStmt:\|InaccessibleAuraEnabledGetter:\|MethodWithSameNameAsEnclosingClass:\|OverrideBothEqualsAndHashcode:\|TestMethodsMustBeInTestClasses:\|AvoidDmlStatementsInLoops:\|AvoidSoqlInLoops:\|AvoidSoslInLoops:\|OperationWithLimitsInLoop:\|ApexBadCrypto:\|ApexDangerousMethods:\|ApexInsecureEndpoint:\|ApexOpenRedirect:\|ApexSharingViolations:\|ApexSOQLInjection:\|ApexSuggestUsingNamedCred:'
+  pattern='ApexUnitTestShouldNotUseSeeAllDataTrue:|UnusedLocalVariable:|ClassNamingConventions:|FieldDeclarationsShouldBeAtStart:|FieldNamingConventions:|FormalParameterNamingConventions:|LocalVariableNamingConventions:|MethodNamingConventions:|PropertyNamingConventions:|ExcessiveClassLength:|ExcessiveParameterList:|ApexDoc:|ApexCSRF:|AvoidDirectAccessTriggerMap:|AvoidHardcodingId:|AvoidNonExistentAnnotations:|EmptyCatchBlock:|EmptyIfStmt:|EmptyStatementBlock:|EmptyTryOrFinallyBlock:|EmptyWhileStmt:|InaccessibleAuraEnabledGetter:|MethodWithSameNameAsEnclosingClass:|OverrideBothEqualsAndHashcode:|TestMethodsMustBeInTestClasses:|AvoidDmlStatementsInLoops:|AvoidSoqlInLoops:|AvoidSoslInLoops:|OperationWithLimitsInLoop:|ApexBadCrypto:|ApexDangerousMethods:|ApexInsecureEndpoint:|ApexOpenRedirect:|ApexSharingViolations:|ApexSOQLInjection:|ApexSuggestUsingNamedCred:'
 
-  _sum_grep_matches() {
+  _count_high_in_dir() {
     local dir="$1"
-    local total=0 n
-    if [ -d "$dir" ]; then
-      n=$(grep -h -o "$pattern" $(find "$dir" -maxdepth 1 -type f -name '*.txt' 2>/dev/null) 2>/dev/null | wc -l | xargs)
-      total=$(( total + ${n:-0} ))
+    local files total
+    total=0
+    files=$(find "$dir" -maxdepth 1 -type f -name '*.txt' 2>/dev/null)
+    if [ -n "$files" ]; then
+      total=$(grep -h -Eo "$pattern" $files 2>/dev/null | wc -l | xargs)
+      # Fallback if -o behaves unexpectedly in some envs
+      if ! [[ "$total" =~ ^[0-9]+$ ]]; then
+        total=$(grep -h -E "$pattern" $files 2>/dev/null | wc -l | xargs)
+      fi
     fi
-    echo "$total"
+    echo "${total:-0}"
   }
-  PMD_HIGH_CLS=$(_sum_grep_matches "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes")
-  PMD_HIGH_TRG=$(_sum_grep_matches "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers")
+
+  PMD_HIGH_CLS=$(_count_high_in_dir "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes")
+  PMD_HIGH_TRG=$(_count_high_in_dir "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers")
   PMD_HIGH_TOTAL=$(( PMD_HIGH_CLS + PMD_HIGH_TRG ))
 
-  # Duration override per request (show PST times and computed duration)
-  START_TIME_IST="3:12 PM PST"
-  END_TIME_IST="3:20 PM PST"
-  TOTAL_DURATION="00h:08m:00s"
+  # Duration: use START/END from ChangeSetDeploy (IST), compute diff if epochs present
+  if [ -n "$START_EPOCH" ] && [ -n "$END_EPOCH" ]; then
+    _dur=$(( END_EPOCH - START_EPOCH ))
+    if [ $_dur -lt 0 ]; then _dur=0; fi
+    _h=$((_dur/3600)); _m=$(((_dur%3600)/60)); _s=$((_dur%60))
+    TOTAL_DURATION=$(printf "%02dh:%02dm:%02ds" "$_h" "$_m" "$_s")
+  else
+    TOTAL_DURATION="${TOTAL_DURATION:-N/A}"
+  fi
+  # START/END times shown as captured by the deploy wrapper
+  START_TIME_IST="${START_TIME_IST:-N/A}"
+  END_TIME_IST="${END_TIME_IST:-N/A}"
 
   OPEN_LOGS_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
   ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
@@ -205,12 +217,12 @@ EOF
   }
 
   _chip_auto "RUN (IST)"   "$(_esc <<<"$_RUN_IST")"
-  _chip_auto "ORG NAME"    "$(_esc <<<"$SFDC_ORG")"   # <== renamed
+  _chip_auto "ORG NAME"    "$(_esc <<<"$SFDC_ORG")"
   _chip_auto "API"         "$(_esc <<<"$_API")"
   _chip_auto "BRANCH"      "$(_esc <<<"$_BRANCH")"
   _chip_auto "REPO"        "$(_esc <<<"$_REPO")"
   _chip_auto "REQUEST ID"  "$(_esc <<<"$_REQID")"
-  _chip_auto "DEPLOY USER" "$(_esc <<<"$_DEPUSER")"   # <== now target org
+  _chip_auto "DEPLOY USER" "$(_esc <<<"$_DEPUSER")"
 
   cat >>"$HTMLLog" <<'EOF'
         </tr>
@@ -311,7 +323,7 @@ EOF
           <tr><td style="padding:8px;" valign="top">
             <div style="font:10px Arial;color:${_status_label};">DEPLOYMENT DURATION</div>
             <div style="font:bold 14px Arial;color:${_status_value};">${TOTAL_DURATION}</div>
-            <div style="font:12px Arial;color:${_status_value};">Start: ${START_TIME_IST:-N/A} &nbsp; • &nbsp; End: ${END_TIME_IST:-N/A}</div>
+            <div style="font:12px Arial;color:${_status_value};">Start: ${START_TIME_IST} &nbsp; • &nbsp; End: ${END_TIME_IST}</div>
           </td></tr>
         </table>
       </td>
@@ -325,25 +337,45 @@ EOF
   if [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; then
     echo '<div style="font:bold 12px Arial;color:#c62828;margin:0 4px 8px;">No PMD report: 0 classes or triggers in changeset.</div>' >>"$HTMLLog"
   else
+    # helper for author row (reuse success-section styling)
+    _emit_author_row(){
+      local gitFile="$1"
+      if [ -n "$gitFile" ] && [ -f "$gitFile" ]; then
+        local LastAuthor
+        LastAuthor=$(git log -1 "$gitFile" 2>/dev/null | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')
+        echo "<tr><td colspan=\"4\" style=\"background:${_succ_auth_bg};padding:6px 8px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;\">GIT log >>> $gitFile
+$LastAuthor</pre></td></tr>"
+      else
+        echo "<tr><td colspan=\"4\" style=\"background:${_succ_auth_bg};padding:6px 8px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;\">No Git log available</pre></td></tr>"
+      fi
+    }
+
     # Classes table
     echo "<table role=\"presentation\" cellpadding=\"8\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:separate;border-spacing:0 4px;\"><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CLASS NAME</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CURRENT (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">Δ HIGH</th></tr>" >>"$HTMLLog"
 
     for classePath in $(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null); do
       base="$(basename "$classePath" .cls)"
-      classeHtml="${base}.cls_currpmd.html"
       currTxt="${base}.cls_currpmd.txt"
       orgTxt="${base}.cls_orgpmd.txt"
 
+      # point to the right HTML file name (new naming)
       pmd_html="/data/public/pmd_rule/$SFDC_ORG/${base}.cls_currpmd_orgpm.html"
       [ -f "$pmd_html" ] || pmd_html="/data/public/pmd_rule/$SFDC_ORG/${base}.cls_currpmd.html"
 
+      # Extract counts from the HTML cards
       OriginalPmd=$(awk '/Original PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p')
       CurrentPmd=$(awk  '/Current PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p')
       OriginalPmd=${OriginalPmd:-0}
       CurrentPmd=${CurrentPmd:-0}
 
-      CurrseverityCnt=$(grep -o "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" 2>/dev/null | wc -l | xargs)
-      OrgseverityCnt=$(grep -o "$pattern" "PMDReport/orgpmdoutput/src/classes/$orgTxt" 2>/dev/null | wc -l | xargs)
+      CurrseverityCnt=$(grep -h -Eo "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" 2>/dev/null | wc -l | xargs)
+      if ! [[ "$CurrseverityCnt" =~ ^[0-9]+$ ]]; then
+        CurrseverityCnt=$(grep -h -E "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" 2>/dev/null | wc -l | xargs)
+      fi
+      OrgseverityCnt=$(grep -h -Eo "$pattern" "PMDReport/orgpmdoutput/src/classes/$orgTxt" 2>/dev/null | wc -l | xargs)
+      if ! [[ "$OrgseverityCnt" =~ ^[0-9]+$ ]]; then
+        OrgseverityCnt=$(grep -h -E "$pattern" "PMDReport/orgpmdoutput/src/classes/$orgTxt" 2>/dev/null | wc -l | xargs)
+      fi
       CurrseverityCnt=${CurrseverityCnt:-0}; OrgseverityCnt=${OrgseverityCnt:-0}
       delta=$(( CurrseverityCnt - OrgseverityCnt )); [ $delta -gt 0 ] && delta="+$delta"
 
@@ -354,15 +386,18 @@ EOF
       else
         echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_normal};\">$display</a></td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${OriginalPmd}-(${OrgseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${CurrentPmd}-(${CurrseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">$delta</td></tr>" >>"$HTMLLog"
       fi
+
+      # Author row for class (search in src)
+      gitFile=$(find src -type f -name "${base}.cls" | head -n 1)
+      _emit_author_row "$gitFile" >>"$HTMLLog"
     done
     echo "</table>" >>"$HTMLLog"
 
-    # Triggers table (same high severity logic)
+    # Triggers table
     echo "<table role=\"presentation\" cellpadding=\"8\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-collapse:separate;border-spacing:0 4px;margin-top:6px;\"><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">TRIGGER NAME</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">CURRENT (HIGH)</th><th align=\"right\" style=\"font:11px Arial;color:${_pmd_hdr_text};padding:8px;\">Δ HIGH</th></tr>" >>"$HTMLLog"
 
     for triggerPath in $(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null); do
       tbase="$(basename "$triggerPath" .trigger)"
-      trigHtml="${tbase}.trigger_currpmd.html"
       currTxt="${tbase}.trigger_currpmd.txt"
       orgTxt="${tbase}.trigger_orgpmd.txt"
 
@@ -374,8 +409,14 @@ EOF
       OriginalPmd=${OriginalPmd:-0}
       CurrentPmd=${CurrentPmd:-0}
 
-      CurrseverityCnt=$(grep -o "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" 2>/dev/null | wc -l | xargs)
-      OrgseverityCnt=$(grep -o "$pattern" "PMDReport/orgpmdoutput/src/triggers/$orgTxt" 2>/dev/null | wc -l | xargs)
+      CurrseverityCnt=$(grep -h -Eo "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" 2>/dev/null | wc -l | xargs)
+      if ! [[ "$CurrseverityCnt" =~ ^[0-9]+$ ]]; then
+        CurrseverityCnt=$(grep -h -E "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" 2>/dev/null | wc -l | xargs)
+      fi
+      OrgseverityCnt=$(grep -h -Eo "$pattern" "PMDReport/orgpmdoutput/src/triggers/$orgTxt" 2>/dev/null | wc -l | xargs)
+      if ! [[ "$OrgseverityCnt" =~ ^[0-9]+$ ]]; then
+        OrgseverityCnt=$(grep -h -E "$pattern" "PMDReport/orgpmdoutput/src/triggers/$orgTxt" 2>/dev/null | wc -l | xargs)
+      fi
       CurrseverityCnt=${CurrseverityCnt:-0}; OrgseverityCnt=${OrgseverityCnt:-0}
       delta=$(( CurrseverityCnt - OrgseverityCnt )); [ $delta -gt 0 ] && delta="+$delta"
 
@@ -386,6 +427,10 @@ EOF
       else
         echo "<tr style=\"background:#ffffff;border:1px solid ${_pmd_row_border};\"><td style=\"word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${_pmd_link_normal};\">$display</a></td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${OriginalPmd}-(${OrgseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">${CurrentPmd}-(${CurrseverityCnt})</td><td align=\"right\" style=\"color:${_pmd_link_normal};\">$delta</td></tr>" >>"$HTMLLog"
       fi
+
+      # Author row for trigger (search in src)
+      gitFile=$(find src -type f -name "${tbase}.trigger" | head -n 1)
+      _emit_author_row "$gitFile" >>"$HTMLLog"
     done
     echo "</table>" >>"$HTMLLog"
   fi
@@ -418,10 +463,23 @@ EOF
         fileDisp=$(echo "$fileName" | sed 's|^changeSetDeploy/force-app/main/default/||')
         errorMsg=$(echo "$failure" | jq -r '.problem' | tr '\n' ' ' | tr '\r' ' ' | sed -e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
         echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:6px;\"><tr><td style=\"background:${_fail_err_bg};padding:6px 8px;border:1px solid ${_fail_err_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;\">$i. $fileDisp -- Error: $errorMsg</pre></td></tr>" >>"$HTMLLog"
-        gitFile=$(find src -type f -iname "$(basename "$fileName")" | head -n 1)
-        if [ -n "$gitFile" ]; then
-          LastAuthor=$(git log -1 "$gitFile" 2>/dev/null | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')
-          echo "<tr><td style=\"background:${_succ_auth_bg};padding:6px 8px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;\">GIT log >>> $gitFile
+
+        # Map actual component path from changeset to src to fetch git logs (more accurate than basename match)
+        gitMap="src/$(echo "$fileDisp" | sed 's|^|/|; s|^/||')"
+        gitMap=$(echo "$gitMap" | sed 's|^src/|src/|')
+        # env-specific remapping similar to success path
+        [ "$gitMap" = "src/labels/CustomLabels.labels-meta.xml" ] && gitMap="src/env/${SFDC_ORG}/customLabel/CustomLabels.labels-meta.xml"
+        echo "$gitMap" | grep -q "src/remoteSiteSettings/" && gitMap=$(echo "$gitMap" | sed -e "s|^src|src/env/${SFDC_ORG}|")
+        echo "$gitMap" | grep -q "src/customMetadata/"      && gitMap=$(echo "$gitMap" | sed -e "s|^src|src/env/${SFDC_ORG}|")
+
+        if [ ! -f "$gitMap" ]; then
+          # fallback: search by exact filename under src
+          gitMap=$(find src -type f -name "$(basename "$fileName")" | head -n 1)
+        fi
+
+        if [ -n "$gitMap" ]; then
+          LastAuthor=$(git log -1 "$gitMap" 2>/dev/null | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')
+          echo "<tr><td style=\"background:${_succ_auth_bg};padding:6px 8px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;\">GIT log >>> $gitMap
 $LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
         else
           echo "<tr><td style=\"background:${_succ_auth_bg};padding:6px 8px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;\">No Git log available for $fileDisp</pre></td></tr></table>" >>"$HTMLLog"
