@@ -1,87 +1,12 @@
-  # ---- Quick Links (compact, stronger gaps, Outlook-safe) ----
-  GAP=$(( ${_ql_gap:-6} + 6 ))  # make the gaps more prominent
-
-  cat >>"$HTMLLog" <<EOF
-  <!-- QUICKLINKS_GAP_STRONG -->
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-         style="margin:0 0 6px 0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
-    <tr>
-      <td align="left" style="padding:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-               style="margin:0;padding:0;mso-table-lspace:0pt;mso-table-rspace:0pt;table-layout:auto;">
-          <tr style="height:22px;line-height:22px;mso-line-height-rule:exactly;">
-
-            <!-- Box 1 -->
-            <td style="padding:0 ${GAP}px 0 0; mso-padding-alt:0 ${GAP}px 0 0;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-                     style="background:${_ql1};mso-table-lspace:0pt;mso-table-rspace:0pt;">
-                <tr style="height:22px;">
-                  <td nowrap height="22"
-                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
-                    <a href="${OPEN_LOGS_URL}"
-                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
-                      Open&nbsp;Logs
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-            <!--[if mso]><td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;">&nbsp;</td><![endif]-->
-
-            <!-- Box 2 -->
-            <td style="padding:0 ${GAP}px 0 0; mso-padding-alt:0 ${GAP}px 0 0;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-                     style="background:${_ql2};mso-table-lspace:0pt;mso-table-rspace:0pt;">
-                <tr style="height:22px;">
-                  <td nowrap height="22"
-                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
-                    <a href="${ORIG_PMD_URL}"
-                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
-                      Combined&nbsp;Original&nbsp;PMD
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-            <!--[if mso]><td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;">&nbsp;</td><![endif]-->
-
-            <!-- Box 3 -->
-            <td style="padding:0 ${GAP}px 0 0; mso-padding-alt:0 ${GAP}px 0 0;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-                     style="background:${_ql3};mso-table-lspace:0pt;mso-table-rspace:0pt;">
-                <tr style="height:22px;">
-                  <td nowrap height="22"
-                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
-                    <a href="#"
-                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
-                      Combined&nbsp;Current&nbsp;PMD
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-            <!--[if mso]><td width="${GAP}" style="width:${GAP}px;font-size:0;line-height:0;">&nbsp;</td><![endif]-->
-
-            <!-- Box 4 (no right padding, it’s last) -->
-            <td style="padding:0; mso-padding-alt:0;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-                     style="background:${_ql4};mso-table-lspace:0pt;mso-table-rspace:0pt;">
-                <tr style="height:22px;">
-                  <td nowrap height="22"
-                      style="height:22px;padding:0 10px;line-height:22px;mso-line-height-rule:exactly;border-radius:0;">
-                    <a href="${FORCE_DEPLOY_URL}"
-                       style="font:bold 12px Arial,Helvetica,sans-serif;color:${_ql_text};text-decoration:none;white-space:nowrap;">
-                      ForceDeploy
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-
-          </tr>
-        </table>
-      </td>
-      <td style="width:100%;">&nbsp;</td>
-    </tr>
-  </table>
-EOF
+# If failed and times still missing, take them from deploy JSON
+if [ "$Report" != "SUCCEEDED" ] && [ -f "$LOG.filtered" ] && { [ -z "$START_TIME_IST" ] || [ -z "$END_TIME_IST" ]; }; then
+  JSON_CREATED="$(jq -r '.result.createdDate // empty' "$LOG.filtered" 2>/dev/null)"
+  JSON_COMPLETED="$(jq -r '.result.completedDate // empty' "$LOG.filtered" 2>/dev/null)"
+  [ -n "$JSON_CREATED" ]  && START_TIME_IST="$(TZ=Asia/Kolkata date -d "$JSON_CREATED" +'%m/%d/%Y %I:%M:%S %p IST')"
+  [ -n "$JSON_COMPLETED" ] && END_TIME_IST="$(TZ=Asia/Kolkata date -d "$JSON_COMPLETED"  +'%m/%d/%Y %I:%M:%S %p IST')"
+  START_TIME_IST_ONLY="$(_time_only "$START_TIME_IST")"
+  END_TIME_IST_ONLY="$(_time_only "$END_TIME_IST")"
+  _start_sec=$(TZ=Asia/Kolkata date -d "$START_TIME_IST" +%s 2>/dev/null || echo "")
+  _end_sec=$(TZ=Asia/Kolkata date -d "$END_TIME_IST" +%s 2>/dev/null || echo "")
+  [ -n "$_start_sec" ] && [ -n "$_end_sec" ] && TOTAL_DURATION=$(printf "%02dh:%02dm:%02ds" $(((_end_sec-_start_sec)/3600)) $((((_end_sec-_start_sec)%3600)/60)) $(((_end_sec-_start_sec)%60)))
+fi
