@@ -321,7 +321,7 @@ EOF
   # small gap
   echo '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:8px;line-height:8px;font-size:0;">&nbsp;</td></tr></table>' >>"$HTMLLog"
 
-  # Quick Links
+  # Quick Links  (Removed "Combined Current PMD"; renamed Original link)
   GAP=$(( ${_ql_gap:-6} + 6 ))
   cat >>"$HTMLLog" <<EOF
   <!--[if gte mso 9]>
@@ -342,14 +342,7 @@ EOF
       <td style="padding:0 ${GAP}px 0 0;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql2};">
           <tr><td height="22" style="height:22px;padding:0 10px;line-height:22px;">
-            <a class="cta" href="${ORIG_PMD_URL}" style="font:bold 12px Arial;">Combined&nbsp;Original&nbsp;PMD</a>
-          </td></tr>
-        </table>
-      </td>
-      <td style="padding:0 ${GAP}px 0 0;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql3};">
-          <tr><td height="22" style="height:22px;padding:0 10px;line-height:22px;">
-            <a class="cta" href="#" style="font:bold 12px Arial;">Combined&nbsp;Current&nbsp;PMD</a>
+            <a class="cta" href="${ORIG_PMD_URL}" style="font:bold 12px Arial;">Original&nbsp;PMD&nbsp;Report</a>
           </td></tr>
         </table>
       </td>
@@ -378,7 +371,6 @@ EOF
       echo "Passed: ${COMP_PASS} &nbsp; • &nbsp; Failed: ${COMP_FAIL}"
     fi
   }
-  # --- CHANGED: always show Classes/Triggers counts; no special 0/0 prose ---
   _pmd_summary_html() {
       echo "<div style=\"font:bold 13px Arial;color:${_status_value};\">Classes: ${CLASS_COUNT} &nbsp; • &nbsp; Triggers: ${TRIGGER_COUNT}</div>"
       echo "<div style=\"font:12px Arial;color:${_status_value};\">High (Classes): ${PMD_HIGH_CLS} &nbsp; • &nbsp; High (Triggers): ${PMD_HIGH_TRG}</div>"
@@ -421,7 +413,7 @@ EOF
 EOF
 
   # =========================
-  # PMD REVIEW (conditional)
+  # PMD REVIEW (conditional, no legend text)
   # =========================
   # helper for Δ pill (Outlook-safe)
   _delta_pill(){ # $1=delta (int)
@@ -438,10 +430,6 @@ PILL
   if [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; then
     : # no PMD REVIEW section when both 0 — tile already communicates 0/0
   else
-    # Header + tiny legend (Outlook-safe)
-    echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\"><tr><td style=\"padding:18px 4px 6px 4px;font:800 16px Arial;color:${_status_title};\">PMD REVIEW</td></tr></table>" >>"$HTMLLog"
-    echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\"><tr><td style=\"padding:0 4px 10px 4px;font:11px Arial;color:${_status_label};\">Legend: <span style=\"background:#ffefef;border:1px solid #f0caca;padding:1px 6px;\">Δ&gt;0</span> regression &nbsp; <span style=\"background:#ecf7ef;border:1px solid #c8e6ca;padding:1px 6px;\">Δ&lt;0</span> improvement</td></tr></table>" >>"$HTMLLog"
-
     # --- CLASSES table only if present ---
     if [ "$CLASS_COUNT" -gt 0 ]; then
       echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_border}; border-collapse:collapse;\">" >>"$HTMLLog"
@@ -472,12 +460,12 @@ PILL
         link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${base}.cls_currpmd_orgpm.html"
         display="${base}.cls"
 
-        # Determine row style (added left bar + improvement highlight)
-        bg_color="#ffffff"; text_color="${_pmd_text_normal}"; link_color="${_pmd_link_normal}"; delta_weight="normal"; delta_color="${_pmd_text_normal}"; delta_prefix=""
-        if [ $((row_num % 2)) -eq 1 ]; then bg_color="#eeeeee"; fi
+        # Determine row style (left bar + improvement highlight)
+        bg_color="#ffffff"; text_color="${_pmd_text_normal}"; link_color="${_pmd_link_normal}"
+        if [ $((row_num % 2)) -eq 1 ]; then bg_color="#f7f7f7"; fi
         row_left="#dcdcdc"
         if [ "$delta" -gt 0 ]; then
-          bg_color="#ffdddd"; text_color="${_pmd_text_high}"; link_color="${_pmd_link_high}"; delta_weight="bold"; delta_color="#c62828"; delta_prefix="+"
+          bg_color="#ffefef"; text_color="${_pmd_text_high}"; link_color="${_pmd_link_high}"
           row_left="#c62828"
         elif [ "$delta" -lt 0 ]; then
           bg_color="#ecf7ef"; row_left="#2e7d32"
@@ -492,14 +480,22 @@ PILL
         echo "</td>" >>"$HTMLLog"
         echo "<td style=\"padding:9px 12px; font:12px Arial; color:${text_color};\">$author_name</td>" >>"$HTMLLog"
         echo "</tr>" >>"$HTMLLog"
+        # subtle divider line after each file
+        echo "<tr><td colspan=\"5\" style=\"border-bottom:1px solid #dddddd;font-size:0;line-height:0;\">&nbsp;</td></tr>" >>"$HTMLLog"
+
         row_num=$((row_num + 1))
       done
       echo "</tbody></table>" >>"$HTMLLog"
     fi
 
+    # small gap between class and trigger tables (if both exist)
+    if [ "$CLASS_COUNT" -gt 0 ] && [ "$TRIGGER_COUNT" -gt 0 ]; then
+      echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"height:12px;line-height:12px;font-size:0;\">&nbsp;</td></tr></table>" >>"$HTMLLog"
+    fi
+
     # --- TRIGGERS table only if present ---
     if [ "$TRIGGER_COUNT" -gt 0 ]; then
-      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"margin-top:16px; border:1px solid ${_pmd_row_border}; border-collapse:collapse;\">" >>"$HTMLLog"
+      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_border}; border-collapse:collapse;\">" >>"$HTMLLog"
       echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:10px 12px; font:bold 11px Arial; color:${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">TRIGGER NAME</th><th align=\"right\" style=\"padding:10px 12px; font:bold 11px Arial; color:${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"padding:10px 12px; font:bold 11px Arial; color:${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">CURRENT (HIGH)</th><th align=\"right\" style=\"padding:10px 12px; font:bold 11px Arial; color:${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">Δ HIGH</th><th align=\"left\" style=\"padding:10px 12px; font:bold 11px Arial; color:${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
       
       row_num=0
@@ -521,18 +517,18 @@ PILL
         delta=$(( CurrseverityCnt - OrgseverityCnt ))
 
         trig_src="${triggerPath/changeSetDeploy\/force-app\/main\/default/src}"
-        author_name="$(git log -1 "$trig_src" 2>/dev/null | head -n1)"
+        author_name="$(git log -1 --format='%an' "$trig_src" 2>/dev/null | head -n1)"
         [ -n "$author_name" ] || author_name="N/A"
 
         link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${tbase}.trigger_currpmd_orgpm.html"
         display="${tbase}.trigger"
         
-        # Determine row style (added left bar + improvement highlight)
-        bg_color="#ffffff"; text_color="${_pmd_text_normal}"; link_color="${_pmd_link_normal}"; delta_weight="normal"; delta_color="${_pmd_text_normal}"; delta_prefix=""
-        if [ $((row_num % 2)) -eq 1 ]; then bg_color="#eeeeee"; fi
+        # Determine row style (left bar + improvement highlight)
+        bg_color="#ffffff"; text_color="${_pmd_text_normal}"; link_color="${_pmd_link_normal}"
+        if [ $((row_num % 2)) -eq 1 ]; then bg_color="#f7f7f7"; fi
         row_left="#dcdcdc"
         if [ "$delta" -gt 0 ]; then
-          bg_color="#ffdddd"; text_color="${_pmd_text_high}"; link_color="${_pmd_link_high}"; delta_weight="bold"; delta_color="#c62828"; delta_prefix="+"
+          bg_color="#ffefef"; text_color="${_pmd_text_high}"; link_color="${_pmd_link_high}"
           row_left="#c62828"
         elif [ "$delta" -lt 0 ]; then
           bg_color="#ecf7ef"; row_left="#2e7d32"
@@ -547,6 +543,9 @@ PILL
         echo "</td>" >>"$HTMLLog"
         echo "<td style=\"padding:9px 12px; font:12px Arial; color:${text_color};\">$author_name</td>" >>"$HTMLLog"
         echo "</tr>" >>"$HTMLLog"
+        # subtle divider line after each file
+        echo "<tr><td colspan=\"5\" style=\"border-bottom:1px solid #dddddd;font-size:0;line-height:0;\">&nbsp;</td></tr>" >>"$HTMLLog"
+
         row_num=$((row_num + 1))
       done
       echo "</tbody></table>" >>"$HTMLLog"
@@ -597,11 +596,13 @@ $LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
   fi
   IFS=$SAVEIFS
 
-  # Footer & close
+  # Footer & close (center aligned)
   cat >>"$HTMLLog" <<EOF
     </td></tr></table>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="1100" style="max-width:1100px;margin:8px auto 14px;background:${_foot_bg};">
-      <tr><td style=\"padding:6px 8px;text-align:center;color:${_foot_text};font:bold 12px Arial;line-height:16px;">End of Report</td></tr>
+      <tr>
+        <td align="center" style="padding:6px 8px;text-align:center;color:${_foot_text};font:bold 12px Arial;line-height:16px;">End of Report</td>
+      </tr>
     </table>
 </td></tr></table>
 </body></html>
