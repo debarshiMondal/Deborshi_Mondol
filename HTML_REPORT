@@ -413,7 +413,7 @@ EOF
 EOF
 
   # =========================
-  # PMD REVIEW (conditional, no legend text)
+  # PMD REVIEW (header restored, no legend)
   # =========================
   # helper for Δ pill (Outlook-safe)
   _delta_pill(){ # $1=delta (int)
@@ -430,6 +430,9 @@ PILL
   if [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; then
     : # no PMD REVIEW section when both 0 — tile already communicates 0/0
   else
+    # header (restored)
+    echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\"><tr><td style=\"padding:18px 4px 6px 4px;font:800 16px Arial;color:${_status_title};\">PMD REVIEW</td></tr></table>" >>"$HTMLLog"
+
     # --- CLASSES table only if present ---
     if [ "$CLASS_COUNT" -gt 0 ]; then
       echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_border}; border-collapse:collapse;\">" >>"$HTMLLog"
@@ -495,8 +498,8 @@ PILL
 
     # --- TRIGGERS table only if present ---
     if [ "$TRIGGER_COUNT" -gt 0 ]; then
-      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_border}; border-collapse:collapse;\">" >>"$HTMLLog"
-      echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:10px 12px; font:bold 11px Arial; color:${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">TRIGGER NAME</th><th align=\"right\" style=\"padding:10px 12px; font:bold 11px Arial; color:${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"padding:10px 12px; font:bold 11px Arial; color:${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">CURRENT (HIGH)</th><th align=\"right\" style=\"padding:10px 12px; font:bold 11px Arial; color:${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">Δ HIGH</th><th align=\"left\" style=\"padding:10px 12px; font:bold 11px Arial; color:${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
+      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing="0" border="0" width="100%" style="border:1px solid ${_pmd_row_border}; border-collapse:collapse;\">" >>"$HTMLLog"
+      echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:10px 12px; font:bold 11px Arial; color:${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">TRIGGER NAME</th><th align=\"right\" style=\"padding:10px 12px; font:bold 11px Arial; color:${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"padding:10px 12px; font:bold 11px Arial; color=${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">CURRENT (HIGH)</th><th align=\"right\" style=\"padding:10px 12px; font:bold 11px Arial; color=${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">Δ HIGH</th><th align=\"left\" style=\"padding:10px 12px; font:bold 11px Arial; color=${_pmd_hdr_text}; border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
       
       row_num=0
       for triggerPath in $(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null); do
