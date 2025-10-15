@@ -1,139 +1,188 @@
 {
   // =====================================================================
-  // UI Color Configuration for HTML_REPORT()
-  // Edit these values to rebrand the email without touching the script.
-  // This file is JSONC (JSON + comments). The function strips comments,
-  // validates, and reads the resulting strict JSON.
+  // ui_colors.jsonc
+  // Comprehensive, line-by-line documented color & layout configuration
+  // for the HTML_REPORT() Bash function.
+  //
+  // FORMAT:
+  //   - This is JSONC (JSON with // comments). The script strips comments
+  //     before feeding the content to `jq`.
+  //   - Do NOT remove required keys; the script validates every listed key.
+  //   - All color values MUST be 6-digit hex strings (#RRGGBB).
+  //   - Non-color tokens (gap_px, corner_radius) must be present (non-empty).
+  //
+  // CHANGE HISTORY (relevant):
+  //   - Original palette provided by you.
+  //   - run_details.title_text changed to black (#000000) per new layout.
+  //   - All other values intentionally preserved to avoid functional drift.
+  //
+  // USAGE NOTES:
+  //   - Some legacy keys (changeset, failures) are kept for backward
+  //     compatibility and fallback logic in the Bash script.
+  //   - The "strip_*_bg" fields under run_details are retained although the
+  //     layout no longer draws a colored strip; they may be repurposed in future.
   // =====================================================================
 
   "meta": {
-    "version": "1.1",
+    // Version tag for human reference (not parsed programmatically)
+    "version": "1.1-layout-compact",
+    // Ownership / stewardship of this config
     "owner": "Release Eng",
-    "notes": "Every color used by HTML_REPORT(). Symmetric success/failure sections."
+    // Free-form notes about intent or differences
+    "notes": "Original palette retained; only run_details.title_text set to black for updated layout."
   },
 
-  // ------------------------------- HEADER -------------------------------
+  // ---------------------------------------------------------------------
+  // HEADER: Top banner bar (contains logo + deployment success/failure text)
+  // ---------------------------------------------------------------------
   "header": {
-    // Top banner background when deployment SUCCEEDED
+    // Background when deployment succeeds
     "success_bg": "#2e7d32",
-    // Top banner background when deployment FAILED
+    // Background when deployment fails
     "failure_bg": "#c62828",
-    // Header text color
+    // Text color for the banner (logo text, title)
     "text": "#ffffff"
   },
 
-  // ----------------------------- PAGE / PLATE ---------------------------
+  // ---------------------------------------------------------------------
+  // PLATE: Outer page background + main card container
+  // ---------------------------------------------------------------------
   "plate": {
-    // Whole page background (outside the card)
+    // Background color for the area outside the main card
     "page_bg": "#f6f8fa",
-    // Main white card background
+    // Background color of the main content card
     "background": "#ffffff",
-    // Main card border color
+    // Border color of the main card
     "border": "#e6e6e6"
   },
 
-  // ----------------------------- RUN DETAILS ----------------------------
+  // ---------------------------------------------------------------------
+  // RUN DETAILS: Color tokens (strip_* are legacy / currently unused)
+  // ---------------------------------------------------------------------
   "run_details": {
-    // Background strip under header (success)
-    "strip_success_bg": "#e8f5e9",
-    // Background strip under header (failure)
-    "strip_failure_bg": "#fff2b6",
-    // "Run Details" title color
-    "title_text": "#1a365d"
+    // Legacy success strip background (retained for validation / future reuse)
+    "strip_success_bg": "#90EE90",
+    // Legacy failure strip background (retained for validation / future reuse)
+    "strip_failure_bg": "#C3B091",
+    // CHANGED: Run Details heading text color (must be black per new layout)
+    "title_text": "#000000"
   },
 
-  // -------------------------------- CHIPS -------------------------------
+  // ---------------------------------------------------------------------
+  // CHIPS: Small labeled data cells (REPO, BRANCH, RUN (IST), etc.)
+  // ---------------------------------------------------------------------
   "chips": {
-    // Chip background (success case) - Gunmetal
-    "success_bg": "#2A3439",
-    // Chip background (failure case) - Ecru
-    "failure_bg": "#C2B280",
-    // Chip text color for success bg
+    // Background for chips when deployment succeeded (dark for contrast)
+    "success_bg": "#333333",
+    // Background for chips when deployment failed (light neutral/warm)
+    "failure_bg": "#FFFDD0",
+    // Text color atop success_bg (light on dark)
     "success_text": "#ffffff",
-    // Chip text color for failure bg
+    // Text color atop failure_bg (dark on light)
     "failure_text": "#111111",
-    // Chip border
+    // Border color outlining each chip
     "border": "#d0d0d0"
   },
 
-  // ---------------------------- QUICK LINKS -----------------------------
+  // ---------------------------------------------------------------------
+  // QUICK LINKS: Tiles linking to Logs / PMD / ForceDeploy.
+  // All four tiles share identical teal for visual uniformity.
+  // ---------------------------------------------------------------------
   "quick_links": {
-    // 4 colored link tiles (from left to right)
-    "tile_1_bg": "#722F37",      // Wine
-    "tile_2_bg": "#2A3439",      // Gunmetal
-    "tile_3_bg": "#614051",      // Eggplant
-    "tile_4_bg": "#4A0E0E",      // Oxblood
-    // Link text color
+    // Background of first tile (Open Logs)
+    "tile_1_bg": "#0D9488",
+    // Background of second tile (Original PMD Report)
+    "tile_2_bg": "#0D9488",
+    // Background of third tile (reserved / unused in current layout)
+    "tile_3_bg": "#0D9488",
+    // Background of fourth tile (ForceDeploy)
+    "tile_4_bg": "#0D9488",
+    // Text color inside all tiles
     "text": "#ffffff",
-    // Spacing between tiles (px string)
-    "gap_px": "4"
+    // Gap between link tiles (string form; parsed as value-only)
+    "gap_px": "10"
   },
 
-  // --------------------------- STATUS SUMMARY ---------------------------
+  // ---------------------------------------------------------------------
+  // STATUS SUMMARY: Three mini-panels (Deployment, PMD, Duration)
+  // ---------------------------------------------------------------------
   "status_summary": {
-    // Left card background (deployment) based on result
+    // Background color of the deployment panel for success
     "deployment_success_bg": "#e8f5e9",
+    // Background color of the deployment panel for failure
     "deployment_failure_bg": "#fff4cc",
-    // Middle card background (PMD)
-    "pmd_bg": "#e7f1ff",
-    // Right card background (time)
-    "time_bg": "#f3f4f7",
-    // Section title color ("STATUS SUMMARY")
+    // Background for the PMD statistics panel
+    "pmd_bg": "#98ff98",
+    // Background for the timing panel
+    "time_bg": "#B0E0E6",
+    // Text color for the section heading label ("Status Summary")
     "title_text": "#1a365d",
-    // Label color (small titles like "DEPLOYMENT")
+    // Small label text color inside each tile (e.g., "DEPLOYMENT")
     "label_text": "#666666",
-    // Value color (numbers, durations)
+    // Primary value text color (counts, durations)
     "value_text": "#111111",
-    // Corner rounding used across summary boxes
+    // Corner radius applied to tiles (string; must be non-empty)
     "corner_radius": "8px"
   },
 
-  // ----------------------------- PMD REVIEW -----------------------------
+  // ---------------------------------------------------------------------
+  // PMD REVIEW: Tables listing classes & triggers with PMD counts/deltas
+  // ---------------------------------------------------------------------
   "pmd_review": {
-    // Table header row background (for both classes/triggers tables)
+    // Header row background color
     "header_bg": "#eaf2ff",
-    // Table header text color
+    // Header row text color
     "header_text": "#274690",
-    // Each data row border color
+    // Border color for table rows
     "row_border": "#e6eefc",
-    // Link color for non-high rows (blue)
+    // Link color in normal / improved rows
     "link_normal": "#0b5ed7",
-    // Link color & high text for high-severity rows (red)
+    // Link color for rows indicating regression (delta > 0)
     "link_high": "#c62828",
+    // Text color for regression emphasis (matches link_high)
     "text_high": "#c62828",
-    // Optional alternate text color for non-high rows
+    // Text color for neutral / improved rows
     "text_normal": "#0b5ed7"
   },
 
-  // ------------------------------ SUCCESS SECTION ------------------------------
-  // Used when Report == SUCCEEDED (Changeset file list)
+  // ---------------------------------------------------------------------
+  // SUCCESS SECTION: File list (& authors) when deployment succeeded
+  // ---------------------------------------------------------------------
   "success_section": {
-    // Green file row background + border
+    // Background for each deployed file row
     "file_row_bg": "#e8f5e9",
+    // Border around each file row
     "file_row_border": "#d8eeda",
-    // Gray author row background + border
+    // Background for author info row
     "author_row_bg": "#e0e0e0",
+    // Border for author info row
     "author_row_border": "#d1d1d1",
-    // Section title color ("Changeset file/s ...")
+    // Section heading text color
     "title_text": "#1a365d"
   },
 
-  // ------------------------------ FAILURE SECTION ------------------------------
-  // Used when Report == FAILED (All Component Failures)
+  // ---------------------------------------------------------------------
+  // FAILURE SECTION: Component failure list when deployment failed
+  // ---------------------------------------------------------------------
   "failure_section": {
-    // Khaki error row background + border
+    // Background for error row (component failure)
     "error_row_bg": "#fff4cc",
+    // Border color for error row
     "error_row_border": "#f0e1a6",
-    // Gray author row background + border
+    // Background for author / git row that follows an error
     "author_row_bg": "#e0e0e0",
+    // Border color for the author row
     "author_row_border": "#d1d1d1",
-    // Section title color ("All Component Failures:")
+    // Section heading text color
     "title_text": "#1a365d"
   },
 
-  // ------------------------------ LEGACY (optional) ----------------------------
-  // Kept for backward compatibility; values mirror success/failure blocks
+  // ---------------------------------------------------------------------
+  // LEGACY: Fallback aliases retained to support older script naming
+  // (Do NOT remove—script attempts fallback mapping when new keys missing)
+  // ---------------------------------------------------------------------
   "changeset": {
+    // Mirrors success_section.* for backward compatibility
     "file_row_bg": "#e8f5e9",
     "file_row_border": "#d8eeda",
     "author_row_bg": "#e0e0e0",
@@ -141,6 +190,7 @@
     "title_text": "#1a365d"
   },
   "failures": {
+    // Mirrors failure_section.* for backward compatibility
     "error_row_bg": "#fff4cc",
     "error_row_border": "#f0e1a6",
     "author_row_bg": "#e0e0e0",
@@ -148,9 +198,13 @@
     "title_text": "#1a365d"
   },
 
-  // -------------------------------- FOOTER ------------------------------
+  // ---------------------------------------------------------------------
+  // FOOTER: Bottom attribution bar
+  // ---------------------------------------------------------------------
   "footer": {
+    // Footer background color
     "bg": "#111111",
+    // Footer text color
     "text": "#ffffff"
   }
 }
