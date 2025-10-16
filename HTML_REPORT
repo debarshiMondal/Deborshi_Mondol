@@ -235,32 +235,36 @@ HTML_REPORT() {
   _FONT_MAIN_HDR="font:bold 14px Arial,Helvetica,sans-serif;"
   _FONT_RUN_HDR="font:bold 11px Arial,Helvetica,sans-serif;"
 
-  # ---- Logo plumbing (per-org local file -> public URL) ----
-  ASSET_LOCAL="build/property/assets/logo.png"
-  ASSET_PUBLIC_DIR="/data/public/assets/${SFDC_ORG}/"
-  ASSET_NAME="$(basename "$ASSET_LOCAL")"
-  PUBLIC_BASE_URL="https://cdnsfdc.cadence.com/assets/${SFDC_ORG}"
-
-  mkdir -p "$ASSET_PUBLIC_DIR"
-  if [ -s "$ASSET_LOCAL" ]; then
-    cp -u "$ASSET_LOCAL" "${ASSET_PUBLIC_DIR}${ASSET_NAME}"
-    REPORT_LOGO="${PUBLIC_BASE_URL}/${ASSET_NAME}"
-  elif [ -s "build/property/assets/default/logo.png" ]; then
-    cp -u "build/property/assets/default/logo.png" "${ASSET_PUBLIC_DIR}logo.png"
-    REPORT_LOGO="${PUBLIC_BASE_URL}/logo.png"
-  else
-    REPORT_LOGO=""
-  fi
-  export REPORT_LOGO
-
-  # Visible placeholder logo (32x32) if not supplied
+  # Placeholder logo
   _logo_src="${REPORT_LOGO:-data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABbklEQVRYR+2WvUrDUBSGv7mQhCIWIhrCwiCKGxsLW1tZWrcQBBFFxMIgY2thYW1trE3/AW0trY2NgYCFhY2Ah2ZLcvIGc6SZnMu7MnDkzs5ISkHcGiKKb8GfAYkAZcADuAl6A+cAF8A+8BvzMFQJgGjAJF7JrkFPhCnVwBZwBngAVgJ3gDdaAF0AC2B24Bn4B0oAPQrt/EtgLP8bW3vcAR0DLeAIWAFW4AA8AD8BPwBR4KfLz0UJTgMerre8N3n2mS8RmqbJ5fLwOu6Lqte13Xdf1SmLIsg2maZv+puu6/X6/1qtFqtRqNRuPxOBwOguVyuaZpms/ncLlc1Wo1QqlU2mwWQqG43W6/X6XS6XQ6/X6z2Qy+Wy2Ww2pVJJOp0Ot9uNvN9vt9vtfLpeL4/H4gEqlwufzyWRyOBwOt9sN4PF4n8/nzczMTHq9Ho/HYTabzWKx2Gw2g29vb6/X6+Uy2bIsf0Wg0mh8OhzqdDq/Xa5Ik2mz2fz6f12g04HA4PB4PJBIJBK/Xi0Qi0W63S5IkHo+Hw+Fw2Gw2Wq0WmUzGx8cH+P1+AJKqqjzP+/0f6DBFYCJifcEAAAAASUVORK5CYII=}"
 
   _CARD_WIDTH=880
 
+  # Helper: bulletproof chip TD (fixed grid for Outlook)
+  _chip_td(){
+    local label="$1"
+    local value="$2"
+    local pr="$3"  # padding-right
+    cat <<CELL
+<td valign="top" width="260" style="padding:0 ${pr}px 10px 0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:${_chip_bg};border:1px solid ${_chip_border};">
+    <tr>
+      <td style="padding:6px 8px;${_FONT_BASE};color:${_chip_txt};line-height:12px;">
+        <div style="font:700 9px Arial,Helvetica,sans-serif;color:${_chip_txt};letter-spacing:.3px;text-transform:uppercase;">${label}</div>
+        <div style="margin-top:2px;word-wrap:break-word;word-break:break-word;${_FONT_BASE};color:${_chip_txt};">
+          $(_esc <<<"$value")
+        </div>
+      </td>
+    </tr>
+  </table>
+</td>
+CELL
+  }
+
+  # Header
   cat >>"$HTMLLog" <<HTML_TOP
 <!DOCTYPE html><html><head><meta charset="utf-8">
-<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style type="text/css">
   a.cta { text-decoration:none !important; color:${_ql_text} !important; }
@@ -270,18 +274,13 @@ HTML_REPORT() {
 </head>
 <body style="margin:0;padding:0;background:${_page_bg};">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_page_bg};"><tr><td align="center">
-HTML_TOP
-
-  # Header with logo (fixed width)
-  cat >>"$HTMLLog" <<EOF
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${_CARD_WIDTH}" style="width:${_CARD_WIDTH}px;margin:6px auto;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${_CARD_WIDTH}" style="max-width:${_CARD_WIDTH}px;margin:6px auto;">
     <tr>
       <td style="background:${_hdr_bg};padding:6px 10px;color:${_hdr_txt};${_FONT_MAIN_HDR}line-height:16px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
           <tr>
-            <td width="40" style="padding:0 10px 0 0; vertical-align:middle;">
-              <img src="${_logo_src}" alt="Logo" width="32" height="32"
-                   style="display:block;border:0;outline:none;text-decoration:none;line-height:0;">
+            <td style="padding:0 10px 0 0;vertical-align:middle;">
+              <img src="${_logo_src}" alt="Logo" width="32" height="32" style="height:32px;width:32px;display:block;">
             </td>
             <td style="padding:0;${_FONT_MAIN_HDR}color:${_hdr_txt};vertical-align:middle;white-space:nowrap;">
               ${SFDC_ORG} Deployment $([ "$Report" = "SUCCEEDED" ] && echo "Success" || echo "Failure") Report
@@ -291,97 +290,68 @@ HTML_TOP
       </td>
     </tr>
   </table>
-EOF
+HTML_TOP
 
-  # Card open (fixed width)
+  # Card open
   cat >>"$HTMLLog" <<EOF
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${_CARD_WIDTH}" style="width:${_CARD_WIDTH}px;background:${_plate_bg};border:1px solid ${_plate_border};">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${_CARD_WIDTH}" style="max-width:${_CARD_WIDTH}px;background:${_plate_bg};border:1px solid ${_plate_border};">
     <tr><td style="padding:10px 12px;">
+      <!-- Run Details -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid ${_chip_border};border-radius:4px;">
+        <tr>
+          <td align="center" style="padding:6px 8px;${_FONT_RUN_HDR}color:${_run_title};border-bottom:1px solid ${_chip_border};">
+            Run Details
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:8px;">
+            <!-- Fixed 3x2 grid for Outlook -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                $(_chip_td "REPO" "$_REPO" 10)
+                $(_chip_td "BRANCH" "$_BRANCH" 10)
+                $(_chip_td "REQUEST ID" "$_REQID" 0)
+              </tr>
+              <tr>
+                $(_chip_td "RUN (IST)" "$_RUN_IST" 10)
+                $(_chip_td "ORG NAME + API" "${SFDC_ORG} • ${_API}" 10)
+                $(_chip_td "DEPLOY USER" "$_DEPUSER" 0)
+              </tr>
+            </table>
+
+            <!-- Quick links buttons -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 2px 0;">
+              <tr>
+                <td style="padding:0 ${_ql_gap}px 0 0;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql1};border-radius:3px;">
+                    <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
+                      <a class="cta" href="${OPEN_LOGS_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">Open Logs</a>
+                    </td></tr>
+                  </table>
+                </td>
+                <td style="padding:0 ${_ql_gap}px 0 0;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql2};border-radius:3px;">
+                    <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
+                      <a class="cta" href="${ORIG_PMD_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">Original PMD Report</a>
+                    </td></tr>
+                  </table>
+                </td>
+                <td>
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql4};border-radius:3px;">
+                    <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
+                      <a class="cta" href="${FORCE_DEPLOY_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">ForceDeploy</a>
+                    </td></tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+      </table>
 EOF
 
-  # Run Details box (full width)
-  cat >>"$HTMLLog" <<EOF
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid ${_chip_border};border-radius:4px;margin:0 0 8px 0;">
-    <tr>
-      <td style="padding:6px 8px;text-align:center;${_FONT_RUN_HDR}color:${_run_title};border-bottom:1px solid ${_chip_border};">
-        Run Details
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:6px 8px 8px 8px;">
-        <!-- Row 1 -->
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 4px auto;">
-          <tr>
-EOF
-
-  # Chip helper (fixed size; Outlook-safe)
-  _emit_chip_cell(){
-    local label="$1" value="$2"
-    cat <<CHIP >>"$HTMLLog"
-            <td width="260" style="padding:4px 6px 4px 0; vertical-align:top;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-                     width="260" height="56"
-                     style="background:${_chip_bg}; border:1px solid ${_chip_border}; border-radius:3px; table-layout:fixed;">
-                <tr>
-                  <td style="padding:6px 8px; ${_FONT_BASE}; color:${_chip_txt}; line-height:14px;">
-                    <div style="font:700 9px Arial,Helvetica,sans-serif; color:${_chip_txt}; letter-spacing:.3px; text-transform:uppercase; margin-bottom:2px;">${label}</div>
-                    <div style="font:10px Arial,Helvetica,sans-serif; color:${_chip_txt}; word-wrap:break-word; word-break:break-word; overflow:hidden;">
-                      ${value}
-                    </div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-CHIP
-  }
-
-  # Row 1 chips (REPO, BRANCH, REQUEST ID)
-  _emit_chip_cell "REPO" "$(_esc <<<"$_REPO")"
-  _emit_chip_cell "BRANCH" "$(_esc <<<"$_BRANCH")"
-  _emit_chip_cell "REQUEST ID" "$(_esc <<<"$_REQID")"
-
-  cat >>"$HTMLLog" <<EOF
-          </tr>
-        </table>
-
-        <!-- Row 2 -->
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 4px auto;">
-          <tr>
-EOF
-
-  _emit_chip_cell "RUN (IST)" "$(_esc <<<"$_RUN_IST")"
-  _emit_chip_cell "ORG NAME" "$(_esc <<<"$SFDC_ORG")"
-  _emit_chip_cell "API" "$(_esc <<<"$_API")"
-  _emit_chip_cell "DEPLOY USER" "$(_esc <<<"$_DEPUSER")"
-
-  # Quick Links INSIDE Run Details
-  GAP=$(( ${_ql_gap:-10} ))
-  cat >>"$HTMLLog" <<EOF
-          </tr>
-        </table>
-
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 0 0;">
-          <tr>
-            <td bgcolor="${_ql1}" align="center" valign="middle" width="170" height="28" style="height:28px; ${_FONT_BASE_BOLD};">
-              <a href="${OPEN_LOGS_URL}" style="display:block;text-decoration:none;color:${_ql_text};line-height:28px;">Open Logs</a>
-            </td>
-            <td width="${GAP}" style="font-size:0;line-height:0;">&nbsp;</td>
-            <td bgcolor="${_ql2}" align="center" valign="middle" width="170" height="28" style="height:28px; ${_FONT_BASE_BOLD};">
-              <a href="${ORIG_PMD_URL}" style="display:block;text-decoration:none;color:${_ql_text};line-height:28px;">Original PMD Report</a>
-            </td>
-            <td width="${GAP}" style="font-size:0;line-height:0;">&nbsp;</td>
-            <td bgcolor="${_ql4}" align="center" valign="middle" width="170" height="28" style="height:28px; ${_FONT_BASE_BOLD};">
-              <a href="${FORCE_DEPLOY_URL}" style="display:block;text-decoration:none;color:${_ql_text};line-height:28px;">ForceDeploy</a>
-            </td>
-          </tr>
-        </table>
-
-      </td>
-    </tr>
-  </table>
-EOF
-
-  # Status Summary (tighter spacing)
+  # Status Summary
   _status_counts_html() {
     if [ "$Report" = "SUCCEEDED" ]; then
       echo "Passed: ${COMP_PASS}"
@@ -401,34 +371,34 @@ EOF
   }
 
   cat >>"$HTMLLog" <<EOF
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:6px;">
     <tr><td style="padding:4px 2px 2px 2px;${_FONT_SECTION_HDR}color:${_status_title};">Status Summary</td></tr>
   </table>
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
-      <td width="33%" valign="top" style="padding:1px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_bg};border-radius:${_status_radius};">
-          <tr><td style="padding:6px 6px 5px 6px;mso-line-height-rule:exactly;">
+      <td width="33%" valign="top" style="padding:2px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" height="78" style="background:${_status_bg};border-radius:${_status_radius};">
+          <tr><td style="padding:6px;" valign="top">
             <div style="${_FONT_BASE}color:${_status_label};">DEPLOYMENT</div>
             <div style="${_FONT_BASE_BOLD}color:${_status_value};">$([ "$Report" = "SUCCEEDED" ] && echo "Succeeded" || echo "Failed")</div>
             <div style="${_FONT_BASE}color:${_status_value};">$(_status_counts_html)</div>
           </td></tr>
         </table>
       </td>
-      <td width="33%" valign="top" style="padding:1px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_pmd};border-radius:${_status_radius};">
-          <tr><td style="padding:6px 6px 5px 6px;mso-line-height-rule:exactly;">
+      <td width="33%" valign="top" style="padding:2px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" height="78" style="background:${_status_pmd};border-radius:${_status_radius};">
+          <tr><td style="padding:6px;" valign="top">
             <div style="${_FONT_BASE}color:${_status_label};">PMD — CHANGESET</div>
             $(_pmd_summary_html)
           </td></tr>
         </table>
       </td>
-      <td width="33%" valign="top" style="padding:1px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_time};border-radius:${_status_radius};">
-          <tr><td style="padding:6px 6px 5px 6px;mso-line-height-rule:exactly;">
+      <td width="33%" valign="top" style="padding:2px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" height="78" style="background:${_status_time};border-radius:${_status_radius};">
+          <tr><td style="padding:6px;" valign="top">
             <div style="${_FONT_BASE}color:${_status_label};">DURATION</div>
             <div style="${_FONT_BASE_BOLD}color:${_status_value};">${TOTAL_DURATION}</div>
-            <div style="${_FONT_BASE}color:${_status_value}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Start: ${START_TIME_IST_ONLY:-N/A} &nbsp;•&nbsp; End: ${END_TIME_IST_ONLY:-N/A}</div>
+            <div style="${_FONT_BASE}color:${_status_value};">Start: ${START_TIME_IST_ONLY:-N/A}<br>End: ${END_TIME_IST_ONLY:-N/A}</div>
           </td></tr>
         </table>
       </td>
@@ -436,7 +406,7 @@ EOF
   </table>
 EOF
 
-  # PMD Review (only if there is data)
+  # PMD Review
   _delta_pill(){
     local d="$1" bg="#eeeeee" bd="#dddddd" col="${_pmd_text_normal}" txt="$d"
     [ "$d" -gt 0 ] && { bg="#ffe3e3"; bd="#f5bcbc"; col="#b71c1c"; txt="+$d"; }
@@ -448,120 +418,109 @@ EOF
 PILL
   }
 
-  if [ "$CLASS_COUNT" -gt 0 ] || [ "$TRIGGER_COUNT" -gt 0 ]; then
+  if ! { [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; }; then
     echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\"><tr><td style=\"padding:10px 2px 4px 2px;${_FONT_SECTION_HDR}color:${_status_title};\">PMD Review</td></tr></table>" >>"$HTMLLog"
-    echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"margin:4px 0 8px 0;\">" >>"$HTMLLog"
-    echo "<tr>" >>"$HTMLLog"
-    echo "<td style=\"padding:4px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:#ffefef;border:1px solid #f5bcbc;margin-right:6px;\"></span>Red = regression (Δ High &gt; 0)</td>" >>"$HTMLLog"
-    echo "<td style=\"padding:4px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:#ecf7ef;border:1px solid #bde0c0;margin-right:6px;\"></span>Green = improvement (Δ High &lt; 0)</td>" >>"$HTMLLog"
-    echo "<td style=\"padding:4px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:#ffffff;border:1px solid #dddddd;margin-right:6px;\"></span>White/Grey = no change (Δ High = 0)</td>" >>"$HTMLLog"
-    echo "</tr>" >>"$HTMLLog"
-    echo "<tr><td colspan=\"3\" style=\"padding-top:4px; ${_FONT_BASE}; color:#444;\">“High” = value in parentheses = count of high-severity PMD findings per item; Δ High = Current High − Original High.</td></tr>" >>"$HTMLLog"
-    echo "</table>" >>"$HTMLLog"
+
+    if [ "$CLASS_COUNT" -gt 0 ]; then
+      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;\">" >>"$HTMLLog"
+      echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CLASS NAME</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CURRENT (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">Δ HIGH</th><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
+      row_num=0
+      for classePath in $(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null); do
+        base="$(basename "$classePath" .cls)"
+        currTxt="${base}.cls_currpmd.txt"
+        orgTxt="${base}.cls_orgpmd.txt"
+        pmd_html="/data/public/pmd_rule/$SFDC_ORG/${base}.cls_currpmd_orgpm.html"
+        [ -f "$pmd_html" ] || pmd_html="/data/public/pmd_rule/$SFDC_ORG/${base}.cls_currpmd_orgpm.html"
+        OriginalPmd=$(awk '/Original PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p')
+        CurrentPmd=$(awk  '/Current PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p')
+        OriginalPmd=${OriginalPmd:-0}; CurrentPmd=${CurrentPmd:-0}
+        CurrseverityCnt=$(grep -Eh "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" 2>/dev/null | wc -l | xargs)
+        OrgseverityCnt=$(grep -Eh "$pattern" "PMDReport/orgpmdoutput/src/classes/$orgTxt" 2>/dev/null | wc -l | xargs)
+        CurrseverityCnt=${CurrseverityCnt:-0}; OrgseverityCnt=${OrgseverityCnt:-0}
+        delta=$(( CurrseverityCnt - OrgseverityCnt ))
+        class_src="${classePath/changeSetDeploy\/force-app\/main\/default/src}"
+        author_name="$(git log -1 --format='%an' "$class_src" 2>/dev/null | head -n1)"
+        [ -n "$author_name" ] || author_name="N/A"
+        link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${base}.cls_currpmd_orgpm.html"
+        display="${base}.cls"
+        bg_color="#ffffff"; text_color="${_pmd_text_normal}"; link_color="${_pmd_link_normal}"
+        [ $((row_num % 2)) -eq 1 ] && bg_color="#f7f7f7"
+        row_left="#dcdcdc"
+        if [ "$delta" -gt 0 ]; then
+          bg_color="#ffefef"; text_color="${_pmd_text_high}"; link_color="${_pmd_link_high}"; row_left="#c62828"
+        elif [ "$delta" -lt 0 ]; then
+          bg_color="#ecf7ef"; row_left="#2e7d32"
+        fi
+        {
+          echo "<tr style=\"background:${bg_color};border-bottom:1px solid ${_pmd_row_border};border-left:4px solid ${row_left};\">"
+          echo "<td style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${link_color};\">$display</a></td>"
+          echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">${OriginalPmd}-(${OrgseverityCnt})</td>"
+          echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">${CurrentPmd}-(${CurrseverityCnt})</td>"
+          echo "<td align=\"right\" style=\"padding:5px 6px;\">"
+          _delta_pill "$delta"
+          echo "</td>"
+          echo "<td style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">$author_name</td>"
+          echo "</tr>"
+          echo "<tr><td colspan=\"5\" style=\"border-bottom:1px solid #dddddd;font-size:0;line-height:0;\">&nbsp;</td></tr>"
+        } >>"$HTMLLog"
+        row_num=$((row_num + 1))
+      done
+      echo "</tbody></table>" >>"$HTMLLog"
+    fi
+
+    if [ "$CLASS_COUNT" -gt 0 ] && [ "$TRIGGER_COUNT" -gt 0 ]; then
+      echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"height:6px;line-height:6px;font-size:0;\">&nbsp;</td></tr></table>" >>"$HTMLLog"
+    fi
+
+    if [ "$TRIGGER_COUNT" -gt 0 ]; then
+      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;\">" >>"$HTMLLog"
+      echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">TRIGGER NAME</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CURRENT (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">Δ HIGH</th><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
+      row_num=0
+      for triggerPath in $(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null); do
+        tbase="$(basename "$triggerPath" .trigger)"
+        currTxt="${tbase}.trigger_currpmd.txt"
+        orgTxt="${tbase}.trigger_orgpmd.txt"
+        pmd_html="/data/public/pmd_rule/$SFDC_ORG/${tbase}.trigger_currpmd_orgpm.html"
+        [ -f "$pmd_html" ] || pmd_html="/data/public/pmd_rule/$SFDC_ORG/${tbase}.trigger_currpmd_orgpm.html"
+        OriginalPmd=$(awk '/Original PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p')
+        CurrentPmd=$(awk  '/Current PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p')
+        OriginalPmd=${OriginalPmd:-0}; CurrentPmd=${CurrentPmd:-0}
+        CurrseverityCnt=$(grep -Eh "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" 2>/dev/null | wc -l | xargs)
+        OrgseverityCnt=$(grep -Eh "$pattern" "PMDReport/orgpmdoutput/src/triggers/$orgTxt" 2>/dev/null | wc -l | xargs)
+        CurrseverityCnt=${CurrseverityCnt:-0}; OrgseverityCnt=${OrgseverityCnt:-0}
+        delta=$(( CurrseverityCnt - OrgseverityCnt ))
+        trig_src="${triggerPath/changeSetDeploy\/force-app\/main\/default/src}"
+        author_name="$(git log -1 --format='%an' "$trig_src" 2>/dev/null | head -n1)"
+        [ -n "$author_name" ] || author_name="N/A"
+        link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${tbase}.trigger_currpmd_orgpm.html"
+        display="${tbase}.trigger"
+        bg_color="#ffffff"; text_color="${_pmd_text_normal}"; link_color="${_pmd_link_normal}"
+        [ $((row_num % 2)) -eq 1 ] && bg_color="#f7f7f7"
+        row_left="#dcdcdc"
+        if [ "$delta" -gt 0 ]; then
+          bg_color="#ffefef"; text_color="${_pmd_text_high}"; link_color="${_pmd_link_high}"; row_left="#c62828"
+        elif [ "$delta" -lt 0 ]; then
+          bg_color="#ecf7ef"; row_left="#2e7d32"
+        fi
+        {
+          echo "<tr style=\"background:${bg_color};border-bottom:1px solid ${_pmd_row_border};border-left:4px solid ${row_left};\">"
+          echo "<td style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${link_color};\">$display</a></td>"
+          echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">${OriginalPmd}-(${OrgseverityCnt})</td>"
+          echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">${CurrentPmd}-(${CurrseverityCnt})</td>"
+          echo "<td align=\"right\" style=\"padding:5px 6px;\">"
+          _delta_pill "$delta"
+          echo "</td>"
+          echo "<td style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">$author_name</td>"
+          echo "</tr>"
+          echo "<tr><td colspan=\"5\" style=\"border-bottom:1px solid #dddddd;font-size:0;line-height:0;\">&nbsp;</td></tr>"
+        } >>"$HTMLLog"
+        row_num=$((row_num + 1))
+      done
+      echo "</tbody></table>" >>"$HTMLLog"
+    fi
   fi
 
-  # Classes table
-  if [ "$CLASS_COUNT" -gt 0 ]; then
-    echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;\">" >>"$HTMLLog"
-    echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CLASS NAME</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CURRENT (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">Δ HIGH</th><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
-    row_num=0
-    for classePath in $(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null); do
-      base="$(basename "$classePath" .cls)"
-      currTxt="${base}.cls_currpmd.txt"
-      orgTxt="${base}.cls_orgpmd.txt"
-      pmd_html="/data/public/pmd_rule/$SFDC_ORG/${base}.cls_currpmd_orgpm.html"
-      [ -f "$pmd_html" ] || pmd_html="/data/public/pmd_rule/$SFDC_ORG/${base}.cls_currpmd_orgpm.html"
-      OriginalPmd=$(awk '/Original PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p')
-      CurrentPmd=$(awk  '/Current PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p')
-      OriginalPmd=${OriginalPmd:-0}; CurrentPmd=${CurrentPmd:-0}
-      CurrseverityCnt=$(grep -Eh "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" 2>/dev/null | wc -l | xargs)
-      OrgseverityCnt=$(grep -Eh "$pattern" "PMDReport/orgpmdoutput/src/classes/$orgTxt" 2>/dev/null | wc -l | xargs)
-      CurrseverityCnt=${CurrseverityCnt:-0}; OrgseverityCnt=${OrgseverityCnt:-0}
-      delta=$(( CurrseverityCnt - OrgseverityCnt ))
-      class_src="${classePath/changeSetDeploy\/force-app\/main\/default/src}"
-      author_name="$(git log -1 --format='%an' "$class_src" 2>/dev/null | head -n1)"
-      [ -n "$author_name" ] || author_name="N/A"
-      link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${base}.cls_currpmd_orgpm.html"
-      display="${base}.cls"
-      bg_color="#ffffff"; text_color="${_pmd_text_normal}"; link_color="${_pmd_link_normal}"
-      [ $((row_num % 2)) -eq 1 ] && bg_color="#f7f7f7"
-      row_left="#dcdcdc"
-      if [ "$delta" -gt 0 ]; then
-        bg_color="#ffefef"; text_color="${_pmd_text_high}"; link_color="${_pmd_link_high}"; row_left="#c62828"
-      elif [ "$delta" -lt 0 ]; then
-        bg_color="#ecf7ef"; row_left="#2e7d32"
-      fi
-      {
-        echo "<tr style=\"background:${bg_color};border-bottom:1px solid ${_pmd_row_border};border-left:4px solid ${row_left};\">"
-        echo "<td style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${link_color};\">$display</a></td>"
-        echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">${OriginalPmd}-(${OrgseverityCnt})</td>"
-        echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">${CurrentPmd}-(${CurrseverityCnt})</td>"
-        echo "<td align=\"right\" style=\"padding:5px 6px;\">"
-        _delta_pill "$delta"
-        echo "</td>"
-        echo "<td style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">$author_name</td>"
-        echo "</tr>"
-        echo "<tr><td colspan=\"5\" style=\"border-bottom:1px solid ${_pmd_row_border};font-size:0;line-height:0;\">&nbsp;</td></tr>"
-      } >>"$HTMLLog"
-      row_num=$((row_num + 1))
-    done
-    echo "</tbody></table>" >>"$HTMLLog"
-  fi
-
-  # Spacer between tables if both exist
-  if [ "$CLASS_COUNT" -gt 0 ] && [ "$TRIGGER_COUNT" -gt 0 ]; then
-    echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"height:6px;line-height:6px;font-size:0;\">&nbsp;</td></tr></table>" >>"$HTMLLog"
-  fi
-
-  # Triggers table
-  if [ "$TRIGGER_COUNT" -gt 0 ]; then
-    echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;\">" >>"$HTMLLog"
-    echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">TRIGGER NAME</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CURRENT (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">Δ HIGH</th><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
-    row_num=0
-    for triggerPath in $(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null); do
-      tbase="$(basename "$triggerPath" .trigger)"
-      currTxt="${tbase}.trigger_currpmd.txt"
-      orgTxt="${tbase}.trigger_orgpmd.txt"
-      pmd_html="/data/public/pmd_rule/$SFDC_ORG/${tbase}.trigger_currpmd_orgpm.html"
-      [ -f "$pmd_html" ] || pmd_html="/data/public/pmd_rule/$SFDC_ORG/${tbase}.trigger_currpmd_orgpm.html"
-      OriginalPmd=$(awk '/Original PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p')
-      CurrentPmd=$(awk  '/Current PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p')
-      OriginalPmd=${OriginalPmd:-0}; CurrentPmd=${CurrentPmd:-0}
-      CurrseverityCnt=$(grep -Eh "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" 2>/dev/null | wc -l | xargs)
-      OrgseverityCnt=$(grep -Eh "$pattern" "PMDReport/orgpmdoutput/src/triggers/$orgTxt" 2>/dev/null | wc -l | xargs)
-      CurrseverityCnt=${CurrseverityCnt:-0}; OrgseverityCnt=${OrgseverityCnt:-0}
-      delta=$(( CurrseverityCnt - OrgseverityCnt ))
-      trig_src="${triggerPath/changeSetDeploy\/force-app\/main\/default/src}"
-      author_name="$(git log -1 --format='%an' "$trig_src" 2>/dev/null | head -n1)"
-      [ -n "$author_name" ] || author_name="N/A"
-      link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${tbase}.trigger_currpmd_orgpm.html"
-      display="${tbase}.trigger"
-      bg_color="#ffffff"; text_color="${_pmd_text_normal}"; link_color="${_pmd_link_normal}"
-      [ $((row_num % 2)) -eq 1 ] && bg_color="#f7f7f7"
-      row_left="#dcdcdc"
-      if [ "$delta" -gt 0 ]; then
-        bg_color="#ffefef"; text_color="${_pmd_text_high}"; link_color="${_pmd_link_high}"; row_left="#c62828"
-      elif [ "$delta" -lt 0 ]; then
-        bg_color="#ecf7ef"; row_left="#2e7d32"
-      fi
-      {
-        echo "<tr style=\"background:${bg_color};border-bottom:1px solid ${_pmd_row_border};border-left:4px solid ${row_left};\">"
-        echo "<td style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${link_color};\">$display</a></td>"
-        echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">${OriginalPmd}-(${OrgseverityCnt})</td>"
-        echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">${CurrentPmd}-(${CurrseverityCnt})</td>"
-        echo "<td align=\"right\" style=\"padding:5px 6px;\">"
-        _delta_pill "$delta"
-        echo "</td>"
-        echo "<td style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">$author_name</td>"
-        echo "</tr>"
-        echo "<tr><td colspan=\"5\" style=\"border-bottom:1px solid ${_pmd_row_border};font-size:0;line-height:0;\">&nbsp;</td></tr>"
-      } >>"$HTMLLog"
-      row_num=$((row_num + 1))
-    done
-    echo "</tbody></table>" >>"$HTMLLog"
-  fi
-
-  # Success / Failure sections
+  # Success / Failure sections (unchanged)
   SAVEIFS=$IFS; IFS=$(echo -en "\n\b")
   if [ "$Report" = "SUCCEEDED" ]; then
     find changeSetDeploy/force-app/main/default -type f \
@@ -603,10 +562,10 @@ $LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
   fi
   IFS=$SAVEIFS
 
-  # Footer (fixed width)
+  # Footer & close
   cat >>"$HTMLLog" <<EOF
     </td></tr></table>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${_CARD_WIDTH}" style="width:${_CARD_WIDTH}px;margin:6px auto 10px;background:${_foot_bg};">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${_CARD_WIDTH}" style="max-width:${_CARD_WIDTH}px;margin:6px auto 10px;background:${_foot_bg};">
       <tr>
         <td align="center" style="padding:6px 8px;text-align:center;color:${_foot_text};${_FONT_BASE_BOLD}line-height:14px;">© 2025 Cadence Design Systems, Inc. | SFDC Deployment Report generated by the Cadence DevOps Team</td>
       </tr>
