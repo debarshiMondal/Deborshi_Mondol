@@ -228,20 +228,43 @@ HTML_REPORT() {
     printf '%s\n' "$f_src"
   }
 
-  # Font scale (smaller as requested)
+  # Font scale
   _FONT_BASE="font:10px Arial,Helvetica,sans-serif;"
   _FONT_BASE_BOLD="font:bold 10px Arial,Helvetica,sans-serif;"
   _FONT_SECTION_HDR="font:bold 11px Arial,Helvetica,sans-serif;"
-  _FONT_MAIN_HDR="font:bold 14px Arial,Helvetica,sans-serif;"   # keep main header readable
+  _FONT_MAIN_HDR="font:bold 14px Arial,Helvetica,sans-serif;"
   _FONT_RUN_HDR="font:bold 11px Arial,Helvetica,sans-serif;"
 
-  # Visible placeholder logo (32x32 teal square) if REPORT_LOGO not supplied
+  # Placeholder logo
   _logo_src="${REPORT_LOGO:-data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABbklEQVRYR+2WvUrDUBSGv7mQhCIWIhrCwiCKGxsLW1tZWrcQBBFFxMIgY2thYW1trE3/AW0trY2NgYCFhY2Ah2ZLcvIGc6SZnMu7MnDkzs5ISkHcGiKKb8GfAYkAZcADuAl6A+cAF8A+8BvzMFQJgGjAJF7JrkFPhCnVwBZwBngAVgJ3gDdaAF0AC2B24Bn4B0oAPQrt/EtgLP8bW3vcAR0DLeAIWAFW4AA8AD8BPwBR4KfLz0UJTgMerre8N3n2mS8RmqbJ5fLwOu6Lqte13Xdf1SmLIsg2maZv+puu6/X6/1qtFqtRqNRuPxOBwOguVyuaZpms/ncLlc1Wo1QqlU2mwWQqG43W6/X6XS6XQ6/X6z2Qy+Wy2Ww2pVJJOp0Ot9uNvN9vt9vtfLpeL4/H4gEqlwufzyWRyOBwOt9sN4PF4n8/nzczMTHq9Ho/HYTabzWKx2Gw2g29vb6/X6+Uy2bIsf0Wg0mh8OhzqdDq/Xa5Ik2mz2fz6f12g04HA4PB4PJBIJBK/Xi0Qi0W63S5IkHo+Hw+Fw2Gw2Wq0WmUzGx8cH+P1+AJKqqjzP+/0f6DBFYCJifcEAAAAASUVORK5CYII=}"
 
   _CARD_WIDTH=880
 
+  # Helper: bulletproof chip TD (fixed grid for Outlook)
+  _chip_td(){
+    local label="$1"
+    local value="$2"
+    local pr="$3"  # padding-right
+    cat <<CELL
+<td valign="top" width="260" style="padding:0 ${pr}px 10px 0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:${_chip_bg};border:1px solid ${_chip_border};">
+    <tr>
+      <td style="padding:6px 8px;${_FONT_BASE};color:${_chip_txt};line-height:12px;">
+        <div style="font:700 9px Arial,Helvetica,sans-serif;color:${_chip_txt};letter-spacing:.3px;text-transform:uppercase;">${label}</div>
+        <div style="margin-top:2px;word-wrap:break-word;word-break:break-word;${_FONT_BASE};color:${_chip_txt};">
+          $(_esc <<<"$value")
+        </div>
+      </td>
+    </tr>
+  </table>
+</td>
+CELL
+  }
+
+  # Header
   cat >>"$HTMLLog" <<HTML_TOP
 <!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style type="text/css">
   a.cta { text-decoration:none !important; color:${_ql_text} !important; }
@@ -251,17 +274,13 @@ HTML_REPORT() {
 </head>
 <body style="margin:0;padding:0;background:${_page_bg};">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_page_bg};"><tr><td align="center">
-HTML_TOP
-
-  # Header with logo
-  cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${_CARD_WIDTH}" style="max-width:${_CARD_WIDTH}px;margin:6px auto;">
     <tr>
       <td style="background:${_hdr_bg};padding:6px 10px;color:${_hdr_txt};${_FONT_MAIN_HDR}line-height:16px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
           <tr>
             <td style="padding:0 10px 0 0;vertical-align:middle;">
-              <img src="${_logo_src}" alt="Logo" style="height:32px;width:32px;display:block;">
+              <img src="${_logo_src}" alt="Logo" width="32" height="32" style="height:32px;width:32px;display:block;">
             </td>
             <td style="padding:0;${_FONT_MAIN_HDR}color:${_hdr_txt};vertical-align:middle;white-space:nowrap;">
               ${SFDC_ORG} Deployment $([ "$Report" = "SUCCEEDED" ] && echo "Success" || echo "Failure") Report
@@ -271,113 +290,68 @@ HTML_TOP
       </td>
     </tr>
   </table>
-EOF
+HTML_TOP
 
   # Card open
   cat >>"$HTMLLog" <<EOF
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${_CARD_WIDTH}" style="max-width:${_CARD_WIDTH}px;background:${_plate_bg};border:1px solid ${_plate_border};">
     <tr><td style="padding:10px 12px;">
-EOF
-
-  # Run Details box (full width)
-  cat >>"$HTMLLog" <<EOF
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid ${_chip_border};border-radius:4px;margin:0 0 8px 0;">
-    <tr>
-      <td style="padding:6px 8px;text-align:center;${_FONT_RUN_HDR}color:${_run_title};border-bottom:1px solid ${_chip_border};">
-        Run Details
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:6px 8px 8px 8px;">
-EOF
-
-  # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  # CHIP GRID (single 2×3 table) — ONLY CHANGE REQUESTED
-  # Chip helper (fixed-width cell; Outlook-safe)
-  _emit_chip_cell(){
-    local label="$1" value="$2"
-    cat >>"$HTMLLog" <<CHIP
-            <td width="170" valign="top" style="padding:0 6px 6px 0;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-                     style="border-collapse:collapse;mso-table-lspace:0;mso-table-rspace:0;">
-                <tr>
-                  <td style="background:${_chip_bg};border:1px solid ${_chip_border};border-radius:3px;padding:6px;">
-                    <div style="font:700 9px Arial,Helvetica,sans-serif;color:${_chip_txt};letter-spacing:.3px;text-transform:uppercase;line-height:12px;mso-line-height-rule:exactly;white-space:nowrap;">
-                      ${label}
-                    </div>
-                    <div style="font:10px Arial,Helvetica,sans-serif;color:${_chip_txt};line-height:12px;mso-line-height-rule:exactly;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                      ${value}
-                    </div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-CHIP
-  }
-
-  # Chip grid (single 2×3 table)
-  cat >>"$HTMLLog" <<EOF
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-         style="border-collapse:collapse;mso-table-lspace:0;mso-table-rspace:0;margin:0 auto 8px auto;">
-    <tr>
-EOF
-  _emit_chip_cell "REPO" "$(_esc <<<"$_REPO")"
-  _emit_chip_cell "BRANCH" "$(_esc <<<"$_BRANCH")"
-  _emit_chip_cell "REQUEST ID" "$(_esc <<<"$_REQID")"
-  cat >>"$HTMLLog" <<'EOF'
-    </tr>
-    <tr>
-EOF
-  _emit_chip_cell "RUN (IST)" "$(_esc <<<"$_RUN_IST")"
-  _emit_chip_cell "ORG NAME + API" "$(_esc <<<"$SFDC_ORG  |  API $_API")"
-  _emit_chip_cell "DEPLOY USER" "$(_esc <<<"$_DEPUSER")"
-  cat >>"$HTMLLog" <<'EOF'
-    </tr>
-  </table>
-EOF
-  # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-  cat >>"$HTMLLog" <<'EOF'
-      </td>
-    </tr>
-  </table>
-EOF
-
-  # Compact Quick Links box (content-width)
-  GAP=$(( ${_ql_gap:-6} ))
-  cat >>"$HTMLLog" <<EOF
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 10px 0;">
-    <tr><td>
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #000000;border-radius:4px;padding:4px;display:inline-block;">
+      <!-- Run Details -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid ${_chip_border};border-radius:4px;">
         <tr>
-          <td style="padding:0 ${GAP}px 0 0;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql1};border-radius:3px;">
-              <tr><td style="padding:0 10px;height:22px;line-height:22px;${_FONT_BASE_BOLD}">
-                <a class="cta" href="${OPEN_LOGS_URL}" style="display:inline-block;line-height:22px;${_FONT_BASE_BOLD}color:${_ql_text};">Open Logs</a>
-              </td></tr>
-            </table>
+          <td align="center" style="padding:6px 8px;${_FONT_RUN_HDR}color:${_run_title};border-bottom:1px solid ${_chip_border};">
+            Run Details
           </td>
-          <td style="padding:0 ${GAP}px 0 0;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql2};border-radius:3px;">
-              <tr><td style="padding:0 10px;height:22px;line-height:22px;${_FONT_BASE_BOLD}">
-                <a class="cta" href="${ORIG_PMD_URL}" style="display:inline-block;line-height:22px;${_FONT_BASE_BOLD}color:${_ql_text};">Original PMD Report</a>
-              </td></tr>
+        </tr>
+        <tr>
+          <td style="padding:8px;">
+            <!-- Fixed 3x2 grid for Outlook -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                $(_chip_td "REPO" "$_REPO" 10)
+                $(_chip_td "BRANCH" "$_BRANCH" 10)
+                $(_chip_td "REQUEST ID" "$_REQID" 0)
+              </tr>
+              <tr>
+                $(_chip_td "RUN (IST)" "$_RUN_IST" 10)
+                $(_chip_td "ORG NAME + API" "${SFDC_ORG} • ${_API}" 10)
+                $(_chip_td "DEPLOY USER" "$_DEPUSER" 0)
+              </tr>
             </table>
-          </td>
-          <td style="padding:0;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql4};border-radius:3px;">
-              <tr><td style="padding:0 10px;height:22px;line-height:22px;${_FONT_BASE_BOLD}">
-                <a class="cta" href="${FORCE_DEPLOY_URL}" style="display:inline-block;line-height:22px;${_FONT_BASE_BOLD}color:${_ql_text};">ForceDeploy</a>
-              </td></tr>
+
+            <!-- Quick links buttons -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 2px 0;">
+              <tr>
+                <td style="padding:0 ${_ql_gap}px 0 0;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql1};border-radius:3px;">
+                    <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
+                      <a class="cta" href="${OPEN_LOGS_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">Open Logs</a>
+                    </td></tr>
+                  </table>
+                </td>
+                <td style="padding:0 ${_ql_gap}px 0 0;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql2};border-radius:3px;">
+                    <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
+                      <a class="cta" href="${ORIG_PMD_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">Original PMD Report</a>
+                    </td></tr>
+                  </table>
+                </td>
+                <td>
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql4};border-radius:3px;">
+                    <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
+                      <a class="cta" href="${FORCE_DEPLOY_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">ForceDeploy</a>
+                    </td></tr>
+                  </table>
+                </td>
+              </tr>
             </table>
+
           </td>
         </tr>
       </table>
-    </td></tr>
-  </table>
 EOF
 
-  # Status Summary (unchanged logic, smaller font)
+  # Status Summary
   _status_counts_html() {
     if [ "$Report" = "SUCCEEDED" ]; then
       echo "Passed: ${COMP_PASS}"
@@ -397,7 +371,7 @@ EOF
   }
 
   cat >>"$HTMLLog" <<EOF
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:6px;">
     <tr><td style="padding:4px 2px 2px 2px;${_FONT_SECTION_HDR}color:${_status_title};">Status Summary</td></tr>
   </table>
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -432,7 +406,7 @@ EOF
   </table>
 EOF
 
-  # PMD Review (logic unchanged)
+  # PMD Review
   _delta_pill(){
     local d="$1" bg="#eeeeee" bd="#dddddd" col="${_pmd_text_normal}" txt="$d"
     [ "$d" -gt 0 ] && { bg="#ffe3e3"; bd="#f5bcbc"; col="#b71c1c"; txt="+$d"; }
@@ -499,7 +473,7 @@ PILL
     fi
 
     if [ "$TRIGGER_COUNT" -gt 0 ]; then
-      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%" style="border:1px solid ${_pmd_row_border};border-collapse:collapse;\">" >>"$HTMLLog"
+      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0" border="0" width="100%" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;\">" >>"$HTMLLog"
       echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">TRIGGER NAME</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CURRENT (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">Δ HIGH</th><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
       row_num=0
       for triggerPath in $(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null); do
@@ -546,7 +520,7 @@ PILL
     fi
   fi
 
-  # Success / Failure sections (font size adjustments consistent)
+  # Success / Failure sections (unchanged)
   SAVEIFS=$IFS; IFS=$(echo -en "\n\b")
   if [ "$Report" = "SUCCEEDED" ]; then
     find changeSetDeploy/force-app/main/default -type f \
@@ -588,7 +562,7 @@ $LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
   fi
   IFS=$SAVEIFS
 
-  # Footer
+  # Footer & close
   cat >>"$HTMLLog" <<EOF
     </td></tr></table>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${_CARD_WIDTH}" style="max-width:${_CARD_WIDTH}px;margin:6px auto 10px;background:${_foot_bg};">
