@@ -228,17 +228,39 @@ HTML_REPORT() {
     printf '%s\n' "$f_src"
   }
 
-  # Font scale
+
+        # Font scale
   _FONT_BASE="font:10px Arial,Helvetica,sans-serif;"
   _FONT_BASE_BOLD="font:bold 10px Arial,Helvetica,sans-serif;"
   _FONT_SECTION_HDR="font:bold 11px Arial,Helvetica,sans-serif;"
   _FONT_MAIN_HDR="font:bold 14px Arial,Helvetica,sans-serif;"
   _FONT_RUN_HDR="font:bold 11px Arial,Helvetica,sans-serif;"
 
+  # ---- Logo plumbing (per-org local file -> public URL) ----
+  ASSET_LOCAL="build/property/assets/logo.png"
+  ASSET_PUBLIC_DIR="/data/public/assets/${SFDC_ORG}/"
+  ASSET_NAME="$(basename "$ASSET_LOCAL")"
+  PUBLIC_BASE_URL="https://cdnsfdc.cadence.com/assets/${SFDC_ORG}"
+
+  mkdir -p "$ASSET_PUBLIC_DIR"
+  if [ -s "$ASSET_LOCAL" ]; then
+    cp -u "$ASSET_LOCAL" "${ASSET_PUBLIC_DIR}${ASSET_NAME}"
+    REPORT_LOGO="${PUBLIC_BASE_URL}/${ASSET_NAME}"
+  elif [ -s "build/property/assets/default/logo.png" ]; then
+    cp -u "build/property/assets/default/logo.png" "${ASSET_PUBLIC_DIR}logo.png"
+    REPORT_LOGO="${PUBLIC_BASE_URL}/logo.png"
+  else
+    REPORT_LOGO=""
+  fi
+  export REPORT_LOGO
+
   # Visible placeholder logo (32x32) if not supplied
   _logo_src="${REPORT_LOGO:-data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABbklEQVRYR+2WvUrDUBSGv7mQhCIWIhrCwiCKGxsLW1tZWrcQBBFFxMIgY2thYW1trE3/AW0trY2NgYCFhY2Ah2ZLcvIGc6SZnMu7MnDkzs5ISkHcGiKKb8GfAYkAZcADuAl6A+cAF8A+8BvzMFQJgGjAJF7JrkFPhCnVwBZwBngAVgJ3gDdaAF0AC2B24Bn4B0oAPQrt/EtgLP8bW3vcAR0DLeAIWAFW4AA8AD8BPwBR4KfLz0UJTgMerre8N3n2mS8RmqbJ5fLwOu6Lqte13Xdf1SmLIsg2maZv+puu6/X6/1qtFqtRqNRuPxOBwOguVyuaZpms/ncLlc1Wo1QqlU2mwWQqG43W6/X6XS6XQ6/X6z2Qy+Wy2Ww2pVJJOp0Ot9uNvN9vt9vtfLpeL4/H4gEqlwufzyWRyOBwOt9sN4PF4n8/nzczMTHq9Ho/HYTabzWKx2Gw2g29vb6/X6+Uy2bIsf0Wg0mh8OhzqdDq/Xa5Ik2mz2fz6f12g04HA4PB4PJBIJBK/Xi0Qi0W63S5IkHo+Hw+Fw2Gw2Wq0WmUzGx8cH+P1+AJKqqjzP+/0f6DBFYCJifcEAAAAASUVORK5CYII=}"
 
   _CARD_WIDTH=880
+
+
+
 
   cat >>"$HTMLLog" <<HTML_TOP
 <!DOCTYPE html><html><head><meta charset="utf-8">
@@ -255,17 +277,19 @@ HTML_REPORT() {
 HTML_TOP
 
   # Header with logo
-  cat >>"$HTMLLog" <<EOF
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${_CARD_WIDTH}" style="max-width:${_CARD_WIDTH}px;margin:6px auto;">
+# Header with logo
+cat >>"$HTMLLog" <<EOF
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="\${_CARD_WIDTH}" style="max-width:\${_CARD_WIDTH}px;margin:6px auto;">
     <tr>
-      <td style="background:${_hdr_bg};padding:6px 10px;color:${_hdr_txt};${_FONT_MAIN_HDR}line-height:16px;">
+      <td style="background:\${_hdr_bg};padding:6px 10px;color:\${_hdr_txt};\${_FONT_MAIN_HDR}line-height:16px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
           <tr>
-            <td style="padding:0 10px 0 0;vertical-align:middle;">
-              <img src="${_logo_src}" alt="Logo" style="height:32px;width:32px;display:block;">
+            <td width="40" style="padding:0 10px 0 0; vertical-align:middle;">
+              <img src="\${_logo_src}" alt="Logo" width="32" height="32"
+                   style="display:block;border:0;outline:none;text-decoration:none;line-height:0;">
             </td>
-            <td style="padding:0;${_FONT_MAIN_HDR}color:${_hdr_txt};vertical-align:middle;white-space:nowrap;">
-              ${SFDC_ORG} Deployment $([ "$Report" = "SUCCEEDED" ] && echo "Success" || echo "Failure") Report
+            <td style="padding:0;\${_FONT_MAIN_HDR}color:\${_hdr_txt};vertical-align:middle;white-space:nowrap;">
+              \${SFDC_ORG} Deployment $([ "\$Report" = "SUCCEEDED" ] && echo "Success" || echo "Failure") Report
             </td>
           </tr>
         </table>
@@ -273,6 +297,7 @@ HTML_TOP
     </tr>
   </table>
 EOF
+
 
   # Card open
   cat >>"$HTMLLog" <<EOF
