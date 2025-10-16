@@ -1,240 +1,716 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SFDC Production Metadata Dump Comparison Reports</title>
-<style>
-  :root{--blue-600:#2563eb;--blue-700:#1d4ed8;--blue-800:#1e40af;--ink:#0b0f19;--bg:#f8fafc;--muted:#475569;--muted-2:#64748b;--line:#e2e8f0;--white:#fff;--radius:16px;--transition:180ms ease}
-  *,*::before,*::after{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;display:flex;flex-direction:column;min-height:100vh}
-  a{color:var(--blue-700);text-decoration:none} a:hover{text-decoration:underline}
-
-  /* Header (kept as-is stylistically) */
-  .app-header{position:sticky;top:0;z-index:50;background:linear-gradient(90deg,var(--ink),var(--blue-800));color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-  .header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,4vw,32px);max-width:1200px;margin:0 auto}
-  .title{font-size:clamp(18px,2.2vw,24px);font-weight:800;letter-spacing:.2px}
-  .rightside{display:flex;align-items:center;gap:14px}
-  .search{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);padding:8px 12px;border-radius:999px;backdrop-filter:blur(6px)}
-  .search input{background:transparent;border:0;color:#fff;width:260px;outline:none;font-size:14px}
-  .search input::placeholder{color:rgba(255,255,255,.85)}
-  .brand img{height:40px;width:auto;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
-
-  .subnav{background:linear-gradient(90deg,var(--blue-800),var(--blue-700));color:#fff}
-  .subnav-inner{max-width:1200px;margin:0 auto;padding:8px clamp(16px,4vw,32px);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-  .chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);color:#fff;padding:5px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.24);font-size:12px}
-
-  main{max-width:1200px;margin:22px auto 0;padding:0 clamp(16px,4vw,32px);flex:1}
-
-  /* COLLAPSE layout to single column (sidebar removed) — no color changes */
-  .layout{display:grid;grid-template-columns:1fr;gap:16px}
-  @media (max-width:980px){.layout{grid-template-columns:1fr}}
-
-  .section-header{display:flex;align-items:end;justify-content:space-between;margin:18px 0 8px;border-left:4px solid #93c5fd;padding-left:10px}
-  .section-header h2{margin:0;font-size:clamp(18px,2vw,22px);font-weight:900;color:#0f172a}
-  .section-header .count{color:var(--muted);font-size:13px}
-  .week-subhead{margin:12px 0 10px;color:#1e40af;font-size:15px;font-weight:700;letter-spacing:.2px}
-
-  /* Cards/grid — unchanged look; logic fixed in JS */
-  .grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
-  .card{grid-column:span 12;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.06);padding:16px;position:relative;transition:var(--transition)}
-  @media(min-width:700px){.card{grid-column:span 6}} @media(min-width:1024px){.card{grid-column:span 4}}
-  .card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.10),0 3px 8px rgba(0,0,0,.08)}
-  .card h3{margin:0 0 8px;font-size:17px;line-height:1.35;font-weight:900;color:#0f172a}
-  .card h3 .tag{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;padding:2px 6px;border-radius:999px;border:1px solid #bae6fd;background:#e0f2fe;color:#075985}
-
-  .meta{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
-  .pill{background:#f1f5f9;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted-2)}
-
-  .btn-row{display:flex;gap:10px;flex-wrap:wrap}
-  .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;font-weight:700;font-size:14px;border:1px solid var(--blue-700);color:#fff;background:linear-gradient(180deg,var(--blue-600),var(--blue-800));box-shadow:0 6px 16px rgba(29,78,216,.25);transition:var(--transition)}
-  .btn:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(29,78,216,.35)}
-
-  .latest-badge{position:absolute;top:10px;right:10px;font-size:10px;letter-spacing:.3px;font-weight:800;color:#fff;padding:3px 6px;border-radius:999px;background:linear-gradient(90deg,#00c6ff,#0072ff,#00c6ff);background-size:200% 100%;box-shadow:0 2px 6px rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.6);animation:shine 1.2s linear infinite}
-  @keyframes shine{to{background-position:-200% 0}}
-
-  footer{text-align:center;padding:10px;color:#e2e8f0;background:#0f172a;border-top:1px solid #0b1220;margin-top:32px;font-size:12px}
-
-  /* Utility: let week headers span across the month grid */
-  .span-all{ grid-column: 1 / -1 !important; }
-
-  /* Safety net: if any leftover weekly grid exists, flatten it without changing visuals */
-  section[id^="m-"] > .grid { /* the per-week grid we used to open */
-    /* JS fix removes it, but if present, this keeps layout working */
-  }
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+  a.cta { text-decoration:none !important; color:#ffffff !important; }
+  a.cta:hover { text-decoration:underline !important; }
+  .wrap { word-wrap:break-word; word-break:break-word; }
 </style>
-
-<script>
-  /* keep the tiny “no reports” check */
-  (function(){
-    var raw='[{"runDate": "2025-08-13", "apiVersion": "62.0", "title": "Production Dump Comparison: 22nd July 2025 vs. 12th August 2025", "oldDumpLabel": "22nd July 2025", "newDumpLabel": "12th August 2025", "detailHref": "2025-09-12/index.html", "compareHref": "2025-09-12/codecomp.html"}, {"runDate": "2025-09-14", "apiVersion": "62.0", "title": "Production Dump Comparison: 12th August 2025 vs. 14th September 2025", "oldDumpLabel": "12th August 2025", "newDumpLabel": "14th September 2025", "detailHref": "2025-09-14/index.html", "compareHref": "2025-09-14/codecomp.html"}, {"runDate": "2025-09-15", "apiVersion": "62.0", "title": "Production Dump Comparison: 14th September 2025 vs. 15th September 2025", "oldDumpLabel": "14th September 2025", "newDumpLabel": "15th September 2025", "detailHref": "2025-09-15/index.html", "compareHref": "2025-09-15/codecomp.html"}]';
-    var looksTemplate = raw.indexOf('{')===-1 && raw.indexOf('[')===-1;
-    if(looksTemplate){ document.documentElement.classList.add('no-reports'); }
-  })();
-</script>
 </head>
-<body>
-<header class="app-header">
-  <div class="header-inner">
-    <div class="title">SFDC Production Metadata Dump Comparison Reports</div>
-    <div class="rightside">
-      <label class="search" for="q" title="Search">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
-        <input id="q" type="search" placeholder="Search by title, API, dates…" />
-      </label>
-      <div class="brand">
-        <img src="assets/cadence-logo.png" data-fallback="assets/cadence-logo.png" alt="Cadence logo"
-             onerror="this.onerror=null; this.src=this.getAttribute('data-fallback');">
-      </div>
-    </div>
-  </div>
-</header>
+<body style="margin:0;padding:0;background:#f6f8fa;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f8fa;"><tr><td align="center">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="880" style="max-width:880px;margin:6px auto;">
+    <tr>
+      <td style="background:#2e7d32;padding:6px 10px;color:#ffffff;font:bold 14px Arial,Helvetica,sans-serif;line-height:16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+          <tr>
+            <td style="padding:0 10px 0 0;vertical-align:middle;">
+              <img src="https://cdnsfdc.cadence.com/assets/sbx/logo.png" alt="Logo" width="32" height="32" style="height:32px;width:32px;display:block;">
+            </td>
+            <td style="padding:0;font:bold 14px Arial,Helvetica,sans-serif;color:#ffffff;vertical-align:middle;white-space:nowrap;">
+              sbx Deployment Success Report
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="880" style="max-width:880px;background:#ffffff;border:1px solid #e6e6e6;">
+    <tr><td style="padding:10px 12px;">
+      <!-- Run Details -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #d0d0d0;border-radius:4px;">
+        <tr>
+          <td align="center" style="padding:6px 8px;font:bold 11px Arial,Helvetica,sans-serif;color:#000000;border-bottom:1px solid #d0d0d0;">
+            Run Details
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:8px;">
+            <!-- Fixed 3x2 grid for Outlook -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td valign="top" width="260" style="padding:0 10px 10px 0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:#333333;border:1px solid #d0d0d0;">
+    <tr>
+      <td style="padding:6px 8px;font:10px Arial,Helvetica,sans-serif;;color:#ffffff;line-height:12px;">
+        <div style="font:700 9px Arial,Helvetica,sans-serif;color:#ffffff;letter-spacing:.3px;text-transform:uppercase;">REPO</div>
+        <div style="margin-top:2px;word-wrap:break-word;word-break:break-word;font:10px Arial,Helvetica,sans-serif;;color:#ffffff;">
+          https://github.cadence.com/IT/SFDC/
+        </div>
+      </td>
+    </tr>
+  </table>
+</td>
+                <td valign="top" width="260" style="padding:0 10px 10px 0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:#333333;border:1px solid #d0d0d0;">
+    <tr>
+      <td style="padding:6px 8px;font:10px Arial,Helvetica,sans-serif;;color:#ffffff;line-height:12px;">
+        <div style="font:700 9px Arial,Helvetica,sans-serif;color:#ffffff;letter-spacing:.3px;text-transform:uppercase;">BRANCH</div>
+        <div style="margin-top:2px;word-wrap:break-word;word-break:break-word;font:10px Arial,Helvetica,sans-serif;;color:#ffffff;">
+          2025-q4nov-release
+        </div>
+      </td>
+    </tr>
+  </table>
+</td>
+                <td valign="top" width="260" style="padding:0 0px 10px 0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:#333333;border:1px solid #d0d0d0;">
+    <tr>
+      <td style="padding:6px 8px;font:10px Arial,Helvetica,sans-serif;;color:#ffffff;line-height:12px;">
+        <div style="font:700 9px Arial,Helvetica,sans-serif;color:#ffffff;letter-spacing:.3px;text-transform:uppercase;">REQUEST ID</div>
+        <div style="margin-top:2px;word-wrap:break-word;word-break:break-word;font:10px Arial,Helvetica,sans-serif;;color:#ffffff;">
+          0AfO900000d4tp3KAA
+        </div>
+      </td>
+    </tr>
+  </table>
+</td>
+              </tr>
+              <tr>
+                <td valign="top" width="260" style="padding:0 10px 10px 0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:#333333;border:1px solid #d0d0d0;">
+    <tr>
+      <td style="padding:6px 8px;font:10px Arial,Helvetica,sans-serif;;color:#ffffff;line-height:12px;">
+        <div style="font:700 9px Arial,Helvetica,sans-serif;color:#ffffff;letter-spacing:.3px;text-transform:uppercase;">RUN (IST)</div>
+        <div style="margin-top:2px;word-wrap:break-word;word-break:break-word;font:10px Arial,Helvetica,sans-serif;;color:#ffffff;">
+          17.Oct.2025 00:16 IST
+        </div>
+      </td>
+    </tr>
+  </table>
+</td>
+                <td valign="top" width="260" style="padding:0 10px 10px 0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:#333333;border:1px solid #d0d0d0;">
+    <tr>
+      <td style="padding:6px 8px;font:10px Arial,Helvetica,sans-serif;;color:#ffffff;line-height:12px;">
+        <div style="font:700 9px Arial,Helvetica,sans-serif;color:#ffffff;letter-spacing:.3px;text-transform:uppercase;">ORG NAME + API</div>
+        <div style="margin-top:2px;word-wrap:break-word;word-break:break-word;font:10px Arial,Helvetica,sans-serif;;color:#ffffff;">
+          sbx • 60.0
+        </div>
+      </td>
+    </tr>
+  </table>
+</td>
+                <td valign="top" width="260" style="padding:0 0px 10px 0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:#333333;border:1px solid #d0d0d0;">
+    <tr>
+      <td style="padding:6px 8px;font:10px Arial,Helvetica,sans-serif;;color:#ffffff;line-height:12px;">
+        <div style="font:700 9px Arial,Helvetica,sans-serif;color:#ffffff;letter-spacing:.3px;text-transform:uppercase;">DEPLOY USER</div>
+        <div style="margin-top:2px;word-wrap:break-word;word-break:break-word;font:10px Arial,Helvetica,sans-serif;;color:#ffffff;">
+          sfdc_codemigration@cadence.com.sbx
+        </div>
+      </td>
+    </tr>
+  </table>
+</td>
+              </tr>
+            </table>
 
-<nav class="subnav"><div class="subnav-inner" id="quickjump"></div></nav>
+            <!-- Quick links buttons -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 2px 0;">
+              <tr>
+                <td style="padding:0 10px 0 0;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:#0D9488;border-radius:3px;">
+                    <tr><td align="center" style="padding:6px 12px;font:bold 10px Arial,Helvetica,sans-serif;">
+                      <a class="cta" href="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/sbx.GIT_56281591983aefb82ee630df59c5a7fd22820c63-8e56855b6c4631208a542dda4a056ad172f6ac69.16Oct2025_11h40m09s" style="display:inline-block;font:bold 10px Arial,Helvetica,sans-serif;color:#ffffff;">Open Logs</a>
+                    </td></tr>
+                  </table>
+                </td>
+                <td style="padding:0 10px 0 0;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:#0D9488;border-radius:3px;">
+                    <tr><td align="center" style="padding:6px 12px;font:bold 10px Arial,Helvetica,sans-serif;">
+                      <a class="cta" href="https://cdnsfdc.cadence.com/PMDOUTPUT/sbx" style="display:inline-block;font:bold 10px Arial,Helvetica,sans-serif;color:#ffffff;">Original PMD Report</a>
+                    </td></tr>
+                  </table>
+                </td>
+                <td>
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:#0D9488;border-radius:3px;">
+                    <tr><td align="center" style="padding:6px 12px;font:bold 10px Arial,Helvetica,sans-serif;">
+                      <a class="cta" href="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/sbx.GIT_56281591983aefb82ee630df59c5a7fd22820c63-8e56855b6c4631208a542dda4a056ad172f6ac69.16Oct2025_11h40m09s/sbx.FDLog.html.16Oct2025_11h40m09s" style="display:inline-block;font:bold 10px Arial,Helvetica,sans-serif;color:#ffffff;">ForceDeploy</a>
+                    </td></tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
 
-<main>
-  <div class="layout">
-    <!-- MAIN COLUMN ONLY (sidebar removed by design) -->
-    <section><div id="sections"></div></section>
-  </div>
-</main>
-
-<footer><p class="end">This is the end of report.</p></footer>
-
-<script>
-(function(){
-  /** Safe JSON parse */
-  var RAW='[{"runDate": "2025-08-13", "apiVersion": "62.0", "title": "Production Dump Comparison: 22nd July 2025 vs. 12th August 2025", "oldDumpLabel": "22nd July 2025", "newDumpLabel": "12th August 2025", "detailHref": "2025-09-12/index.html", "compareHref": "2025-09-12/codecomp.html"}, {"runDate": "2025-09-14", "apiVersion": "62.0", "title": "Production Dump Comparison: 12th August 2025 vs. 14th September 2025", "oldDumpLabel": "12th August 2025", "newDumpLabel": "14th September 2025", "detailHref": "2025-09-14/index.html", "compareHref": "2025-09-14/codecomp.html"}, {"runDate": "2025-09-15", "apiVersion": "62.0", "title": "Production Dump Comparison: 14th September 2025 vs. 15th September 2025", "oldDumpLabel": "14th September 2025", "newDumpLabel": "15th September 2025", "detailHref": "2025-09-15/index.html", "compareHref": "2025-09-15/codecomp.html"}]', REPORTS=[];
-  try { REPORTS = JSON.parse(RAW); } catch(e) { REPORTS = []; }
-
-  /** Helpers (unchanged visuals; robust data handling) */
-  function monthKey(iso){
-    if(!iso) return '0000-00';
-    var d = new Date(iso+'T00:00:00');
-    if(isNaN(d)) return '0000-00';
-    return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);
-  }
-  function monthLabel(k){
-    var a=(k||'0000-00').split('-'); var y=+a[0]||0, m=(+a[1]||1)-1;
-    var d=new Date(y,m,1); return d.toLocaleDateString(undefined,{month:'long',year:'numeric'});
-  }
-  function getMonday(iso){
-    var d=new Date((iso||'1970-01-01')+'T00:00:00'); if(isNaN(d)) d=new Date('1970-01-01T00:00:00');
-    var day=(d.getDay()+6)%7; d.setDate(d.getDate()-day); d.setHours(0,0,0,0); return d;
-  }
-  function fmtShort(d){ return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
-  function fmtRun(iso){ var d=new Date((iso||'1970-01-01')+'T00:00:00'); return isNaN(d)?'—':d.toLocaleDateString(); }
-  function titleOf(r){ return (r && (r.masterTitle || r.title)) || '—'; }
-  function apiOf(r){ return (r && r.apiVersion) ? String(r.apiVersion) : '—'; }
-  function hrefOf(r){ return (r && r.detailHref) ? r.detailHref : '#'; }
-  function runDateOf(r){ return (r && r.runDate) ? r.runDate : '1970-01-01'; }
-
-  var $sections=document.getElementById('sections'),
-      $quickjump=document.getElementById('quickjump'),
-      $search=document.getElementById('q');
-
-  /** Render (now: ONE grid per MONTH) */
-  function render(list){
-    var items = Array.isArray(list) ? list.slice() : [];
-    // guard against bad shapes
-    items = items.filter(function(r){ return r && r.runDate; });
-
-    if(!items.length){
-      $quickjump.innerHTML='';
-      $sections.innerHTML='<div style="padding:24px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">No reports yet.</div>';
-      return;
-    }
-
-    // newest runDate for "Latest" badge
-    items.sort(function(a,b){ return String(b.runDate).localeCompare(String(a.runDate)); });
-    var latest = items[0].runDate;
-
-    // group by month
-    var groups = Object.create(null), order=[];
-    items.forEach(function(r){
-      var k = monthKey(r.runDate);
-      if(!groups[k]){ groups[k]=[]; order.push(k); }
-      groups[k].push(r);
-    });
-    // sort months newest first by first item's runDate
-    order.sort(function(a,b){
-      var A=(groups[a][0]||{}).runDate||'', B=(groups[b][0]||{}).runDate||'';
-      return B.localeCompare(A);
-    });
-
-    // month chips
-    $quickjump.innerHTML = order.map(function(k){
-      return '<a class="chip" href="#m-'+k+'">'+monthLabel(k)+'</a>';
-    }).join('');
-
-    // build HTML
-    var html='';
-    for(var i=0;i<order.length;i++){
-      var k = order[i], monthItems = groups[k] || [];
-
-      html+='<section id="m-'+k+'">';
-      html+='<div class="section-header"><h2>'+monthLabel(k)+'</h2><div class="count">'+monthItems.length+' report'+(monthItems.length!==1?'s':'')+'</div></div>';
-
-      // build weeks (for headers only)
-      var weeks = Object.create(null), wkeys=[];
-      monthItems.forEach(function(r){
-        var mon = getMonday(r.runDate);
-        var wkKey = mon.toISOString().slice(0,10);
-        if(!weeks[wkKey]){ weeks[wkKey] = {mon:mon,list:[]}; wkeys.push(wkKey); }
-        weeks[wkKey].list.push(r);
-      });
-      wkeys.sort().reverse();
-
-      // OPEN ONE GRID for the WHOLE MONTH
-      html+='<div class="grid">';
-
-      // insert week headers + cards INSIDE the same grid
-      for(var t=0;t<wkeys.length;t++){
-        var wk=wkeys[t], start=weeks[wk].mon, end=new Date(+start); end.setDate(end.getDate()+6);
-        html+='<h3 class="week-subhead span-all">Week of '+fmtShort(start)+' – '+fmtShort(end)+'</h3>';
-
-        // sort runs within week newest first (stable visual)
-        var L = weeks[wk].list.slice().sort(function(a,b){
-          return String(b.runDate).localeCompare(String(a.runDate));
-        });
-
-        for(var u=0;u<L.length;u++){
-          var r=L[u];
-          html+='<article class="card">';
-          if(r.runDate===latest){ html+='<span class="latest-badge">Latest</span>'; }
-          html+='<h3>'+titleOf(r)+' <span class="tag">API '+apiOf(r)+'</span></h3>';
-          html+='<div class="meta"><span class="pill">Run: '+fmtRun(runDateOf(r))+'</span></div>';
-          html+='<div class="btn-row"><a class="btn" target="_blank" href="'+hrefOf(r)+'">Open Detailed Report</a></div>';
-          html+='</article>';
-        }
-      }
-
-      // CLOSE the ONE month grid
-      html+='</div>';
-      html+='</section>';
-    }
-
-    $sections.innerHTML = html;
-  }
-
-  /** Search uses the same render path (so layout stays correct) */
-  function doSearch(){
-    var q=($search.value||'').toLowerCase().trim();
-    if(!q){ render(REPORTS); return; }
-    var out=[];
-    for(var i=0;i<REPORTS.length;i++){
-      var r=REPORTS[i];
-      var blob=(titleOf(r)+' '+apiOf(r)+' '+runDateOf(r)).toLowerCase();
-      if(blob.indexOf(q)!==-1) out.push(r);
-    }
-    render(out);
-  }
-
-  render(REPORTS);
-  $search.addEventListener('input', doSearch);
-})();
-</script>
-</body>
-</html>
+          </td>
+        </tr>
+      </table>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:6px;">
+    <tr><td style="padding:4px 2px 2px 2px;font:bold 11px Arial,Helvetica,sans-serif;color:#1a365d;">Status Summary</td></tr>
+  </table>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+      <td width="33%" valign="top" style="padding:2px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#e8f5e9;border-radius:8px;">
+          <tr><td style="padding:6px;" valign="top">
+            <div style="font:10px Arial,Helvetica,sans-serif;color:#666666;">DEPLOYMENT</div>
+            <div style="font:bold 10px Arial,Helvetica,sans-serif;color:#111111;">Succeeded</div>
+            <div style="font:10px Arial,Helvetica,sans-serif;color:#111111;">Passed: 136</div>
+          </td></tr>
+        </table>
+      </td>
+      <td width="33%" valign="top" style="padding:2px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#98ff98;border-radius:8px;">
+          <tr><td style="padding:6px;" valign="top">
+            <div style="font:10px Arial,Helvetica,sans-serif;color:#666666;">PMD — CHANGESET</div>
+            <div style="font:bold 10px Arial,Helvetica,sans-serif;color:#111111;">Classes: 11 &nbsp; • &nbsp; Triggers: 4</div>
+<div style="font:10px Arial,Helvetica,sans-serif;color:#111111;">High (Classes): 981 &nbsp; • &nbsp; High (Triggers): 0</div>
+          </td></tr>
+        </table>
+      </td>
+      <td width="33%" valign="top" style="padding:2px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#B0E0E6;border-radius:8px;">
+          <tr><td style="padding:6px;" valign="top">
+            <div style="font:10px Arial,Helvetica,sans-serif;color:#666666;">DURATION</div>
+            <div style="font:bold 10px Arial,Helvetica,sans-serif;color:#111111;">00h:05m:54s</div>
+            <div style="font:10px Arial,Helvetica,sans-serif;color:#111111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Start: 12:10 AM IST &nbsp;•&nbsp; End: 12:16 AM IST</div>
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:10px 2px 4px 2px;font:bold 11px Arial,Helvetica,sans-serif;color:#1a365d;">PMD Review</td></tr></table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:4px 0 8px 0;">
+<tr>
+<td style="padding:4px 8px;font:10px Arial,Helvetica,sans-serif;"><span style="display:inline-block;width:10px;height:10px;background:#ffefef;border:1px solid #f5bcbc;margin-right:6px;"></span>Red = regression (Δ High &gt; 0)</td>
+<td style="padding:4px 8px;font:10px Arial,Helvetica,sans-serif;"><span style="display:inline-block;width:10px;height:10px;background:#ecf7ef;border:1px solid #bde0c0;margin-right:6px;"></span>Green = improvement (Δ High &lt; 0)</td>
+<td style="padding:4px 8px;font:10px Arial,Helvetica,sans-serif;"><span style="display:inline-block;width:10px;height:10px;background:#ffffff;border:1px solid #dddddd;margin-right:6px;"></span>White/Grey = no change (Δ High = 0)</td>
+</tr>
+<tr><td colspan="3" style="padding-top:4px; font:10px Arial,Helvetica,sans-serif;; color:#444;">“High” = number in parentheses = count of high-severity PMD findings; Δ High = Current High − Original High.</td></tr>
+</table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #e6eefc;border-collapse:collapse;">
+<thead><tr style="background:#eaf2ff;"><th align="left" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">CLASS NAME</th><th align="right" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">ORIGINAL (HIGH)</th><th align="right" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">CURRENT (HIGH)</th><th align="right" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">Δ HIGH</th><th align="left" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">AUTHOR</th></tr></thead><tbody>
+<tr style="background:#ffefef;border-bottom:1px solid #e6eefc;border-left:4px solid #c62828;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/APTPS_TWR_LWC.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#c62828;">APTPS_TWR_LWC.cls</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">0-(0)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">123-(24)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #f5bcbc;background:#ffe3e3;">
+  <tr><td style="font:bold 10px Arial;color:#b71c1c;padding:1px 5px;white-space:nowrap;">+24</td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">Subhodip Sadhu</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr style="background:#ffefef;border-bottom:1px solid #e6eefc;border-left:4px solid #c62828;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/APTS_GenerateDocumentQueueable.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#c62828;">APTS_GenerateDocumentQueueable.cls</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">0-(0)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">4-(4)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #f5bcbc;background:#ffe3e3;">
+  <tr><td style="font:bold 10px Arial;color:#b71c1c;padding:1px 5px;white-space:nowrap;">+4</td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">Swarup Khan</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr style="background:#ffffff;border-bottom:1px solid #e6eefc;border-left:4px solid #dcdcdc;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/APTS_MultiRegionWANTriggerHandler.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#0b5ed7;">APTS_MultiRegionWANTriggerHandler.cls</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">117-(29)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">118-(29)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #dddddd;background:#eeeeee;">
+  <tr><td style="font:bold 10px Arial;color:#0b5ed7;padding:1px 5px;white-space:nowrap;"></td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">Aditya Goyal</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr style="background:#ecf7ef;border-bottom:1px solid #e6eefc;border-left:4px solid #2e7d32;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/Apts_NDA.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#0b5ed7;">Apts_NDA.cls</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">1528-(624)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">1497-(621)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #bde0c0;background:#e4f4e7;">
+  <tr><td style="font:bold 10px Arial;color:#1b5e20;padding:1px 5px;white-space:nowrap;"></td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">Anjali Kumari</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr style="background:#ffefef;border-bottom:1px solid #e6eefc;border-left:4px solid #c62828;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/APTS_ProposalUtility.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#c62828;">APTS_ProposalUtility.cls</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">86-(21)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">144-(37)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #f5bcbc;background:#ffe3e3;">
+  <tr><td style="font:bold 10px Arial;color:#b71c1c;padding:1px 5px;white-space:nowrap;">+16</td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">Aditya Goyal</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr style="background:#ffefef;border-bottom:1px solid #e6eefc;border-left:4px solid #c62828;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/APTS_QuoteTriggerhandler.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#c62828;">APTS_QuoteTriggerhandler.cls</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">1168-(209)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">1199-(215)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #f5bcbc;background:#ffe3e3;">
+  <tr><td style="font:bold 10px Arial;color:#b71c1c;padding:1px 5px;white-space:nowrap;">+6</td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">Swarup Khan</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr style="background:#ffefef;border-bottom:1px solid #e6eefc;border-left:4px solid #c62828;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/Apttus_DocuSign_EnvelopeTriggerHandler.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#c62828;">Apttus_DocuSign_EnvelopeTriggerHandler.cls</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">0-(0)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">4-(1)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #f5bcbc;background:#ffe3e3;">
+  <tr><td style="font:bold 10px Arial;color:#b71c1c;padding:1px 5px;white-space:nowrap;">+1</td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">Pramita Ghosh</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr style="background:#ffefef;border-bottom:1px solid #e6eefc;border-left:4px solid #c62828;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/ApttusUserSetup.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#c62828;">ApttusUserSetup.cls</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">0-(0)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">95-(37)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #f5bcbc;background:#ffe3e3;">
+  <tr><td style="font:bold 10px Arial;color:#b71c1c;padding:1px 5px;white-space:nowrap;">+37</td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">Subhodip Sadhu</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr style="background:#ffefef;border-bottom:1px solid #e6eefc;border-left:4px solid #c62828;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/BatchEsignForGoalLettersTest.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#c62828;">BatchEsignForGoalLettersTest.cls</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">0-(0)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">3-(3)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #f5bcbc;background:#ffe3e3;">
+  <tr><td style="font:bold 10px Arial;color:#b71c1c;padding:1px 5px;white-space:nowrap;">+3</td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#c62828;">Shreya Mitra</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr style="background:#ecf7ef;border-bottom:1px solid #e6eefc;border-left:4px solid #2e7d32;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/BatchEsignForUniversityRequestsTest.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#0b5ed7;">BatchEsignForUniversityRequestsTest.cls</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">7-(5)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">3-(2)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #bde0c0;background:#e4f4e7;">
+  <tr><td style="font:bold 10px Arial;color:#1b5e20;padding:1px 5px;white-space:nowrap;"></td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">Shreya Mitra</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr style="background:#ffffff;border-bottom:1px solid #e6eefc;border-left:4px solid #dcdcdc;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/Utility_global_var.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#0b5ed7;">Utility_global_var.cls</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">10-(8)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">10-(8)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #dddddd;background:#eeeeee;">
+  <tr><td style="font:bold 10px Arial;color:#0b5ed7;padding:1px 5px;white-space:nowrap;"></td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">Anjali Kumari</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+</tbody></table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:6px;line-height:6px;font-size:0;">&nbsp;</td></tr></table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #e6eefc;border-collapse:collapse;">
+<thead><tr style="background:#eaf2ff;"><th align="left" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">TRIGGER NAME</th><th align="right" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">ORIGINAL (HIGH)</th><th align="right" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">CURRENT (HIGH)</th><th align="right" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">Δ HIGH</th><th align="left" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">AUTHOR</th></tr></thead><tbody>
+<tr style="background:#ffffff;border-bottom:1px solid #e6eefc;border-left:4px solid #dcdcdc;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/APTS_ContentDocumentLinkTrigger.trigger_currpmd_orgpm.html" style="text-decoration:underline;color:#0b5ed7;">APTS_ContentDocumentLinkTrigger.trigger</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">7-(0)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">7-(0)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #dddddd;background:#eeeeee;">
+  <tr><td style="font:bold 10px Arial;color:#0b5ed7;padding:1px 5px;white-space:nowrap;"></td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">Anjali Kumari</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr style="background:#f7f7f7;border-bottom:1px solid #e6eefc;border-left:4px solid #dcdcdc;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/ContentDocumentLink_AT.trigger_currpmd_orgpm.html" style="text-decoration:underline;color:#0b5ed7;">ContentDocumentLink_AT.trigger</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">9-(0)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">9-(0)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #dddddd;background:#eeeeee;">
+  <tr><td style="font:bold 10px Arial;color:#0b5ed7;padding:1px 5px;white-space:nowrap;"></td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">Anjali Kumari</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr style="background:#ffffff;border-bottom:1px solid #e6eefc;border-left:4px solid #dcdcdc;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/ContentVersionTrigger_AT.trigger_currpmd_orgpm.html" style="text-decoration:underline;color:#0b5ed7;">ContentVersionTrigger_AT.trigger</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">1-(0)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">2-(0)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #dddddd;background:#eeeeee;">
+  <tr><td style="font:bold 10px Arial;color:#0b5ed7;padding:1px 5px;white-space:nowrap;"></td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">Anjali Kumari</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr style="background:#f7f7f7;border-bottom:1px solid #e6eefc;border-left:4px solid #dcdcdc;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/cs_ContentDocumentLinkTrigger.trigger_currpmd_orgpm.html" style="text-decoration:underline;color:#0b5ed7;">cs_ContentDocumentLinkTrigger.trigger</a></td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">21-(0)</td>
+<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">21-(0)</td>
+<td align="right" style="padding:5px 6px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #dddddd;background:#eeeeee;">
+  <tr><td style="font:bold 10px Arial;color:#0b5ed7;padding:1px 5px;white-space:nowrap;"></td></tr>
+</table>
+</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">Anjali Kumari</td>
+</tr>
+<tr><td colspan="5" style="border-bottom:1px solid #dddddd;font-size:0;line-height:0;">&nbsp;</td></tr>
+</tbody></table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;"><tr><td style="font:bold 11px Arial,Helvetica,sans-serif;color:#1a365d;padding:4px;">Changeset file/s ...[82]</td></tr></table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[1] src/classes/APTPS_TWR_LWC.cls</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 4cfac3cc1f7e79bc14c53ee81ec49a539633c2c8 | Author: Subhodip Sadhu <ssadhu@cadence.com> | Date: Thu Oct 16 12:39:08 2025 +0530 | Comment: [LMA-715]:(LMA-709,710,715 changes on bhhalf of Prince) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[2] src/classes/APTPS_TWR_LWC.cls-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 464a1e89a74938cd22a2df5f4bb49ef475ddb447 | Author: Anjali Kumari <kumarian@cadence.com> | Date: Thu Sep 11 13:22:49 2025 +0530 | Comment: [LMA-0000]:(recheckin class) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[3] src/classes/APTS_GenerateDocumentQueueable.cls</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit e119d18a489dbd06c42996c36db299274e69f29f | Author: Swarup Khan <swarupk@cadence.com> | Date: Thu Oct 16 01:28:17 2025 +0530 | Comment: [SFDC-24295]:(New queueable job to generate the OM notes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[4] src/classes/APTS_GenerateDocumentQueueable.cls-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit e119d18a489dbd06c42996c36db299274e69f29f | Author: Swarup Khan <swarupk@cadence.com> | Date: Thu Oct 16 01:28:17 2025 +0530 | Comment: [SFDC-24295]:(New queueable job to generate the OM notes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[5] src/classes/APTS_MultiRegionWANTriggerHandler.cls</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 9ebb7aa0f023e2204e947175506d1a2b77a5b68b | Author: Aditya Goyal <goyaladi@cadence.com> | Date: Wed Oct 15 20:53:20 2025 +0530 | Comment: [SFDC-24456]:(updated the logic regarding one scenario) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[6] src/classes/APTS_MultiRegionWANTriggerHandler.cls-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit b259f23c1127a30259ec8672ff1a04add0fb7c95 | Author: Aditya Goyal <goyaladi@cadence.com> | Date: Thu Oct 9 20:29:19 2025 +0530 | Comment: [SFDC-24456]:(Added new field and added the logic) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[7] src/classes/Apts_NDA.cls</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 30367e3630b260c993f741456620dbc8706a1f7b | Author: Anjali Kumari <kumarian@cadence.com> | Date: Tue Oct 14 18:00:37 2025 +0530 | Comment: [LMA-648]:(SOQL 101 issue) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[8] src/classes/Apts_NDA.cls-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 464a1e89a74938cd22a2df5f4bb49ef475ddb447 | Author: Anjali Kumari <kumarian@cadence.com> | Date: Thu Sep 11 13:22:49 2025 +0530 | Comment: [LMA-0000]:(recheckin class) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[9] src/classes/APTS_ProposalUtility.cls</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 9ebb7aa0f023e2204e947175506d1a2b77a5b68b | Author: Aditya Goyal <goyaladi@cadence.com> | Date: Wed Oct 15 20:53:20 2025 +0530 | Comment: [SFDC-24456]:(updated the logic regarding one scenario) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[10] src/classes/APTS_ProposalUtility.cls-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit beffb4ceea8da5f98b33e72fc2bd8a4d50006e45 | Author: debarshi <debarshi@cadence.com> | Date: Wed May 28 00:21:33 2025 -0700 | Comment: [IT-1703903]:(Updating the master with SFCLI) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[11] src/classes/APTS_QuoteTriggerhandler.cls</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 5433ef7ff1db4cfa2d30a767164c39c620d114e1 | Author: Swarup Khan <swarupk@cadence.com> | Date: Thu Oct 16 01:38:33 2025 +0530 | Comment: [SFDC-24295]:(Added fix for asyncapex exception) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[12] src/classes/APTS_QuoteTriggerhandler.cls-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit beffb4ceea8da5f98b33e72fc2bd8a4d50006e45 | Author: debarshi <debarshi@cadence.com> | Date: Wed May 28 00:21:33 2025 -0700 | Comment: [IT-1703903]:(Updating the master with SFCLI) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[13] src/classes/Apttus_DocuSign_EnvelopeTriggerHandler.cls</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit a3ca96eefdb0f026233bd81ed83e5afee2cffc4d | Author: Pramita Ghosh <pramita@cadence.com> | Date: Wed Oct 15 16:48:19 2025 +0530 | Comment: [SFDC-24222]:(Added layout change after BU demo) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[14] src/classes/Apttus_DocuSign_EnvelopeTriggerHandler.cls-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit c84befe4818472a7eabf6127ee7901e969306bb2 | Author: Pramita Ghosh <pramita@cadence.com> | Date: Thu Oct 9 18:53:58 2025 +0530 | Comment: [SFDC-24222]:(Added DocuSign change for CLM) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[15] src/classes/ApttusUserSetup.cls</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 584a2c469e1a8606eb54bede7f7b420c2b695464 | Author: Subhodip Sadhu <ssadhu@cadence.com> | Date: Tue Oct 14 17:01:24 2025 +0530 | Comment: [LMA-705]:(checkin ob behalf of Prince for variable name typo of cllaapprover ps) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[16] src/classes/ApttusUserSetup.cls-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 464a1e89a74938cd22a2df5f4bb49ef475ddb447 | Author: Anjali Kumari <kumarian@cadence.com> | Date: Thu Sep 11 13:22:49 2025 +0530 | Comment: [LMA-0000]:(recheckin class) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[17] src/classes/BatchEsignForGoalLettersTest.cls</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit a9adff7b551ab38c934053b97ca02fae0f2e7bfa | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 14:27:16 2025 +0530 | Comment: [SFDC-24457]:(test class changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[18] src/classes/BatchEsignForGoalLettersTest.cls-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit a9adff7b551ab38c934053b97ca02fae0f2e7bfa | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 14:27:16 2025 +0530 | Comment: [SFDC-24457]:(test class changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[19] src/classes/BatchEsignForUniversityRequestsTest.cls</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit a9adff7b551ab38c934053b97ca02fae0f2e7bfa | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 14:27:16 2025 +0530 | Comment: [SFDC-24457]:(test class changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[20] src/classes/BatchEsignForUniversityRequestsTest.cls-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit beffb4ceea8da5f98b33e72fc2bd8a4d50006e45 | Author: debarshi <debarshi@cadence.com> | Date: Wed May 28 00:21:33 2025 -0700 | Comment: [IT-1703903]:(Updating the master with SFCLI) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[21] src/classes/Utility_global_var.cls</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit a514bde4bbfa45435d4b68c1abb3ac169bb693f0 | Merge: 2d8c935f66 9e00dee924 | Author: Anjali Kumari <kumarian@cadence.com> | Date: Tue Oct 14 15:24:01 2025 +0530 | Comment: Merge branch 2025-q4nov-release of https://github.cadence.com/IT/SFDC into 2025-q4nov-release |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[22] src/classes/Utility_global_var.cls-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 464a1e89a74938cd22a2df5f4bb49ef475ddb447 | Author: Anjali Kumari <kumarian@cadence.com> | Date: Thu Sep 11 13:22:49 2025 +0530 | Comment: [LMA-0000]:(recheckin class) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[23] src/flexipages/APTS_Agreement_Lightning_CLLA_Legal.flexipage-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 73a19f5302cdcced482f2864a1901ff49cb4bdda | Author: Pramita Ghosh <pramita@cadence.com> | Date: Thu Oct 16 15:48:40 2025 +0530 | Comment: [SFDC-24222]:(Added related list change for CLLA) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[24] src/flexipages/APTS_Agreement_Lightning_CLLA_OF.flexipage-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 73a19f5302cdcced482f2864a1901ff49cb4bdda | Author: Pramita Ghosh <pramita@cadence.com> | Date: Thu Oct 16 15:48:40 2025 +0530 | Comment: [SFDC-24222]:(Added related list change for CLLA) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[25] src/flexipages/APTS_Agreement_Lightning_CLLA_Requester.flexipage-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 73a19f5302cdcced482f2864a1901ff49cb4bdda | Author: Pramita Ghosh <pramita@cadence.com> | Date: Thu Oct 16 15:48:40 2025 +0530 | Comment: [SFDC-24222]:(Added related list change for CLLA) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[26] src/flexipages/Legal_Apttus_Home_Page.flexipage-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 134bc988d3de1634ca9288917927239e02bd1866 | Author: dprasad <dprasad@cadence.com> | Date: Thu Oct 16 18:56:11 2025 +0530 | Comment: removed apttus link from Legal apttus homepage |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[27] src/flows/Expected_Close_Quarter_After_Create_Update_Event.flow-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0627f811c737b1b1516ed4839a5d65e5d09ed678 | Author: Supritha D <supritha@cadence.com> | Date: Tue Oct 14 16:46:32 2025 +0530 | Comment: [SFDC-23185]:(Flow changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[28] src/flows/GSS_Account_Team_After_Create_Update_Event.flow-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0627f811c737b1b1516ed4839a5d65e5d09ed678 | Author: Supritha D <supritha@cadence.com> | Date: Tue Oct 14 16:46:32 2025 +0530 | Comment: [SFDC-23185]:(Flow changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[29] src/flows/Opportunity_After_Create_Update_Event.flow-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0627f811c737b1b1516ed4839a5d65e5d09ed678 | Author: Supritha D <supritha@cadence.com> | Date: Tue Oct 14 16:46:32 2025 +0530 | Comment: [SFDC-23185]:(Flow changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[30] src/flows/Quote_After_Create_Update.flow-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0627f811c737b1b1516ed4839a5d65e5d09ed678 | Author: Supritha D <supritha@cadence.com> | Date: Tue Oct 14 16:46:32 2025 +0530 | Comment: [SFDC-23185]:(Flow changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[31] src/flows/Quote_Line_Item_After_Create_Update_Event.flow-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0627f811c737b1b1516ed4839a5d65e5d09ed678 | Author: Supritha D <supritha@cadence.com> | Date: Tue Oct 14 16:46:32 2025 +0530 | Comment: [SFDC-23185]:(Flow changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[32] src/flows/State_Region_After_Create_Update_Event.flow-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0627f811c737b1b1516ed4839a5d65e5d09ed678 | Author: Supritha D <supritha@cadence.com> | Date: Tue Oct 14 16:46:32 2025 +0530 | Comment: [SFDC-23185]:(Flow changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[33] src/env/sbx/customLabel/CustomLabels.labels-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 07c07cf9f22bbb17084d5ba1a33800daabac4ecb | Author: Rajesh Debnath <rdebnath@cadence.com> | Date: Tue Sep 16 22:28:36 2025 -0700 | Comment: [SFDC-0000]:(Update) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[34] src/layouts/Apttus__APTS_Agreement__c-CIC OF Layout.layout-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit a3ca96eefdb0f026233bd81ed83e5afee2cffc4d | Author: Pramita Ghosh <pramita@cadence.com> | Date: Wed Oct 15 16:48:19 2025 +0530 | Comment: [SFDC-24222]:(Added layout change after BU demo) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[35] src/layouts/Apttus__APTS_Agreement__c-CIC Requestor Layout.layout-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit a3ca96eefdb0f026233bd81ed83e5afee2cffc4d | Author: Pramita Ghosh <pramita@cadence.com> | Date: Wed Oct 15 16:48:19 2025 +0530 | Comment: [SFDC-24222]:(Added layout change after BU demo) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[36] src/layouts/Apttus__APTS_Agreement__c-CLLA OF Layout.layout-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit ee47911dc1024be51ccbbb1b6a34e37b96769ddd | Author: Pramita Ghosh <pramita@cadence.com> | Date: Wed Oct 15 16:54:08 2025 +0530 | Comment: [SFDC-24222]:(Updated CLLA related lists layouts) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[37] src/layouts/Apttus__APTS_Agreement__c-CLLA OF Layout Legal.layout-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit ee47911dc1024be51ccbbb1b6a34e37b96769ddd | Author: Pramita Ghosh <pramita@cadence.com> | Date: Wed Oct 15 16:54:08 2025 +0530 | Comment: [SFDC-24222]:(Updated CLLA related lists layouts) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[38] src/layouts/Apttus__APTS_Agreement__c-CLLA Requester Layout.layout-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit ee47911dc1024be51ccbbb1b6a34e37b96769ddd | Author: Pramita Ghosh <pramita@cadence.com> | Date: Wed Oct 15 16:54:08 2025 +0530 | Comment: [SFDC-24222]:(Updated CLLA related lists layouts) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[39] src/layouts/Apttus__APTS_Agreement__c-CLLA Special OF Layout.layout-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit ee47911dc1024be51ccbbb1b6a34e37b96769ddd | Author: Pramita Ghosh <pramita@cadence.com> | Date: Wed Oct 15 16:54:08 2025 +0530 | Comment: [SFDC-24222]:(Updated CLLA related lists layouts) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[40] src/layouts/Apttus__APTS_Agreement__c-General NDA Legal.layout-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit a3ca96eefdb0f026233bd81ed83e5afee2cffc4d | Author: Pramita Ghosh <pramita@cadence.com> | Date: Wed Oct 15 16:48:19 2025 +0530 | Comment: [SFDC-24222]:(Added layout change after BU demo) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[41] src/layouts/Apttus__APTS_Agreement__c-General NDA non Legal.layout-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit a3ca96eefdb0f026233bd81ed83e5afee2cffc4d | Author: Pramita Ghosh <pramita@cadence.com> | Date: Wed Oct 15 16:48:19 2025 +0530 | Comment: [SFDC-24222]:(Added layout change after BU demo) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[42] src/lwc/clm_apttusTwr/clm_apttusTwr.css</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 1e0288abe74c75d2c7f7291d0063a66366353fd4 | Author: Anjali Kumari <kumarian@cadence.com> | Date: Wed Sep 10 17:54:42 2025 +0530 | Comment: [LMA-0000]:(LWC checkin) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[43] src/lwc/clm_apttusTwr/clm_apttusTwr.html</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit b10a3abbfced87d21d964277fefc12f86ac185ef | Author: Anjali Kumari <kumarian@cadence.com> | Date: Thu Oct 16 17:58:03 2025 +0530 | Comment: [LMA-709]:(Checkin on behalf of prince) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[44] src/lwc/clm_apttusTwr/clm_apttusTwr.js</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 8e56855b6c4631208a542dda4a056ad172f6ac69 | Author: Subhodip Sadhu <ssadhu@cadence.com> | Date: Thu Oct 16 20:15:38 2025 +0530 | Comment: [LMA-709]:(Checkin on behalf of Prince) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[45] src/lwc/clm_apttusTwr/clm_apttusTwr.js-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 1e0288abe74c75d2c7f7291d0063a66366353fd4 | Author: Anjali Kumari <kumarian@cadence.com> | Date: Wed Sep 10 17:54:42 2025 +0530 | Comment: [LMA-0000]:(LWC checkin) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[46] src/objects/Apttus__APTS_Agreement__c/fields/APTPS_CLLA_Requesters_Rep_VP__c.field-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit f120d6d756cad03873e997107495a9358b20bc7b | Author: Anjali Kumari <kumarian@cadence.com> | Date: Thu Oct 16 16:46:06 2025 +0530 | Comment: [LMA-646]:(User lookup issue fix) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[47] src/objects/Apttus__APTS_Agreement__c/fields/APTPS_Enter_Account_Manager__c.field-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit f120d6d756cad03873e997107495a9358b20bc7b | Author: Anjali Kumari <kumarian@cadence.com> | Date: Thu Oct 16 16:46:06 2025 +0530 | Comment: [LMA-646]:(User lookup issue fix) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[48] src/objects/Apttus__APTS_Agreement__c/fields/APTPS_License_Fulfillment_Owner__c.field-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit f120d6d756cad03873e997107495a9358b20bc7b | Author: Anjali Kumari <kumarian@cadence.com> | Date: Thu Oct 16 16:46:06 2025 +0530 | Comment: [LMA-646]:(User lookup issue fix) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[49] src/objects/Apttus__APTS_Agreement__c/fields/Employee_Name_in_SFDC__c.field-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit f120d6d756cad03873e997107495a9358b20bc7b | Author: Anjali Kumari <kumarian@cadence.com> | Date: Thu Oct 16 16:46:06 2025 +0530 | Comment: [LMA-646]:(User lookup issue fix) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[50] src/objects/Apttus__APTS_Agreement__c/fields/TRS_Owner__c.field-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit f120d6d756cad03873e997107495a9358b20bc7b | Author: Anjali Kumari <kumarian@cadence.com> | Date: Thu Oct 16 16:46:06 2025 +0530 | Comment: [LMA-646]:(User lookup issue fix) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[51] src/objects/Apttus__APTS_Agreement__c/validationRules/APTS_RestrictExtUserRequestorSelection.validationRule-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit f120d6d756cad03873e997107495a9358b20bc7b | Author: Anjali Kumari <kumarian@cadence.com> | Date: Thu Oct 16 16:46:06 2025 +0530 | Comment: [LMA-646]:(User lookup issue fix) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[52] src/objects/TSMC_Agreement__c/fields/Requestor__c.field-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 02ac751a30fd362889b099ab5bcdced2824a2019 | Author: Subhodip Sadhu <ssadhu@cadence.com> | Date: Thu Oct 16 19:19:55 2025 +0530 | Comment: [LMA-646]:(added lookup filters) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[53] src/objects/TSMC_Agreement__c/fields/User__c.field-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 02ac751a30fd362889b099ab5bcdced2824a2019 | Author: Subhodip Sadhu <ssadhu@cadence.com> | Date: Thu Oct 16 19:19:55 2025 +0530 | Comment: [LMA-646]:(added lookup filters) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[54] src/permissionsets/Cadence_Sales_Ops_and_IT_Admin_User.permissionset-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit b259f23c1127a30259ec8672ff1a04add0fb7c95 | Author: Aditya Goyal <goyaladi@cadence.com> | Date: Thu Oct 9 20:29:19 2025 +0530 | Comment: [SFDC-24456]:(Added new field and added the logic) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[55] src/permissionsets/Goal_Letter_PS.permissionset-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[56] src/profiles/4_1 - Sales Finance _Forecast_.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[57] src/profiles/4_2 - WFO.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[58] src/profiles/4_3 - Sales Finance.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[59] src/profiles/4_4 - Apttus Lightning.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[60] src/profiles/4_4 - Apttus Platform Profile.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[61] src/profiles/4_4 - Apttus Salesforce Profile.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[62] src/profiles/4_4 - LegalApttusClone.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[63] src/profiles/4_4 - Legal_Apttus.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[64] src/profiles/4_4 - Legal.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[65] src/profiles/4_5 - Credit.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[66] src/profiles/4_6 - Revenue Accounting.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[67] src/profiles/4_7 - BP Approvers.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[68] src/profiles/4_8 - WFO Nerve Center.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[69] src/profiles/4_8 - WFO Operations2.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[70] src/profiles/4_8 - WFO Operations.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[71] src/profiles/4_9 - Corp.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 0d1109bc2c84bfabea73890b5b0335c1eb7871b4 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 20:14:11 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[72] src/profiles/Cadence Echosign Integration Profile.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 3f2faedaa62982dced672889715c02eb02c7b977 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 18:02:14 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[73] src/profiles/Integration.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit aee7444601c794a13bc24f9586f15d296da0cef1 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 16:49:42 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[74] src/profiles/System Administrator Custom.profile-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit aee7444601c794a13bc24f9586f15d296da0cef1 | Author: Shreya Mitra <smitra@cadence.com> | Date: Wed Oct 15 16:49:42 2025 +0530 | Comment: [SFDC-24457]:(fls changes) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[75] src/triggers/APTS_ContentDocumentLinkTrigger.trigger</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 2d8c935f66a1d3bd3e15fb9b724ccc7c8e6fd8e0 | Author: Anjali Kumari <kumarian@cadence.com> | Date: Tue Oct 14 15:23:31 2025 +0530 | Comment: [LMA-648]:(to fix 101 SOQL issue) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[76] src/triggers/APTS_ContentDocumentLinkTrigger.trigger-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 1378ae62b22fd7094890e6cee645cccb0b2ec9dd | Author: Anjali Kumari <kumarian@cadence.com> | Date: Wed Sep 10 18:17:01 2025 +0530 | Comment: [LMA-0000]:(Obj and Triggers checkin) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[77] src/triggers/ContentDocumentLink_AT.trigger</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 2d8c935f66a1d3bd3e15fb9b724ccc7c8e6fd8e0 | Author: Anjali Kumari <kumarian@cadence.com> | Date: Tue Oct 14 15:23:31 2025 +0530 | Comment: [LMA-648]:(to fix 101 SOQL issue) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[78] src/triggers/ContentDocumentLink_AT.trigger-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit beffb4ceea8da5f98b33e72fc2bd8a4d50006e45 | Author: debarshi <debarshi@cadence.com> | Date: Wed May 28 00:21:33 2025 -0700 | Comment: [IT-1703903]:(Updating the master with SFCLI) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[79] src/triggers/ContentVersionTrigger_AT.trigger</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 2d8c935f66a1d3bd3e15fb9b724ccc7c8e6fd8e0 | Author: Anjali Kumari <kumarian@cadence.com> | Date: Tue Oct 14 15:23:31 2025 +0530 | Comment: [LMA-648]:(to fix 101 SOQL issue) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[80] src/triggers/ContentVersionTrigger_AT.trigger-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit beffb4ceea8da5f98b33e72fc2bd8a4d50006e45 | Author: debarshi <debarshi@cadence.com> | Date: Wed May 28 00:21:33 2025 -0700 | Comment: [IT-1703903]:(Updating the master with SFCLI) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[81] src/triggers/cs_ContentDocumentLinkTrigger.trigger</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit 2d8c935f66a1d3bd3e15fb9b724ccc7c8e6fd8e0 | Author: Anjali Kumari <kumarian@cadence.com> | Date: Tue Oct 14 15:23:31 2025 +0530 | Comment: [LMA-648]:(to fix 101 SOQL issue) |</pre></td></tr>
+            </table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
+              <tr><td style="background:#e8f5e9;padding:5px 7px;border:1px solid #d8eeda;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">[82] src/triggers/cs_ContentDocumentLinkTrigger.trigger-meta.xml</pre></td></tr>
+              <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #d1d1d1;border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">Last author... commit beffb4ceea8da5f98b33e72fc2bd8a4d50006e45 | Author: debarshi <debarshi@cadence.com> | Date: Wed May 28 00:21:33 2025 -0700 | Comment: [IT-1703903]:(Updating the master with SFCLI) |</pre></td></tr>
+            </table>
+    </td></tr></table>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="880" style="max-width:880px;margin:6px auto 10px;background:#111111;">
+      <tr>
+        <td align="center" style="padding:6px 8px;text-align:center;color:#ffffff;font:bold 10px Arial,Helvetica,sans-serif;line-height:14px;">© 2025 Cadence Design Systems, Inc. | SFDC Deployment Report generated by the Cadence DevOps Team</td>
+      </tr>
+    </table>
+</td></tr></table>
+</body></html>
