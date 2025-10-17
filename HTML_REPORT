@@ -88,7 +88,7 @@ HTML_REPORT() {
   _plate_border="$(_col '.plate.border' '#d0d7de')"
 
   # ---- run details bar ----
-  _run_title_lbl="$(_gets '.strings.run_details.title' 'Run Details')"   # label from strings
+  _run_title_lbl="$(_gets '.strings.run_details.title' 'Run Details')"
   _run_title_bg_s="$(_col '.run_details.title_bg_success' '$_hdr_s')"
   _run_title_bg_f="$(_col '.run_details.title_bg_failure' '$_hdr_f')"
   _run_hdr_bg=$([ "$Report" = "SUCCEEDED" ] && echo "$_run_title_bg_s" || echo "$_run_title_bg_f")
@@ -96,7 +96,7 @@ HTML_REPORT() {
   _run_hdr_txt_f="$(_col '.run_details.title_text_failure' '#ffffff')"
   _run_hdr_txt=$([ "$Report" = "SUCCEEDED" ] && echo "$_run_hdr_txt_s" || echo "$_run_hdr_txt_f")
 
-  # ---- legacy chip text/border fallbacks (only for metadata chips) ----
+  # ---- legacy chip text/border fallbacks ----
   _chip_txt_s="$(_col '.chips.success_text' '#0f5132')"
   _chip_txt_f="$(_col '.chips.failure_text' '#842029')"
   _chip_border_default="$(_col '.chips.border' "$_chip_border_col")"
@@ -126,7 +126,7 @@ HTML_REPORT() {
   _pmd_text_high="$(_col '.pmd_review.text_high' '#b91c1c')"
   _pmd_text_normal="$(_col '.pmd_review.text_normal' '#1f2937')"
 
-  # ---- OPTIONAL section-level overrides (sections.pmd_review.palette.*) ----
+  # ---- OPTIONAL section-level overrides ----
   _pmd_hdr_bg="$(_col '.sections.pmd_review.palette.header_bg' "$_pmd_hdr_bg")"
   _pmd_hdr_text="$(_col '.sections.pmd_review.palette.header_text' "$_pmd_hdr_text")"
   _pmd_row_border="$(_col '.sections.pmd_review.palette.row_border' "$_pmd_row_border")"
@@ -578,7 +578,9 @@ PILL
   }
 
   if ! { [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; }; then
-    echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0" border="0" width="100%"><tr><td style=\"padding:8px 2px 4px 2px;font:${_w_bold} ${_t_pmd_title}px ${_fontfam};color:${_status_title};\">${_STR_PMD_REVIEW}</td></tr></table>" >>"$HTMLLog"
+    cat >>"$HTMLLog" <<PMD_TITLE
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:8px 2px 4px 2px;font:${_w_bold} ${_t_pmd_title}px ${_fontfam};color:${_status_title};">${_STR_PMD_REVIEW}</td></tr></table>
+PMD_TITLE
 
     PMD_COLS_JSON="$(jq -c '.sections.pmd_review.table.columns // [
       {"key":"name","label":"NAME","align":"left","width":"35%","show":true},
@@ -606,7 +608,9 @@ PILL
     } >>"$HTMLLog"
 
     if [ "$CLASS_COUNT" -gt 0 ]; then
-      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0" border="0" width="100%" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;border-radius:${_table_radius}px;overflow:hidden;\">" >>"$HTMLLog"
+      cat >>"$HTMLLog" <<PMD_CLASS_OPEN
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid ${_pmd_row_border};border-collapse:collapse;border-radius:${_table_radius}px;overflow:hidden;">
+PMD_CLASS_OPEN
       _render_pmd_header "$PMD_COLS_JSON" >>"$HTMLLog"
       row_num=0
       for classePath in $(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null | xargs -n1 -I{} basename {}); do
@@ -618,7 +622,9 @@ PILL
       echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"height:4px;line-height:4px;font-size:0;\">&nbsp;</td></tr></table>" >>"$HTMLLog"
     fi
     if [ "$TRIGGER_COUNT" -gt 0 ]; then
-      echo "<table role=\"presentation\" cellpadding=\"0" cellspacing="0" border="0" width="100%" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;border-radius:${_table_radius}px;overflow:hidden;\">" >>"$HTMLLog"
+      cat >>"$HTMLLog" <<PMD_TRIG_OPEN
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid ${_pmd_row_border};border-collapse:collapse;border-radius:${_table_radius}px;overflow:hidden;">
+PMD_TRIG_OPEN
       _render_pmd_header "$PMD_COLS_JSON" >>"$HTMLLog"
       row_num=0
       for triggerPath in $(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null | xargs -n1 -I{} basename {}); do
