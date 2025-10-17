@@ -95,7 +95,7 @@ HTML_REPORT() {
   _pmd_hdr_bg=$(_getc '.pmd_review.header_bg'); _pmd_hdr_text=$(_getc '.pmd_review.header_text'); _pmd_row_border=$(_getc '.pmd_review.row_border'); _pmd_link_normal=$(_getc '.pmd_review.link_normal'); _pmd_link_high=$(_getc '.pmd_review.link_high'); _pmd_text_high=$(_getc '.pmd_review.text_high'); _pmd_text_normal=$(_getc '.pmd_review.text_normal')
   _succ_file_bg=$(_getc '.success_section.file_row_bg'); _succ_file_border=$(_getc '.success_section.file_row_border'); _succ_auth_bg=$(_getc '.success_section.author_row_bg'); _succ_auth_border=$(_getc '.success_section.author_row_border'); _succ_title=$(_getc '.success_section.title_text')
   _fail_err_bg=$(_getc '.failure_section.error_row_bg'); _fail_err_border=$(_getc '.failure_section.error_row_border'); _fail_auth_bg=$(_getc '.failure_section.author_row_bg'); _fail_auth_border=$(_getc '.failure_section.author_row_border'); _fail_title=$(_getc '.failure_section.title_text')
-  _foot_bg=$(_getc '.footer.bg'); _foot_text=$(_getc '.footer.text')
+  _foot_bg=$(_getc '.footer.bg'); _foot_text=$(_getc '.footer.text'); _foot_copy=$(_getc '.footer.copyright_text')
 
   # ---- strings / typography (optional; have sensible defaults) ----
   _fontfam="$(_gets '.typography.font_family' 'Arial,Helvetica,sans-serif')"
@@ -566,7 +566,7 @@ PILL
     fi
 
     if [ "$TRIGGER_COUNT" -gt 0 ]; then
-      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing="0" border="0" width="100%" style="border:1px solid ${_pmd_row_border};border-collapse:collapse;\">" >>"$HTMLLog"
+      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;\">" >>"$HTMLLog"
       echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">TRIGGER NAME</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CURRENT (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">Δ HIGH</th><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
       row_num=0
       for triggerPath in $(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null); do
