@@ -241,11 +241,14 @@ HTML_REPORT() {
   ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
   FORCE_DEPLOY_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/$(basename "${HTMLFDLog:-$HTMLLog}").${DATE}"
 
-  if [ "$Report" = "SUCCEEDED" ]; then
-    _hdr_bg="$_hdr_s"; _status_bg="$_status_s"; _chip_bg="$_chip_bg_s"; _chip_txt="$_chip_txt_s"
+   if [ "$Report" = "SUCCEEDED" ]; then
+  _hdr_bg="$_hdr_s"; _status_bg="$_status_s"; _chip_bg="$_chip_bg_s"; _chip_txt="$_chip_txt_s"
+  _chip_border="${_chip_border_s:-$_chip_border_default}"
   else
-    _hdr_bg="$_hdr_f"; _status_bg="$_status_f"; _chip_bg="$_chip_bg_f"; _chip_txt="$_chip_txt_f"
+  _hdr_bg="$_hdr_f"; _status_bg="$_status_f"; _chip_bg="$_chip_bg_f"; _chip_txt="$_chip_txt_f"
+  _chip_border="${_chip_border_f:-$_chip_border_default}"
   fi
+
 
   resolve_src_from_json_name() {
     local jname="$1" stem f_cs f_src
