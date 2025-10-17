@@ -31,9 +31,7 @@ HTML_REPORT() {
   HEX_RE='^#[0-9A-Fa-f]{6}$'
   _getc(){ jq -r "$1 // empty" "$UI_COLORS_JSON_STRICT"; }
   _ishex(){ [[ "$1" =~ $HEX_RE ]]; }
-  _gets(){ # read string with fallback
-    local key="$1" dflt="$2" v; v=$(_getc "$key"); [ -n "$v" ] && printf '%s' "$v" || printf '%s' "$dflt"
-  }
+  _gets(){ local key="$1" dflt="$2" v; v=$(_getc "$key"); [ -n "$v" ] && printf '%s' "$v" || printf '%s' "$dflt"; }
 
   required_keys=(
     '.header.success_bg' '.header.failure_bg' '.header.text'
@@ -84,7 +82,11 @@ HTML_REPORT() {
   _hdr_s=$(_getc '.header.success_bg'); _hdr_f=$(_getc '.header.failure_bg'); _hdr_txt=$(_getc '.header.text')
   _page_bg=$(_getc '.plate.page_bg'); _plate_bg=$(_getc '.plate.background'); _plate_border=$(_getc '.plate.border')
   _run_s=$(_getc '.run_details.strip_success_bg'); _run_f=$(_getc '.run_details.strip_failure_bg'); _run_title=$(_getc '.run_details.title_text')
-  _chip_bg_s=$(_getc '.chips.success_bg'); _chip_bg_f=$(_getc '.chips.failure_bg'); _chip_txt_s=$(_getc '.chips.success_text'); _chip_txt_f=$(_getc '.chips.failure_text'); _chip_bg_s=$(_getc '.chips.success_bg'); _chip_bg_f=$(_getc '.chips.failure_bg'); _chip_txt_s=$(_getc '.chips.success_text'); _chip_txt_f=$(_getc '.chips.failure_text')
+
+  _chip_bg_s=$(_getc '.chips.success_bg')
+  _chip_bg_f=$(_getc '.chips.failure_bg')
+  _chip_txt_s=$(_getc '.chips.success_text')
+  _chip_txt_f=$(_getc '.chips.failure_text')
   _chip_border_default=$(_getc '.chips.border')
   _chip_border_s=$(_getc '.chips.border_success')
   _chip_border_f=$(_getc '.chips.border_failure')
@@ -92,12 +94,57 @@ HTML_REPORT() {
   _ql1=$(_getc '.quick_links.tile_1_bg'); _ql2=$(_getc '.quick_links.tile_2_bg'); _ql3=$(_getc '.quick_links.tile_3_bg'); _ql4=$(_getc '.quick_links.tile_4_bg'); _ql_text=$(_getc '.quick_links.text'); _ql_gap=$(_getc '.quick_links.gap_px')
   _status_s=$(_getc '.status_summary.deployment_success_bg'); _status_f=$(_getc '.status_summary.deployment_failure_bg'); _status_pmd=$(_getc '.status_summary.pmd_bg'); _status_time=$(_getc '.status_summary.time_bg')
   _status_title=$(_getc '.status_summary.title_text'); _status_label=$(_getc '.status_summary.label_text'); _status_value=$(_getc '.status_summary.value_text'); _status_radius=$(_getc '.status_summary.corner_radius')
+
   _pmd_hdr_bg=$(_getc '.pmd_review.header_bg'); _pmd_hdr_text=$(_getc '.pmd_review.header_text'); _pmd_row_border=$(_getc '.pmd_review.row_border'); _pmd_link_normal=$(_getc '.pmd_review.link_normal'); _pmd_link_high=$(_getc '.pmd_review.link_high'); _pmd_text_high=$(_getc '.pmd_review.text_high'); _pmd_text_normal=$(_getc '.pmd_review.text_normal')
+
   _succ_file_bg=$(_getc '.success_section.file_row_bg'); _succ_file_border=$(_getc '.success_section.file_row_border'); _succ_auth_bg=$(_getc '.success_section.author_row_bg'); _succ_auth_border=$(_getc '.success_section.author_row_border'); _succ_title=$(_getc '.success_section.title_text')
   _fail_err_bg=$(_getc '.failure_section.error_row_bg'); _fail_err_border=$(_getc '.failure_section.error_row_border'); _fail_auth_bg=$(_getc '.failure_section.author_row_bg'); _fail_auth_border=$(_getc '.failure_section.author_row_border'); _fail_title=$(_getc '.failure_section.title_text')
   _foot_bg=$(_getc '.footer.bg'); _foot_text=$(_getc '.footer.text'); _foot_copy=$(_getc '.footer.copyright_text')
 
-  # ---- strings / typography (optional; have sensible defaults) ----
+  # ---- extra JSON-driven options ----
+  _chip_label_s=$(_getc '.chips.label_success_text')
+  _chip_label_f=$(_getc '.chips.label_failure_text')
+
+  _run_title_bg_s=$(_getc '.run_details.title_bg_success')
+  _run_title_bg_f=$(_getc '.run_details.title_bg_failure')
+  _run_title_txt_s=$(_gets '.run_details.title_text_success' "$_run_title")
+  _run_title_txt_f=$(_gets '.run_details.title_text_failure' "$_run_title")
+
+  _dep_label_s=$(_gets '.status_summary.deployment_label_success' "$_status_label")
+  _dep_value_s=$(_gets '.status_summary.deployment_value_success' "$_status_value")
+  _dep_label_f=$(_gets '.status_summary.deployment_label_failure' "$_status_label")
+  _dep_value_f=$(_gets '.status_summary.deployment_value_failure' "$_status_value")
+  _pmd_textcol=$(_gets '.status_summary.pmd_text' "$_status_value")
+  _time_textcol=$(_gets '.status_summary.time_text' "$_status_value")
+
+  _leg_red_bg=$(_gets '.pmd_review.legend_red_bg' '#ffefef')
+  _leg_red_bd=$(_gets '.pmd_review.legend_red_border' '#f5bcbc')
+  _leg_green_bg=$(_gets '.pmd_review.legend_green_bg' '#ecfdf5')
+  _leg_green_bd=$(_gets '.pmd_review.legend_green_border' '#a7f3d0')
+  _leg_neu_bg=$(_gets '.pmd_review.legend_neutral_bg' '#ffffff')
+  _leg_neu_bd=$(_gets '.pmd_review.legend_neutral_border' '#dddddd')
+
+  _pmd_reg_row_bg=$(_gets '.pmd_review.regression_row_bg' '#ffefef')
+  _pmd_reg_left=$(_gets '.pmd_review.regression_left_stripe' '#c62828')
+  _delta_reg_bg=$(_gets '.pmd_review.delta_reg_bg' '#ffe3e3')
+  _delta_reg_bd=$(_gets '.pmd_review.delta_reg_border' '#f5bcbc')
+  _delta_reg_tx=$(_gets '.pmd_review.delta_reg_text' '#b71c1c')
+
+  _pmd_imp_row_bg_s=$(_gets '.pmd_review.improve_success_row_bg' '#ecfdf5')
+  _pmd_imp_left_s=$(_gets '.pmd_review.improve_success_left_stripe' '#2e7d32')
+  _pmd_imp_tx_s=$(_gets '.pmd_review.improve_success_text' '#065f46')
+  _delta_imp_bg_s=$(_gets '.pmd_review.delta_imp_success_bg' '#ecfdf5')
+  _delta_imp_bd_s=$(_gets '.pmd_review.delta_imp_success_border' '#a7f3d0')
+  _delta_imp_tx_s=$(_gets '.pmd_review.delta_imp_success_text' '#065f46')
+
+  _pmd_imp_row_bg_f=$(_gets '.pmd_review.improve_failure_row_bg' '#fef2f2')
+  _pmd_imp_left_f=$(_gets '.pmd_review.improve_failure_left_stripe' '#a94442')
+  _pmd_imp_tx_f=$(_gets '.pmd_review.improve_failure_text' '#7f1d1d')
+  _delta_imp_bg_f=$(_gets '.pmd_review.delta_imp_failure_bg' '#fef2f2')
+  _delta_imp_bd_f=$(_gets '.pmd_review.delta_imp_failure_border' '#fecaca')
+  _delta_imp_tx_f=$(_gets '.pmd_review.delta_imp_failure_text' '#7f1d1d')
+
+  # ---- strings / typography ----
   _fontfam="$(_gets '.typography.font_family' 'Arial,Helvetica,sans-serif')"
   _base="$(_gets '.typography.base_px' '10')"
   _sect="$(_gets '.typography.section_hdr_px' '11')"
@@ -123,13 +170,7 @@ HTML_REPORT() {
   _STR_TILE_DUR="$(_gets '.strings.sections.duration_tile' 'DURATION')"
   _STR_DUR_START="$(_gets '.strings.sections.duration_start' 'Start')"
   _STR_DUR_END="$(_gets '.strings.sections.duration_end' 'End')"
-
   _STR_PMD_REVIEW="$(_gets '.strings.sections.pmd_review' 'PMD Review')"
-  _STR_LEG_RED="$(_gets '.strings.legend.red' 'Red = regression (Δ High > 0)')"
-  _STR_LEG_GREEN="$(_gets '.strings.legend.green' 'Green = improvement (Δ High < 0)')"
-  _STR_LEG_WHITE="$(_gets '.strings.legend.white' 'White/Grey = no change (Δ High = 0)')"
-  _STR_LEG_HIGH="$(_gets '.strings.legend.high_explainer' '“High” = the number in parentheses; count of high-severity PMD findings matched from pattern list.')"
-  _STR_LEG_DELTA="$(_gets '.strings.legend.delta_explainer' 'Δ High = Current High − Original High.')"
 
   # Fonts (computed from json)
   _FONT_BASE="font:${_base}px ${_fontfam};"
@@ -241,14 +282,28 @@ HTML_REPORT() {
   ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
   FORCE_DEPLOY_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/$(basename "${HTMLFDLog:-$HTMLLog}").${DATE}"
 
-   if [ "$Report" = "SUCCEEDED" ]; then
-  _hdr_bg="$_hdr_s"; _status_bg="$_status_s"; _chip_bg="$_chip_bg_s"; _chip_txt="$_chip_txt_s"
-  _chip_border="${_chip_border_s:-$_chip_border_default}"
+  if [ "$Report" = "SUCCEEDED" ]; then
+    _hdr_bg="$_hdr_s"; _status_bg="$_status_s"; _chip_bg="$_chip_bg_s"; _chip_txt="$_chip_txt_s"
+    _chip_border="${_chip_border_s:-$_chip_border_default}"
   else
-  _hdr_bg="$_hdr_f"; _status_bg="$_status_f"; _chip_bg="$_chip_bg_f"; _chip_txt="$_chip_txt_f"
-  _chip_border="${_chip_border_f:-$_chip_border_default}"
+    _hdr_bg="$_hdr_f"; _status_bg="$_status_f"; _chip_bg="$_chip_bg_f"; _chip_txt="$_chip_txt_f"
+    _chip_border="${_chip_border_f:-$_chip_border_default}"
   fi
 
+  # Run Details bar colors + chip label color + deployment tile text colors
+  if [ "$Report" = "SUCCEEDED" ]; then
+    _run_hdr_bg="${_run_title_bg_s:-$_hdr_bg}"
+    _run_hdr_txt="${_run_title_txt_s:-#ffffff}"
+    _chip_label="${_chip_label_s:-$_chip_txt}"
+    _dep_label_col="$_dep_label_s"
+    _dep_value_col="$_dep_value_s"
+  else
+    _run_hdr_bg="${_run_title_bg_f:-$_hdr_bg}"
+    _run_hdr_txt="${_run_title_txt_f:-#ffffff}"
+    _chip_label="${_chip_label_f:-$_chip_txt}"
+    _dep_label_col="$_dep_label_f"
+    _dep_value_col="$_dep_value_f"
+  fi
 
   resolve_src_from_json_name() {
     local jname="$1" stem f_cs f_src
@@ -312,23 +367,20 @@ HTML_REPORT() {
     fi
     echo ""
   }
-  _urlenc_spaces(){
-    # minimal: spaces, #, +, %
-    echo "$1" | sed -e 's/%/%25/g' -e 's/ /%20/g' -e 's/#/%23/g' -e 's/+/%2B/g'
-  }
+  _urlenc_spaces(){ echo "$1" | sed -e 's/%/%25/g' -e 's/ /%20/g' -e 's/#/%23/g' -e 's/+/%2B/g'; }
   _GH_ROOT="$(_repo_http_root "$_REPO")"
 
-  # Helper: bulletproof chip TD (fixed grid for Outlook) — now with thin borders
+  # Helper: bulletproof chip TD (fixed grid for Outlook) — with thin borders
   _chip_td(){
     local label="$1"
     local value="$2"
-    local pr="$3"  # padding-right
+    local pr="$3"
     cat <<CELL
 <td valign="top" width="260" style="padding:0 ${pr}px 10px 0;">
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:${_chip_bg};border:1px solid ${_chip_border};">
     <tr>
       <td style="padding:6px 8px;${_FONT_BASE};color:${_chip_txt};line-height:12px;">
-        <div style="font:700 ${_base}px ${_fontfam};color:${_chip_txt};letter-spacing:.3px;text-transform:uppercase;">${label}</div>
+        <div style="font:700 ${_base}px ${_fontfam};color:${_chip_label};letter-spacing:.3px;text-transform:uppercase;">${label}</div>
         <div style="margin-top:2px;word-wrap:break-word;word-break:break-word;${_FONT_BASE};color:${_chip_txt};">
           $(_esc <<<"$value")
         </div>
@@ -377,7 +429,7 @@ HTML_TOP
       <!-- Run Details -->
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid ${_chip_border};border-radius:4px;">
         <tr>
-          <td align="center" style="padding:6px 8px;${_FONT_RUN_HDR}color:${_run_title};border-bottom:1px solid ${_chip_border};">
+          <td align="center" style="padding:6px 8px;${_FONT_RUN_HDR}color:${_run_hdr_txt};background:${_run_hdr_bg};border-bottom:1px solid ${_chip_border};">
             ${_STR_RUN_TITLE}
           </td>
         </tr>
@@ -429,7 +481,7 @@ HTML_TOP
       </table>
 EOF
 
-  # Status Summary (no fixed heights; removes extra space)
+  # Status Summary
   _status_counts_html() {
     if [ "$Report" = "SUCCEEDED" ]; then
       echo "Passed: ${COMP_PASS}"
@@ -443,8 +495,8 @@ EOF
       echo "<div style=\"${_FONT_BASE_BOLD}color:${warn_color};\">Classes: 0 &nbsp; • &nbsp; Triggers: 0</div>"
       echo "<div style=\"${_FONT_BASE_BOLD}color:${warn_color};\">PMD analysis skipped</div>"
     else
-      echo "<div style=\"${_FONT_BASE_BOLD}color:${_status_value};\">Classes: ${CLASS_COUNT} &nbsp; • &nbsp; Triggers: ${TRIGGER_COUNT}</div>"
-      echo "<div style=\"${_FONT_BASE}color:${_status_value};\">High (Classes): ${PMD_HIGH_CLS} &nbsp; • &nbsp; High (Triggers): ${PMD_HIGH_TRG}</div>"
+      echo "<div style=\"${_FONT_BASE_BOLD}color:${_pmd_textcol};\">Classes: ${CLASS_COUNT} &nbsp; • &nbsp; Triggers: ${TRIGGER_COUNT}</div>"
+      echo "<div style=\"${_FONT_BASE}color:${_pmd_textcol};\">High (Classes): ${PMD_HIGH_CLS} &nbsp; • &nbsp; High (Triggers): ${PMD_HIGH_TRG}</div>"
     fi
   }
 
@@ -457,9 +509,9 @@ EOF
       <td width="33%" valign="top" style="padding:2px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_bg};border-radius:${_status_radius};">
           <tr><td style="padding:6px;" valign="top">
-            <div style="${_FONT_BASE}color:${_status_label};">${_STR_TILE_DEPLOY}</div>
-            <div style="${_FONT_BASE_BOLD}color:${_status_value};">$([ "$Report" = "SUCCEEDED" ] && echo "Succeeded" || echo "Failed")</div>
-            <div style="${_FONT_BASE}color:${_status_value};">$(_status_counts_html)</div>
+            <div style="${_FONT_BASE}color:${_dep_label_col};">${_STR_TILE_DEPLOY}</div>
+            <div style="${_FONT_BASE_BOLD}color:${_dep_value_col};">$([ "$Report" = "SUCCEEDED" ] && echo "Succeeded" || echo "Failed")</div>
+            <div style="${_FONT_BASE}color:${_dep_value_col};">$(_status_counts_html)</div>
           </td></tr>
         </table>
       </td>
@@ -475,8 +527,10 @@ EOF
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_time};border-radius:${_status_radius};">
           <tr><td style="padding:6px;" valign="top">
             <div style="${_FONT_BASE}color:${_status_label};">${_STR_TILE_DUR}</div>
-            <div style="${_FONT_BASE_BOLD}color:${_status_value};">${TOTAL_DURATION}</div>
-            <div style="${_FONT_BASE}color:${_status_value};">${_STR_DUR_START}: ${START_TIME_IST_ONLY:-N/A}<br>${_STR_DUR_END}: ${END_TIME_IST_ONLY:-N/A}</div>
+            <div style="${_FONT_BASE_BOLD}color:${_time_textcol};">${TOTAL_DURATION}</div>
+            <div style="${_FONT_BASE}color:${_time_textcol};white-space:nowrap;">
+              ${_STR_DUR_START}: ${START_TIME_IST_ONLY:-N/A} &nbsp;•&nbsp; ${_STR_DUR_END}: ${END_TIME_IST_ONLY:-N/A}
+            </div>
           </td></tr>
         </table>
       </td>
@@ -486,25 +540,37 @@ EOF
 
   # PMD Review (only if there is at least one class or trigger)
   _delta_pill(){
-    local d="$1" bg="#ffffff" bd="#dddddd" col="${_pmd_text_normal}" txt="$d"
-    [ "$d" -gt 0 ] && { bg="#ffefef"; bd="#f5bcbc"; col="#b71c1c"; txt="+$d"; }
-    [ "$d" -lt 0 ] && { bg="#ecf7ef"; bd="#bde0c0"; col="#1b5e20"; }
+    local d="$1" bg bd col
+    if [ "$d" -gt 0 ]; then
+      bg="${_delta_reg_bg}"; bd="${_delta_reg_bd}"; col="${_delta_reg_tx}"
+    elif [ "$d" -lt 0 ]; then
+      if [ "$Report" = "SUCCEEDED" ]; then
+        bg="${_delta_imp_bg_s}"; bd="${_delta_imp_bd_s}"; col="${_delta_imp_tx_s}"
+      else
+        bg="${_delta_imp_bg_f}"; bd="${_delta_imp_bd_f}"; col="${_delta_imp_tx_f}"
+      fi
+    else
+      bg="${_delta_neu_bg:-#eeeeee}"; bd="${_delta_neu_border:-#dddddd}"; col="${_pmd_text_normal}"
+    fi
     cat <<PILL
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid $bd;background:$bg;">
-  <tr><td style="font:bold ${_base}px ${_fontfam};color:$col;padding:1px 5px;white-space:nowrap;">$txt</td></tr>
+  <tr><td style="font:bold ${_base}px ${_fontfam};color:$col;padding:1px 5px;white-space:nowrap;">$d</td></tr>
 </table>
 PILL
   }
 
   _emit_pmd_table_row(){
-    # args: display link author OriginalPmd Orgsev CurrentPmd Currsev delta row_num
     local display="$1" link="$2" author="$3" op="$4" oh="$5" cp="$6" ch="$7" delta="$8" row_num="$9"
-    local bg_color="#ffffff" text_color="${_pmd_text_normal}" link_color="${_pmd_link_normal}" row_left="#dcdcdc"
-    [ $((row_num % 2)) -eq 1 ] && bg_color="#f7f7f7"
+    local bg_color="#ffffff" text_color="${_pmd_text_normal}" link_color="${_pmd_link_normal}" row_left="$(_gets '.pmd_review.neutral_left_stripe' '#dcdcdc')"
+    [ $((row_num % 2)) -eq 1 ] && bg_color="$(_gets '.pmd_review.zebra_alt_bg' '#f7f7f7')"
     if [ "$delta" -gt 0 ]; then
-      bg_color="#ffefef"; text_color="${_pmd_text_high}"; link_color="${_pmd_link_high}"; row_left="#c62828"
+      bg_color="${_pmd_reg_row_bg}"; row_left="${_pmd_reg_left}"; text_color="${_pmd_text_high}"; link_color="${_pmd_link_high}"
     elif [ "$delta" -lt 0 ]; then
-      bg_color="#ecf7ef"; row_left="#2e7d32"
+      if [ "$Report" = "SUCCEEDED" ]; then
+        bg_color="${_pmd_imp_row_bg_s}"; row_left="${_pmd_imp_left_s}"; text_color="${_pmd_imp_tx_s}"
+      else
+        bg_color="${_pmd_imp_row_bg_f}"; row_left="${_pmd_imp_left_f}"; text_color="${_pmd_imp_tx_f}"
+      fi
     fi
     {
       echo "<tr style=\"background:${bg_color};border-bottom:1px solid ${_pmd_row_border};border-left:4px solid ${row_left};\">"
@@ -521,15 +587,15 @@ PILL
   if ! { [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; }; then
     echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\"><tr><td style=\"padding:10px 2px 6px 2px;${_FONT_SECTION_HDR}color:${_status_title};\">${_STR_PMD_REVIEW}</td></tr></table>" >>"$HTMLLog"
 
-    # Outlook-friendly legend (compact + visible borders)
+    # Outlook-friendly legend (bold + colored keywords)
     {
       echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"margin:0 0 8px 0; border:1px solid ${_pmd_row_border};\">"
       echo "<tr>"
-      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:#ffefef;border:1px solid #f5bcbc;margin-right:6px;\"></span>${_STR_LEG_RED}</td>"
-      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:#ecf7ef;border:1px solid #bde0c0;margin-right:6px;\"></span>${_STR_LEG_GREEN}</td>"
-      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:#ffffff;border:1px solid #dddddd;margin-right:6px;\"></span>${_STR_LEG_WHITE}</td>"
+      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_red_bg};border:1px solid ${_leg_red_bd};margin-right:6px;\"></span><strong><span style=\"color:${_pmd_reg_left}\">Red</span></strong> = regression (Δ High &gt; 0)</td>"
+      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_green_bg};border:1px solid ${_leg_green_bd};margin-right:6px;\"></span><strong><span style=\"color:${_pmd_imp_left_s}\">Green</span></strong> = improvement (Δ High &lt; 0)</td>"
+      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_neu_bg};border:1px solid ${_leg_neu_bd};margin-right:6px;\"></span><strong><span style=\"color:#555555\">White/Grey</span></strong> = no change (Δ High = 0)</td>"
       echo "</tr>"
-      echo "<tr><td colspan=\"3\" style=\"padding:4px 8px;${_FONT_BASE};color:#444;\">${_STR_LEG_HIGH} ${_STR_LEG_DELTA}</td></tr>"
+      echo "<tr><td colspan=\"3\" style=\"padding:4px 8px;${_FONT_BASE};color:#444;\"><strong>“High”</strong> = value in parentheses; count of high-severity PMD findings. &nbsp;&nbsp; <strong>Δ High</strong> = Current − Original.</td></tr>"
       echo "</table>"
     } >>"$HTMLLog"
 
@@ -566,7 +632,7 @@ PILL
     fi
 
     if [ "$TRIGGER_COUNT" -gt 0 ]; then
-      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;\">" >>"$HTMLLog"
+      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing="0" border="0" width="100%" style="border:1px solid ${_pmd_row_border};border-collapse:collapse;\">" >>"$HTMLLog"
       echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">TRIGGER NAME</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CURRENT (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">Δ HIGH</th><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
       row_num=0
       for triggerPath in $(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null); do
@@ -655,7 +721,9 @@ $LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
     </td></tr></table>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${_CARD_WIDTH}" style="max-width:${_CARD_WIDTH}px;margin:6px auto 10px;background:${_foot_bg};">
       <tr>
-        <td align="center" style="padding:6px 8px;text-align:center;color:${_foot_text};${_FONT_BASE_BOLD}line-height:14px;">${_foot_text}</td>
+        <td align="center" style="padding:6px 8px;text-align:center;color:${_foot_text};${_FONT_BASE_BOLD}line-height:14px;">
+          ${_foot_copy:-© 2025 Cadence Design Systems, Inc. | SFDC Deployment Report generated by the Cadence DevOps Team}
+        </td>
       </tr>
     </table>
 </td></tr></table>
