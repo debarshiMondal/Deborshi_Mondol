@@ -1,301 +1,321 @@
 {
-  // =====================================================================
-  // ui_colors.jsonc
-  // Master configuration for colors, texts, and typography used by
-  // HTML_REPORT(). Tweak here WITHOUT editing the Bash.
-  //
-  // FORMAT: JSON with comments (JSONC). The script strips comments first.
-  // Keep required keys; add optional ones as needed.
-  // =====================================================================
+  //////////////////////////////////////////////////////////////////////////////
+  // ui_colors.jsonc — FULLY ANNOTATED
+  // Every line is commented with purpose and (for colors) human-friendly names.
+  // Used by HTML_REPORT() to drive layout, palettes, typography, chips & tables.
+  //////////////////////////////////////////////////////////////////////////////
 
-  "meta": {
-    "version": "1.4-mint-success-lightred-failure",
-    "owner": "Release Eng",
-    "notes": "Chips get per-state borders & labels; Run Details title bar is state-colored; Status tile text colors are JSON-driven; PMD legend/table palettes are fully JSON-driven; footer copy comes from JSON."
+  "meta": {                                    // Top-level metadata for schema/version gating
+    "schema_version": "1"                      // REQUIRED. Schema version that HTML_REPORT() checks before reading keys
   },
 
-  // ---------------------------------------------------------------------
-  // HEADER: Top banner bar (logo + title)
-  //  success_bg: green      (#2e7d32)
-  //  failure_bg: light-red  (#a94442)
-  //  text:       white      (#ffffff)
-  // ---------------------------------------------------------------------
-  "header": {
-    "success_bg": "#2e7d32",
-    "failure_bg": "#a94442",
-    "text": "#ffffff"
+  "typography": {                              // Global typography settings (can be overridden per section)
+    "font_family": "Arial, Helvetica, sans-serif", // Font stack for all text; safe web fonts
+    "scale": {                                 // Base font sizes in PX (strings to keep JSONC consistent)
+      "base_px": "10",                         // Body/base size used in chips, cells, misc text
+      "section_hdr_px": "11",                  // Size for small section headers like “Status Summary”
+      "main_hdr_px": "14",                     // Size for the big report header in the colored bar
+      "run_hdr_px": "11"                       // Size for the “Run Details” bar title
+    },
+    "weights": {                               // Font weights (CSS numeric values)
+      "normal": "400",                         // Normal text weight
+      "bold": "700"                            // Bold text weight for headers/labels
+    },
+    "line_height": {                           // Line-height tokens (CSS values)
+      "base": "12px",                          // Base line height used for body text
+      "header": "16px"                         // Taller line height for headers to breathe
+    }
   },
 
-  // ---------------------------------------------------------------------
-  // PAGE / CARD chrome
-  //  page_bg:   page background (#f6f8fa)
-  //  background: main white card
-  //  border:     outer card border (#e6e6e6)
-  // ---------------------------------------------------------------------
-  "plate": {
-    "page_bg": "#f6f8fa",
-    "background": "#ffffff",
-    "border": "#e6e6e6"
+  "components": {                              // Primitive component tokens (radius, padding, borders)
+    "chip": {                                  // Generic chip frame used for status tiles and metadata chips
+      "radius_px": "4",                        // Chip corner radius in px
+      "pad_y_px": "6",                         // Vertical padding inside chips
+      "pad_x_px": "8",                         // Horizontal padding inside chips
+      "gap_px": "6",                           // Default horizontal gap between chips/quick-links
+      "border_color": "#d0d7de",               // (Gray blue 300/350) — default chip border color
+      "border_width_px": "1"                   // Border thickness for chips
+    },
+    "table": {                                 // Table frame tokens
+      "radius_px": "4",                        // Outer table corner radius
+      "pad_y_px": "6",                         // Default cell vertical padding
+      "pad_x_px": "8",                         // Default cell horizontal padding
+      "border_color": "#e5e7eb",               // (Gray 200) — row separator & table border
+      "row_zebra_even": "#ffffff",             // (White) — even zebra row color
+      "row_zebra_odd":  "#f7f7f7"              // (Very light gray) — odd zebra row color
+    }
   },
 
-  // ---------------------------------------------------------------------
-  // RUN DETAILS
-  // - title_bg_* / title_text_* color the "Run Details" title bar itself.
-  // - title_text (plain) is a fallback if per-state is missing.
-  // ---------------------------------------------------------------------
-  "run_details": {
-    "title_bg_success": "#2e7d32",   // green bar in success
-    "title_bg_failure": "#a94442",   // light-red bar in failure
-    "title_text_success": "#ffffff", // white text on the bar (success)
-    "title_text_failure": "#ffffff", // white text on the bar (failure)
-    "strip_success_bg": "#90EE90",   // legacy/unused, kept for validation
-    "strip_failure_bg": "#C3B091",   // legacy/unused, kept for validation
-    "title_text": "#000000"          // fallback
+  "header": {                                  // Report top bar (color switches by success/failure)
+    "success_bg": "#146c43",                   // (Dark emerald/green 800) — header bg when Report=SUCCEEDED
+    "failure_bg": "#8d1b1b",                   // (Dark ruby/red 800–900) — header bg when Report!=SUCCEEDED
+    "text": "#ffffff"                          // (White) — header title text
   },
 
-  // ---------------------------------------------------------------------
-  // CHIPS (REPO / BRANCH / etc.)
-  // Success (mint):
-  //   background #ecfdf5, border #a7f3d0, LABEL #047857, TEXT #065f46
-  // Failure (light-red):
-  //   background #fef2f2, border #fecaca, LABEL #a94442, TEXT #7f1d1d
-  //
-  // NOTE:
-  // - "border" is a generic fallback.
-  // - "border_success"/"border_failure" are auto-picked by the Bash.
-  // - "label_*_text" controls the small uppercase label (not the body text).
-  // ---------------------------------------------------------------------
+  "plate": {                                   // Card container & page background
+    "page_bg":    "#f6f8fa",                   // (Very light blue-gray; “GitHub canvas”) — page background
+    "background": "#ffffff",                   // (White) — inner card background
+    "border":     "#d0d7de"                    // (Gray blue 300/350) — card border color
+  },
+
+  "run_details": {                             // “Run Details” bar + stripe colors
+    "strip_success_bg": "#146c43",             // (Dark emerald) — success stripe fallback
+    "strip_failure_bg": "#8d1b1b",             // (Dark ruby) — failure stripe fallback
+    "title_text": "Run Details",               // Default title string (also exposed under strings.run_details.title)
+    "title_bg_success": "#146c43",             // (Dark emerald) — Run Details bar background when success
+    "title_bg_failure": "#8d1b1b",             // (Dark ruby) — Run Details bar background when failure
+    "title_text_success": "#ffffff",           // (White) — Run Details title color when success
+    "title_text_failure": "#ffffff"            // (White) — Run Details title color when failure
+  },
+
+  // CHIP SYSTEM — Per-chip logic & colors are controlled here.
   "chips": {
-    "success_bg": "#ecfdf5",
-    "failure_bg": "#fef2f2",
-    "success_text": "#065f46",
-    "failure_text": "#7f1d1d",
-    "border": "#a7f3d0",            // fallback
-    "border_success": "#a7f3d0",
-    "border_failure": "#fecaca",
-    "label_success_text": "#047857",
-    "label_failure_text": "#a94442"
+    "success_text": "#0f5132",                 // (Deep green text) — legacy fallback for success text
+    "failure_text": "#842029",                 // (Deep maroon text) — legacy fallback for failure text
+    "border": "#d0d7de",                       // (Gray blue 300/350) — legacy fallback border
+
+    // DEPLOYMENT — shows overall deployment result with rule-based color.
+    "deployment": {
+      // "force_color": { "bg": "#000000", "text": "#ffffff", "border": "#000000" }, // (Optional override) Force specific colors
+      // "force_label": "DEPLOYMENT (OVERRIDDEN)",                                    // (Optional override) Force label text
+      "color_rules": [                         // Evaluate in order; first match wins
+        {
+          "match_type": "text",                // Literal string match on the chip value
+          "match": "Succeeded",                // Match when value exactly equals “Succeeded”
+          "label": "DEPLOYMENT",               // Label to display when rule matches
+          "color": {                           // Green/OK band
+            "bg": "#ecfdf5",                   // (Mint green; emerald-50) — background for OK
+            "text": "#065f46",                 // (Emerald 700) — text color for OK
+            "border": "#a7f3d0"                // (Mint/emerald 200) — border for OK
+          }
+        },
+        {
+          "match_type": "regex",               // Case-insensitive regex for warning states
+          "match": "(?i)warn|partial",         // Any value containing warn/partial ⇒ warning
+          "label": "DEPLOYMENT",               // Label to display for warning
+          "color": {                           // Amber/WARN band
+            "bg": "#fffbeb",                   // (Amber 50) — background for warn
+            "text": "#92400e",                 // (Amber 800) — text color for warn
+            "border": "#fde68a"                // (Amber 300) — border for warn
+          }
+        },
+        {
+          "match_type": "regex",               // Regex for failure states
+          "match": "(?i)fail|error",           // Any value containing fail/error ⇒ failure
+          "label": "DEPLOYMENT",               // Label for failure
+          "color": {                           // Red/FAIL band
+            "bg": "#fef2f2",                   // (Rose 50) — background for fail
+            "text": "#7f1d1d",                 // (Red 900) — text color for fail
+            "border": "#fecaca"                // (Rose 300) — border for fail
+          }
+        }
+      ]
+    },
+
+    // PMD — CHANGESET — reflects high-severity PMD count banding (0, 1–2, ≥3).
+    "pmd_changeset": {
+      "color_rules": [
+        {
+          "match_type": "regex",               // Use regex to match numbers
+          "match": "^0$",                      // Exactly zero high-severity issues ⇒ OK
+          "label": "PMD — CHANGESET",          // Chip label
+          "color": {
+            "bg": "#ecfdf5",                   // (Mint green; emerald-50) — OK background
+            "text": "#065f46",                 // (Emerald 700) — OK text
+            "border": "#a7f3d0"                // (Emerald 200) — OK border
+          }
+        },
+        {
+          "match_type": "regex",               // 1–2 issues ⇒ warning
+          "match": "^[1-2]$",
+          "label": "PMD — CHANGESET",
+          "color": {
+            "bg": "#fffbeb",                   // (Amber 50) — WARN background
+            "text": "#92400e",                 // (Amber 800) — WARN text
+            "border": "#fde68a"                // (Amber 300) — WARN border
+          }
+        },
+        {
+          "match_type": "regex",               // 3+ issues ⇒ failure
+          "match": "^[3-9]\\d*$",
+          "label": "PMD — CHANGESET",
+          "color": {
+            "bg": "#fef2f2",                   // (Rose 50) — FAIL background
+            "text": "#7f1d1d",                 // (Red 900) — FAIL text
+            "border": "#fecaca"                // (Rose 300) — FAIL border
+          }
+        }
+      ]
+    },
+
+    // DURATION — colored by runtime in ms vs thresholds (ok ≤ ok_ms; warn ≤ warn_ms; else fail).
+    "duration": {
+      "thresholds_ms": [ 300000, 600000 ],     // Thresholds in milliseconds: [OK=5 min, WARN=10 min]
+      "colors": {
+        "ok":   { "bg": "#ecfdf5", "text": "#065f46", "border": "#a7f3d0" }, // (Mint/Emerald) — OK band
+        "warn": { "bg": "#fffbeb", "text": "#92400e", "border": "#fde68a" }, // (Amber) — WARN band
+        "fail": { "bg": "#fef2f2", "text": "#7f1d1d", "border": "#fecaca" }  // (Rose/Red) — FAIL band
+      }
+      // "force_color": { "bg": "#111827", "text": "#ffffff", "border": "#111827" }, // Optional hard override
+      // "force_label": "DURATION (OVERRIDDEN)"                                      // Optional label override
+    }
   },
 
-  // ---------------------------------------------------------------------
-  // QUICK LINKS (buttons under Run Details)
-  // All four tiles use the same teal fill (#0D9488) + white text.
-  // gap_px: horizontal spacing between tiles (string or number ok)
-  // ---------------------------------------------------------------------
-  "quick_links": {
-    "tile_1_bg": "#0D9488",
-    "tile_2_bg": "#0D9488",
-    "tile_3_bg": "#0D9488",
-    "tile_4_bg": "#0D9488",
-    "text": "#ffffff",
-    "gap_px": "10"
+  "quick_links": {                             // Small CTA buttons under Run Details
+    "tile_1_bg": "#1f6feb",                    // (Bright azure/blue 600) — “Open Logs” bg
+    "tile_2_bg": "#0969da",                    // (Cobalt blue 600) — “Original PMD Report” bg
+    "tile_3_bg": "#1750a7",                    // (Indigo blue 700) — “PMD High Patterns” bg
+    "tile_4_bg": "#0a3069",                    // (Navy 900) — “ForceDeploy” bg
+    "text": "#ffffff",                         // (White) — quick-link text
+    "gap_px": "6"                              // Gap between quick-link tiles
   },
 
-  // ---------------------------------------------------------------------
-  // STATUS SUMMARY tiles
-  // Deployment:
-  //   success: bg #ecfdf5, label #047857, value #065f46
-  //   failure: bg #fef2f2, label #a94442, value #7f1d1d
-  // PMD tile:  bg #fff7ed, text #9a3412
-  // Time tile: bg #eff6ff, text #1d4ed8
-  // title_text: section heading color ("Status Summary")
-  // corner_radius: border-radius for the tiles
-  // ---------------------------------------------------------------------
-  "status_summary": {
-    "deployment_success_bg": "#ecfdf5",
-    "deployment_failure_bg": "#fef2f2",
-    "pmd_bg": "#fff7ed",
-    "time_bg": "#eff6ff",
-
-    "title_text": "#1a365d",
-
-    // generic fallbacks (used if specific ones are absent)
-    "label_text": "#047857",
-    "value_text": "#065f46",
-
-    // per-state label/value for deployment tile
-    "deployment_label_success": "#047857",
-    "deployment_value_success": "#065f46",
-    "deployment_label_failure": "#a94442",
-    "deployment_value_failure": "#7f1d1d",
-
-    // per-tile text colors
-    "pmd_text": "#9a3412",
-    "time_text": "#1d4ed8",
-
-    "corner_radius": "8px"
+  "status_summary": {                          // Title text colors and corner radii for the three status chips row
+    "title_text": "#111827",                   // (Slate/gray 900 almost black) — “Status Summary” label color
+    "label_text": "#374151",                   // (Gray 700) — small labels inside chips
+    "value_text": "#111827",                   // (Slate/gray 900) — value text inside chips
+    "corner_radius": "6",                      // Corner radius for status chips
+    "pmd_bg": "#ecfdf5",                       // (Mint green; emerald-50) — legacy PMD tile background (unused if chip logic active)
+    "time_bg": "#eef2ff"                       // (Indigo 50) — legacy duration tile background (unused if chip logic active)
   },
 
-  // ---------------------------------------------------------------------
-  // PMD REVIEW (applies to both Classes & Triggers tables)
-  // header_*    : table header strip
-  // row_border  : horizontal separators
-  // link_* / text_*: colors for normal vs regression
-  //
-  // Legend chips and row palettes are used by the function to build
-  // the explanation row and to style each data row consistently.
-  // ---------------------------------------------------------------------
-  "pmd_review": {
-    "header_bg": "#eaf2ff",
-    "header_text": "#274690",
-    "row_border": "#e6eefc",
-
-    "link_normal": "#0b5ed7",
-    "link_high": "#c62828",
-    "text_high": "#c62828",
-    "text_normal": "#0b5ed7",
-
-    // Legend chips (explanation)
-    "legend_red_bg": "#ffefef",
-    "legend_red_border": "#f5bcbc",
-    "legend_green_bg": "#ecfdf5",
-    "legend_green_border": "#a7f3d0",
-    "legend_neutral_bg": "#ffffff",
-    "legend_neutral_border": "#dddddd",
-
-    // Neutral visuals
-    "zebra_alt_bg": "#f7f7f7",
-    "neutral_left_stripe": "#dcdcdc",
-    "delta_neu_bg": "#eeeeee",
-    "delta_neu_border": "#dddddd",
-
-    // Regression (Δ > 0)
-    "regression_row_bg": "#ffefef",
-    "regression_left_stripe": "#c62828",
-    "delta_reg_bg": "#ffe3e3",
-    "delta_reg_border": "#f5bcbc",
-    "delta_reg_text": "#b71c1c",
-
-    // Improvement — success palette (Δ < 0 when overall report is SUCCEEDED)
-    "improve_success_row_bg": "#ecfdf5",
-    "improve_success_left_stripe": "#2e7d32",
-    "improve_success_text": "#065f46",
-    "delta_imp_success_bg": "#ecfdf5",
-    "delta_imp_success_border": "#a7f3d0",
-    "delta_imp_success_text": "#065f46",
-
-    // Improvement — failure palette (Δ < 0 when overall report is FAILED)
-    "improve_failure_row_bg": "#fef2f2",
-    "improve_failure_left_stripe": "#a94442",
-    "improve_failure_text": "#7f1d1d",
-    "delta_imp_failure_bg": "#fef2f2",
-    "delta_imp_failure_border": "#fecaca",
-    "delta_imp_failure_text": "#7f1d1d"
+  "tables": {                                  // Table-level palettes per table group
+    "pmd_review": {                            // PMD Review table header/rows
+      "header_bg": "#111827",                  // (Slate/gray 900) — table header background
+      "header_text": "#ffffff",                // (White) — table header text
+      "row_border": "#e5e7eb",                 // (Gray 200) — row separators/borders
+      "row_zebra_even": "#ffffff",             // (White) — even row background
+      "row_zebra_odd": "#f7f7f7"               // (Very light gray) — odd row background
+    }
   },
 
-  // ---------------------------------------------------------------------
-  // SUCCESS: Changeset list (file row + author row)
-  // file_row_*: green/mint bar with border
-  // author_row_*: neutral gray details row below each file
-  // ---------------------------------------------------------------------
-  "success_section": {
-    "file_row_bg": "#ecfdf5",
-    "file_row_border": "#a7f3d0",
-    "author_row_bg": "#e0e0e0",
-    "author_row_border": "#d1d1d1",
-    "title_text": "#1a365d"
+  "sections": {                                // Section-specific settings (titles, typography, tables)
+    "pmd_review": {                            // PMD Review section
+      "title": "PMD Review",                   // Title shown above the PMD table
+      "typography": {                          // Per-section typography overrides (px)
+        "title_px": "12",                      // Title font size for “PMD Review”
+        "header_px": "11",                     // Table header font size in PMD section
+        "cell_px": "10"                        // Table cell font size in PMD section
+      },
+      "table": {
+        "columns": [                           // Column order/visibility; keys must be recognized by HTML_REPORT()
+          { "key": "name",          "label": "NAME",            "align": "left",  "width": "35%", "show": true  }, // File/class/trigger name (clickable)
+          { "key": "original_pair", "label": "ORIGINAL (HIGH)", "align": "right", "width": "15%", "show": true  }, // Original PMD total-(High)
+          { "key": "current_pair",  "label": "CURRENT (HIGH)",  "align": "right", "width": "15%", "show": true  }, // Current PMD total-(High)
+          { "key": "delta_high",    "label": "Δ HIGH",          "align": "right", "width": "10%", "show": true  }, // Pill showing High delta (current-original)
+          { "key": "author",        "label": "AUTHOR",          "align": "left",  "width": "25%", "show": true  }  // Last git author for the artifact
+          // Optional extras you can enable:
+          // { "key": "original_total", "label": "ORIGINAL (TOTAL)", "align": "right", "width": "10%", "show": false }, // Raw original total
+          // { "key": "original_high",  "label": "ORIGINAL (HIGH)",  "align": "right", "width": "10%", "show": false }, // Raw original high
+          // { "key": "current_total",  "label": "CURRENT (TOTAL)",  "align": "right", "width": "10%", "show": false }, // Raw current total
+          // { "key": "current_high",   "label": "CURRENT (HIGH)",   "align": "right", "width": "10%", "show": false }  // Raw current high
+        ]
+      }
+    }
   },
 
-  // ---------------------------------------------------------------------
-  // FAILURE: Component failures (error row + author row)
-  // error_row_*: light-red bar with border
-  // ---------------------------------------------------------------------
-  "failure_section": {
-    "error_row_bg": "#fef2f2",
-    "error_row_border": "#fecaca",
-    "author_row_bg": "#e0e0e0",
-    "author_row_border": "#d1d1d1",
-    "title_text": "#1a365d"
+  "pmd_review": {                               // Additional PMD styling tokens (legend, stripes, links)
+    "legend_red_bg": "#ffefef",                 // (Pale red) — legend sample for regressions
+    "legend_red_border": "#f5bcbc",             // (Soft red) — legend sample border
+    "legend_green_bg": "#ecfdf5",               // (Mint green) — legend sample for improvements
+    "legend_green_border": "#a7f3d0",           // (Mint border) — legend sample border
+    "legend_neutral_bg": "#ffffff",             // (White) — legend sample for neutral
+    "legend_neutral_border": "#dddddd",         // (Gray 300) — legend neutral border
+
+    "delta_reg_bg": "#ffe3e3",                  // (Light red) — Δ pill background for regression (>0)
+    "delta_reg_border": "#f5bcbc",              // (Soft red) — Δ pill border for regression
+    "delta_reg_text": "#b71c1c",                // (Red 800) — Δ pill text for regression
+
+    "delta_imp_bg": "#ecfdf5",                  // (Mint green) — Δ pill background for improvement (<0)
+    "delta_imp_border": "#a7f3d0",              // (Mint border) — Δ pill border for improvement
+    "delta_imp_text": "#065f46",                // (Emerald 700) — Δ pill text for improvement
+
+    "delta_neutral_bg": "#eeeeee",              // (Neutral gray) — Δ pill background for no change (=0)
+    "delta_neutral_border": "#dddddd",          // (Gray 300) — Δ pill border for no change
+    "delta_neutral_text": "#444444",            // (Gray 600) — Δ pill text for no change
+
+    "neutral_left_stripe": "#dcdcdc",           // (Gray 300) — neutral row left stripe
+
+    "regression_row_bg": "#ffefef",             // (Pale red) — row background when regression detected
+    "regression_left_stripe": "#c62828",        // (Strong red 700/800) — left stripe for regression rows
+
+    "improvement_row_bg": "#ecfdf5",            // (Mint green) — row background when improvement detected
+    "improvement_left_stripe": "#2e7d32",       // (Green 800) — left stripe for improvement rows
+    "improvement_text": "#065f46",              // (Emerald 700) — row text for improvement rows
+
+    "link_normal": "#0a58ca",                   // (Royal blue) — default link color in PMD table
+    "link_high":   "#b91c1c",                   // (Red 700) — link color when row is “high attention”
+    "text_high":   "#b91c1c",                   // (Red 700) — high-attention text color
+    "text_normal": "#1f2937"                    // (Gray 800) — normal text color in PMD table
   },
 
-  // ---------------------------------------------------------------------
-  // LEGACY fallbacks for older script naming (do not remove)
-  // ---------------------------------------------------------------------
-  "changeset": {
-    "file_row_bg": "#ecfdf5",
-    "file_row_border": "#a7f3d0",
-    "author_row_bg": "#e0e0e0",
-    "author_row_border": "#d1d1d1",
-    "title_text": "#1a365d"
-  },
-  "failures": {
-    "error_row_bg": "#fef2f2",
-    "error_row_border": "#fecaca",
-    "author_row_bg": "#e0e0e0",
-    "author_row_border": "#d1d1d1",
-    "title_text": "#1a365d"
+  "success_section": {                          // Colors for the SUCCEEDED “Changeset files …” list
+    "file_row_bg": "#f8fafc",                   // (Off-white with blue tint) — file row background
+    "file_row_border": "#d0d7de",               // (Gray blue 300/350) — file row border
+    "author_row_bg": "#ffffff",                 // (White) — author sub-row background
+    "author_row_border": "#d0d7de",             // (Gray blue 300/350) — author sub-row border
+    "title_text": "#065f46"                     // (Emerald 700) — “Changeset file/s …” title color
   },
 
-  // ---------------------------------------------------------------------
-  // FOOTER
-  // bg: background color for footer bar
-  // text: TEXT COLOR (must be hex for validation)
-  // copyright_text: the actual footer sentence shown in the email
-  // ---------------------------------------------------------------------
-  "footer": {
-    "bg": "#111111",
-    "text": "#ffffff",
-    "copyright_text": "© 2025 Cadence Design Systems, Inc. | SFDC Deployment Report generated by the Cadence DevOps Team"
+  "failure_section": {                          // Colors for the FAILURE “All Component Failures:” list
+    "error_row_bg": "#fff1f2",                  // (Rose 50+) — error row background
+    "error_row_border": "#fecaca",              // (Rose 300) — error row border
+    "author_row_bg": "#ffffff",                 // (White) — author sub-row background
+    "author_row_border": "#d0d7de",             // (Gray blue 300/350) — author sub-row border
+    "title_text": "#7f1d1d"                     // (Red 900) — “All Component Failures:” title color
   },
 
-  // ---------------------------------------------------------------------
-  // TYPOGRAPHY (global font family & sizes in px)
-  //  base_px: body size & chip label size
-  //  section_hdr_px: section titles (Status Summary, PMD Review, etc.)
-  //  main_hdr_px: big banner in the header
-  //  run_hdr_px: Run Details title
-  // ---------------------------------------------------------------------
-  "typography": {
-    "font_family": "Arial,Helvetica,sans-serif",
-    "base_px": "10",
-    "section_hdr_px": "11",
-    "main_hdr_px": "14",
-    "run_hdr_px": "11"
+  "footer": {                                   // Footer stripe at the bottom
+    "bg": "#0b1020",                            // (Very dark navy) — footer background
+    "text": "#e5e7eb",                          // (Gray 200) — footer text color
+    "copyright_text": "© 2025 Cadence Design Systems, Inc. | SFDC Deployment Report generated by the Cadence DevOps Team" // Footer copy string
   },
 
-  // ---------------------------------------------------------------------
-  // STRINGS (user-visible labels)
-  // Rename any text here without changing the script.
-  // ---------------------------------------------------------------------
-  "strings": {
+  "formatters": {                                // Centralized UI formatters
+    "duration": "h:mm:ss",                       // Duration formatting: “hours:minutes:seconds”
+    "percent":  "0.0%",                          // Percent formatting token (reserved for future)
+    "number":   "#,##0"                          // Number formatting token (reserved for future)
+  },
+
+  "strings": {                                   // Static labels & icons used across the report
     "header": {
-      "title_core": "Deployment",
-      "title_suffix": "Report",
-      "success_word": "Success",
-      "failure_word": "Failure"
+      "title_core": "Deployment",                // Header middle word (e.g., “<ORG> Deployment Success Report”)
+      "title_suffix": "Report",                  // Header trailing word
+      "success_word": "Success",                 // Word inserted when Report=SUCCEEDED
+      "failure_word": "Failure"                  // Word inserted when Report!=SUCCEEDED
     },
-    "run_details": { "title": "Run Details" },
+    "run_details": {
+      "title": "Run Details"                     // Caption for the Run Details bar (also duplicated in run_details.title_text)
+    },
     "chips": {
-      "repo": "REPO",
-      "branch": "BRANCH",
-      "request_id": "REQUEST ID",
-      "run_ist": "RUN (IST)",
-      "org_api": "ORG NAME + API",
-      "deploy_user": "DEPLOY USER"
-    },
-    "quick_links": {
-      "tile_1": "Open Logs",
-      "tile_2": "Original PMD Report",
-      "tile_3": "Reserved",
-      "tile_4": "ForceDeploy"
+      "repo": "REPO",                            // Label for repository chip
+      "branch": "BRANCH",                        // Label for branch chip
+      "request_id": "REQUEST ID",                // Label for request-id chip
+      "run_ist": "RUN (IST)",                    // Label for the local run time chip
+      "org_api": "ORG NAME + API",               // Label for org+api chip
+      "deploy_user": "DEPLOY USER"               // Label for deploy user chip
     },
     "sections": {
-      "status_summary": "Status Summary",
-      "pmd_review": "PMD Review",
-      "success_title": "Changeset file/s ...",
-      "failure_title": "All Component Failures:",
-      "deployment_tile": "DEPLOYMENT",
-      "pmd_tile": "PMD — CHANGESET",
-      "duration_tile": "DURATION",
-      "duration_start": "Start",
-      "duration_end": "End"
+      "status_summary": "Status Summary",        // Title above the three status chips
+      "deployment_tile": "DEPLOYMENT",           // Default label for deployment chip
+      "pmd_tile": "PMD — CHANGESET",             // Default label for PMD chip
+      "duration_tile": "DURATION",               // Default label for duration chip
+      "duration_start": "Start",                 // Label shown before start time
+      "duration_end": "End",                     // Label shown before end time
+      "pmd_review": "PMD Review",                // Fallback title for PMD Review header
+      "failure_title": "All Component Failures:",// Heading above failure list
+      "success_title": "Changeset file/s ..."    // Heading above success list
     },
-    "legend": {
-      "red": "Red = regression (Δ High > 0)",
-      "green": "Green = improvement (Δ High < 0)",
-      "white": "White/Grey = no change (Δ High = 0)",
-      "high_explainer": "“High” = value in parentheses; count of high-severity PMD findings (pattern-based).",
-      "delta_explainer": "Δ High = Current High − Original High."
+    "icons": {
+      "deployment": "",                          // Optional icon prefix for deployment chip (e.g., "✅ ")
+      "pmd_changeset": "",                       // Optional icon prefix for PMD chip (e.g., "🧩 ")
+      "duration": ""                             // Optional icon prefix for duration chip (e.g., "⏱️ ")
+    },
+    "quick_links": {                             // CTA labels under Run Details
+      "tile_1": "Open Logs",                     // First quick link label
+      "tile_2": "Original PMD Report",           // Second quick link label
+      "tile_3": "PMD High Patterns",             // Third quick link label (points to published patterns file)
+      "tile_4": "ForceDeploy"                    // Fourth quick link label
     }
   }
 }
