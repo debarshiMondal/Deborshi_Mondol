@@ -9,14 +9,16 @@
   // =====================================================================
 
   "meta": {
-    "version": "1.3-mint-success-lightred-failure",
+    "version": "1.4-mint-success-lightred-failure",
     "owner": "Release Eng",
-    "notes": "Palette synced from latest specs. Chips get per-state borders; PMD tables share consistent row logic."
+    "notes": "Chips get per-state borders & labels; Run Details title bar is state-colored; Status tile text colors are JSON-driven; PMD legend/table palettes are fully JSON-driven; footer copy comes from JSON."
   },
 
   // ---------------------------------------------------------------------
   // HEADER: Top banner bar (logo + title)
-  // Success = green, Failure = light-red
+  //  success_bg: green      (#2e7d32)
+  //  failure_bg: light-red  (#a94442)
+  //  text:       white      (#ffffff)
   // ---------------------------------------------------------------------
   "header": {
     "success_bg": "#2e7d32",
@@ -26,47 +28,59 @@
 
   // ---------------------------------------------------------------------
   // PAGE / CARD chrome
+  //  page_bg:   page background (#f6f8fa)
+  //  background: main white card
+  //  border:     outer card border (#e6e6e6)
   // ---------------------------------------------------------------------
   "plate": {
     "page_bg": "#f6f8fa",
     "background": "#ffffff",
-    "border": "#e6e6e6"   // outer card border
+    "border": "#e6e6e6"
   },
 
   // ---------------------------------------------------------------------
   // RUN DETAILS
-  // title_text controls the section header text color
+  // - title_bg_* / title_text_* color the "Run Details" title bar itself.
+  // - title_text (plain) is a fallback if per-state is missing.
   // ---------------------------------------------------------------------
   "run_details": {
-    "strip_success_bg": "#90EE90", // legacy/unused
-    "strip_failure_bg": "#C3B091", // legacy/unused
-    "title_text": "#000000"
+    "title_bg_success": "#2e7d32",   // green bar in success
+    "title_bg_failure": "#a94442",   // light-red bar in failure
+    "title_text_success": "#ffffff", // white text on the bar (success)
+    "title_text_failure": "#ffffff", // white text on the bar (failure)
+    "strip_success_bg": "#90EE90",   // legacy/unused, kept for validation
+    "strip_failure_bg": "#C3B091",   // legacy/unused, kept for validation
+    "title_text": "#000000"          // fallback
   },
 
   // ---------------------------------------------------------------------
   // CHIPS (REPO / BRANCH / etc.)
-  // Success (mint): bg #ecfdf5, border #a7f3d0, label #047857, text #065f46
-  // Failure (light-red): bg #fef2f2, border #fecaca, label #a94442, text #7f1d1d
+  // Success (mint):
+  //   background #ecfdf5, border #a7f3d0, LABEL #047857, TEXT #065f46
+  // Failure (light-red):
+  //   background #fef2f2, border #fecaca, LABEL #a94442, TEXT #7f1d1d
   //
   // NOTE:
-  // - The script historically reads .chips.border (single value).
-  // - We also provide border_success / border_failure so the function
-  //   can auto-pick per deployment state.
+  // - "border" is a generic fallback.
+  // - "border_success"/"border_failure" are auto-picked by the Bash.
+  // - "label_*_text" controls the small uppercase label (not the body text).
   // ---------------------------------------------------------------------
   "chips": {
     "success_bg": "#ecfdf5",
     "failure_bg": "#fef2f2",
     "success_text": "#065f46",
     "failure_text": "#7f1d1d",
-    "border": "#a7f3d0",            // generic fallback
-    "border_success": "#a7f3d0",    // success-only
-    "border_failure": "#fecaca",    // failure-only
+    "border": "#a7f3d0",            // fallback
+    "border_success": "#a7f3d0",
+    "border_failure": "#fecaca",
     "label_success_text": "#047857",
     "label_failure_text": "#a94442"
   },
 
   // ---------------------------------------------------------------------
-  // QUICK LINKS (buttons)
+  // QUICK LINKS (buttons under Run Details)
+  // All four tiles use the same teal fill (#0D9488) + white text.
+  // gap_px: horizontal spacing between tiles (string or number ok)
   // ---------------------------------------------------------------------
   "quick_links": {
     "tile_1_bg": "#0D9488",
@@ -79,9 +93,13 @@
 
   // ---------------------------------------------------------------------
   // STATUS SUMMARY tiles
-  // Deployment: success bg #ecfdf5 / failure bg #fef2f2
-  // PMD tile: bg #fff7ed, text #9a3412
-  // Duration tile: bg #eff6ff, text #1d4ed8
+  // Deployment:
+  //   success: bg #ecfdf5, label #047857, value #065f46
+  //   failure: bg #fef2f2, label #a94442, value #7f1d1d
+  // PMD tile:  bg #fff7ed, text #9a3412
+  // Time tile: bg #eff6ff, text #1d4ed8
+  // title_text: section heading color ("Status Summary")
+  // corner_radius: border-radius for the tiles
   // ---------------------------------------------------------------------
   "status_summary": {
     "deployment_success_bg": "#ecfdf5",
@@ -89,17 +107,19 @@
     "pmd_bg": "#fff7ed",
     "time_bg": "#eff6ff",
 
-    "title_text": "#1a365d",   // section heading (“Status Summary”)
+    "title_text": "#1a365d",
 
-    // Generic label/value (script can use these across tiles)
-    "label_text": "#047857",   // matches mint label
-    "value_text": "#065f46",   // matches mint value
+    // generic fallbacks (used if specific ones are absent)
+    "label_text": "#047857",
+    "value_text": "#065f46",
 
-    // Optional per-tile text colors (use if function is wired to them)
+    // per-state label/value for deployment tile
     "deployment_label_success": "#047857",
     "deployment_value_success": "#065f46",
     "deployment_label_failure": "#a94442",
     "deployment_value_failure": "#7f1d1d",
+
+    // per-tile text colors
     "pmd_text": "#9a3412",
     "time_text": "#1d4ed8",
 
@@ -107,21 +127,25 @@
   },
 
   // ---------------------------------------------------------------------
-  // PMD REVIEW (applies to Classes & Triggers tables)
-  // Header strip + row logic (regression / neutral / improvement)
+  // PMD REVIEW (applies to both Classes & Triggers tables)
+  // header_*    : table header strip
+  // row_border  : horizontal separators
+  // link_* / text_*: colors for normal vs regression
+  //
+  // Legend chips and row palettes are used by the function to build
+  // the explanation row and to style each data row consistently.
   // ---------------------------------------------------------------------
   "pmd_review": {
     "header_bg": "#eaf2ff",
     "header_text": "#274690",
     "row_border": "#e6eefc",
 
-    // Links / text
     "link_normal": "#0b5ed7",
     "link_high": "#c62828",
     "text_high": "#c62828",
     "text_normal": "#0b5ed7",
 
-    // Legend chips (for the explanation row)
+    // Legend chips (explanation)
     "legend_red_bg": "#ffefef",
     "legend_red_border": "#f5bcbc",
     "legend_green_bg": "#ecfdf5",
@@ -129,20 +153,20 @@
     "legend_neutral_bg": "#ffffff",
     "legend_neutral_border": "#dddddd",
 
-    // Neutral row visuals
+    // Neutral visuals
     "zebra_alt_bg": "#f7f7f7",
     "neutral_left_stripe": "#dcdcdc",
     "delta_neu_bg": "#eeeeee",
     "delta_neu_border": "#dddddd",
 
-    // Regression visuals (Δ > 0)
+    // Regression (Δ > 0)
     "regression_row_bg": "#ffefef",
     "regression_left_stripe": "#c62828",
     "delta_reg_bg": "#ffe3e3",
     "delta_reg_border": "#f5bcbc",
     "delta_reg_text": "#b71c1c",
 
-    // Improvement — SUCCESS palette (Δ < 0 with mint)
+    // Improvement — success palette (Δ < 0 when overall report is SUCCEEDED)
     "improve_success_row_bg": "#ecfdf5",
     "improve_success_left_stripe": "#2e7d32",
     "improve_success_text": "#065f46",
@@ -150,7 +174,7 @@
     "delta_imp_success_border": "#a7f3d0",
     "delta_imp_success_text": "#065f46",
 
-    // Improvement — FAILURE palette (Δ < 0 but themed red)
+    // Improvement — failure palette (Δ < 0 when overall report is FAILED)
     "improve_failure_row_bg": "#fef2f2",
     "improve_failure_left_stripe": "#a94442",
     "improve_failure_text": "#7f1d1d",
@@ -161,6 +185,8 @@
 
   // ---------------------------------------------------------------------
   // SUCCESS: Changeset list (file row + author row)
+  // file_row_*: green/mint bar with border
+  // author_row_*: neutral gray details row below each file
   // ---------------------------------------------------------------------
   "success_section": {
     "file_row_bg": "#ecfdf5",
@@ -172,6 +198,7 @@
 
   // ---------------------------------------------------------------------
   // FAILURE: Component failures (error row + author row)
+  // error_row_*: light-red bar with border
   // ---------------------------------------------------------------------
   "failure_section": {
     "error_row_bg": "#fef2f2",
@@ -201,9 +228,9 @@
 
   // ---------------------------------------------------------------------
   // FOOTER
-  // If your function expects a COLOR, keep "text_color".
-  // If your function prints the footer sentence from JSON, keep "text".
-  // Having both is safe; unused keys are ignored.
+  // bg: background color for footer bar
+  // text: TEXT COLOR (must be hex for validation)
+  // copyright_text: the actual footer sentence shown in the email
   // ---------------------------------------------------------------------
   "footer": {
     "bg": "#111111",
@@ -213,6 +240,10 @@
 
   // ---------------------------------------------------------------------
   // TYPOGRAPHY (global font family & sizes in px)
+  //  base_px: body size & chip label size
+  //  section_hdr_px: section titles (Status Summary, PMD Review, etc.)
+  //  main_hdr_px: big banner in the header
+  //  run_hdr_px: Run Details title
   // ---------------------------------------------------------------------
   "typography": {
     "font_family": "Arial,Helvetica,sans-serif",
@@ -224,6 +255,7 @@
 
   // ---------------------------------------------------------------------
   // STRINGS (user-visible labels)
+  // Rename any text here without changing the script.
   // ---------------------------------------------------------------------
   "strings": {
     "header": {
