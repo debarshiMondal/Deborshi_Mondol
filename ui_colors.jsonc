@@ -47,9 +47,9 @@
       "radius_px":       "4",                               // Table corner radius
       "pad_y_px":        "6",                               // Cell vertical padding
       "pad_x_px":        "8",                               // Cell horizontal padding
-      "border_color":    "#D0D7DE",                         // Row/divider border [Gray Blue 300/350] (from CSV: Generic chip/card border)
+      "border_color":    "#D0D7DE",                         // Row/divider border [Gray Blue 300/350]
       "row_zebra_even":  "#FFFFFF",                         // Even row background [White]
-      "row_zebra_odd":   "#FFFFFF"                          // Odd  row background [White] (CSV neutral row = white)
+      "row_zebra_odd":   "#FFFFFF"                          // Odd  row background [White]
     }
   },
 
@@ -59,82 +59,82 @@
   "header": {
     "success_bg": "#658354",                                // Top header bar when SUCCESS [Matte Green / desaturated fern]
     "failure_bg": "#A94442",                                // Top header bar when FAILURE [Rich Red]
-    "text":       "#FFFFFF"                                 // Top header bar text [White]
+    "text":       "#FFFFFF"                                 // Top header text [White]
   },
 
   "plate": {
     "page_bg":    "#F3F5F7",                                // Whole page background [Cloud Gray]
     "background": "#FFFFFF",                                // Card background [White]
-    "border":     "#D0D7DE"                                 // Card/outer border [Gray Blue 300/350] (CSV: Outer card border)
+    "border":     "#D0D7DE"                                 // Card/outer border [Gray Blue 300/350]
   },
 
   // Title strip inside the Run Details box (and used by code for other strips)
   "run_details": {
-    "title_bg_success":  "#146C43",                         // Section bar when SUCCESS [Cadence Green / deep emerald]
-    "title_bg_failure":  "#8D1B1B",                         // Section bar when FAILURE [Burgundy / dark red]
-    "title_text_success":"#FFFFFF",                         // Section bar text on SUCCESS [White]
-    "title_text_failure":"#FFFFFF"                          // Section bar text on FAILURE [White]
+    "title_bg_success":   "#146C43",                        // Section bar when SUCCESS [Deep Emerald]
+    "title_bg_failure":   "#8D1B1B",                        // Section bar when FAILURE [Burgundy]
+    "title_text_success": "#FFFFFF",                        // Section bar text on SUCCESS [White]
+    "title_text_failure": "#FFFFFF"                         // Section bar text on FAILURE [White]
   },
 
   // ─────────────────────────────────────────────────────────────────────────
   // CHIP SYSTEM: legacy + new per-chip configs and rules
   // ─────────────────────────────────────────────────────────────────────────
   "chips": {
-    // Legacy chip palettes used for Run Details metadata chips (exact CSV values)
-    "success_bg":   "#F0FFF4",                              // Chip background on SUCCESS [Mint White]
-    "failure_bg":   "#FDF2F2",                              // Chip background on FAILURE [Rosé 50]
-    "success_text": "#065F46",                              // Chip text on SUCCESS [Deep Green / pine]
-    "failure_text": "#7F1D1D",                              // Chip text on FAILURE [Dark Rose / mulberry]
+    // Legacy chip palette used for Run Details meta chips (exact CSV tones)
+    "success_bg":   "#F0FFF4",                              // Chip bg SUCCESS [Mint White]
+    "failure_bg":   "#FDF2F2",                              // Chip bg FAILURE [Rosé 50]
+    "success_text": "#065F46",                              // Chip text SUCCESS [Deep Green]
+    "failure_text": "#7F1D1D",                              // Chip text FAILURE [Dark Rose]
     "border":       "#D0D7DE",                              // Default chip border [Gray Blue 300/350]
 
-    // New: deployment status chip (JSONC-driven)
+    // JSONC-driven DEPLOYMENT chip
     "deployment": {
       "color_rules": [
         { "match_type": "text",  "match": "Succeeded", "label": "DEPLOYMENT",
-          "color": { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" } }, // Success → green (CSV DEPLOYMENT tile bg + green text)
+          "color": { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" } }, // Success → green [Mint 50 + Deep Green]
         { "match_type": "regex", "match": "(?i)warn|partial", "label": "DEPLOYMENT",
-          "color": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" } }, // Warning → amber (not in CSV; standard amber)
+          "color": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" } }, // Warning → amber [Amber 50/300]
         { "match_type": "regex", "match": "(?i)fail|error", "label": "DEPLOYMENT",
-          "color": { "bg": "#FEF2F2", "text": "#7F1D1D", "border": "#D0D7DE" } }  // Fail → red (CSV failure tile bg + red text)
+          "color": { "bg": "#FEF2F2", "text": "#7F1D1D", "border": "#D0D7DE" } }  // Fail → red [Rosé 50 + Dark Rose]
       ]
-      // "force_color": { "bg": "#111827", "text": "#FFFFFF", "border": "#111827" }, // Optional hard override
-      // "force_label": "DEPLOYMENT (OVERRIDE)"                                     // Optional label override
+      // "force_color": { "bg": "#111827", "text": "#FFFFFF", "border": "#111827" },
+      // "force_label": "DEPLOYMENT (OVERRIDE)"
     },
 
-    // New: PMD — CHANGESET chip rules (derive band by numeric high count)
+    // JSONC-driven PMD — CHANGESET chip (based on HIGH count)
     "pmd_changeset": {
       "color_rules": [
-        { "match_type": "regex", "match": "^0$",    "label": "PMD — CHANGESET",
-          "color": { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" } }, // 0 ⇒ green (CSV success green)
+        { "match_type": "regex", "match": "^0$", "label": "PMD — CHANGESET",
+          "color": { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" } }, // 0 ⇒ green
         { "match_type": "regex", "match": "^[1-2]$", "label": "PMD — CHANGESET",
-          "color": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" } }, // 1–2 ⇒ amber (not in CSV; standard amber)
+          "color": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" } }, // 1–2 ⇒ amber
         { "match_type": "regex", "match": "^[3-9]\\d*$", "label": "PMD — CHANGESET",
-          "color": { "bg": "#FFF0F0", "text": "#7F1D1D", "border": "#D0D7DE" } }  // ≥3 ⇒ red (CSV PMD tile bg + red text)
+          "color": { "bg": "#FFF0F0", "text": "#7F1D1D", "border": "#D0D7DE" } }  // ≥3 ⇒ red
       ]
     },
 
-    // New: duration chip rules (thresholds in milliseconds)
+    // JSONC-driven DURATION chip (thresholds in ms)
     "duration": {
-      "thresholds_ms": [ 300000, 600000 ],                 // 5m ok, 10m warn (editable)
+      "thresholds_ms": [ 300000, 600000 ],                  // 5m ok, 10m warn
       "colors": {
-        "ok":   { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" }, // OK → green (CSV success green)
-        "warn": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" }, // WARN → amber (not in CSV; standard amber)
-        "fail": { "bg": "#FEF2F2", "text": "#7F1D1D", "border": "#D0D7DE" }  // FAIL → red (CSV failure red)
+        "ok":   { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" }, // OK → green
+        "warn": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" }, // WARN → amber
+        "fail": { "bg": "#FEF2F2", "text": "#7F1D1D", "border": "#D0D7DE" }  // FAIL → red
       }
-      // "force_color": { "bg": "#111827", "text": "#FFFFFF", "border": "#111827" }, // Optional hard override
-      // "force_label": "DURATION (OVERRIDE)"                                      // Optional label override
+      // "force_color": { "bg": "#111827", "text": "#FFFFFF", "border": "#111827" },
+      // "force_label": "DURATION (OVERRIDE)"
     }
   },
 
   // ─────────────────────────────────────────────────────────────────────────
-  // QUICK LINKS: 4 tiles under Run Details (all use your CSV blue)
+  // QUICK LINKS: 4 tiles under Run Details (CSV blue)
   // ─────────────────────────────────────────────────────────────────────────
   "quick_links": {
-    "tile_1_bg": "#2E4CA4",                                 // Tile background [Cadence Blue] (Open Logs)
-    "tile_2_bg": "#2E4CA4",                                 // Tile background [Cadence Blue] (Original PMD Report)
-    "tile_3_bg": "#2E4CA4",                                 // Tile background [Cadence Blue] (TMD High Patterns)
-    "tile_4_bg": "#2E4CA4",                                 // Tile background [Cadence Blue] (ForceDeploy)
-    "text":     "#FFFFFF",                                  // Tile label text [White]
+    "tile_1_bg": "#2E4CA4",                                 // Tile bg [Cadence Blue] (Open Logs)
+    "tile_2_bg": "#2E4CA4",                                 // Tile bg [Cadence Blue] (Original PMD Report)
+    "tile_3_bg": "#2E4CA4",                                 // Tile bg [Cadence Blue] (TMD High Patterns)
+    "tile_4_bg": "#2E4CA4",                                 // Tile bg [Cadence Blue] (ForceDeploy)
+    "text":     "#FFFFFF",                                  // Tile text [White]
     "gap_px":   "6"                                         // Space between tiles (px)
   },
 
@@ -142,26 +142,26 @@
   // STATUS SUMMARY (3 tiles): DEPLOYMENT / PMD — CHANGESET / DURATION
   // ─────────────────────────────────────────────────────────────────────────
   "status_summary": {
-    "title_text": "#1F2937",                                // Section small title [Slate 800 / near-black]
+    "title_text": "#1F2937",                                // Section title [Slate 800]
     "label_text": "#374151",                                // Tile label text [Slate 700]
-    "value_text": "#1F2937",                                // Generic value text [Slate 800]
+    "value_text": "#1F2937",                                // Value text [Slate 800]
     "corner_radius": "6",                                   // Tile radius (px)
 
-    // DEPLOYMENT tile backgrounds by result
-    "deployment_success_bg": "#ECFDF5",                     // DEPLOYMENT tile bg (success) [Mint Green 50]
-    "deployment_failure_bg": "#FEF2F2",                     // DEPLOYMENT tile bg (failure) [Rosé 50]
-    "deployment_label_success": "#374151",                  // DEPLOYMENT label text (success) [Slate 700]
-    "deployment_value_success": "#065F46",                  // DEPLOYMENT value text (success) [Deep Green]
-    "deployment_label_failure": "#7F1D1D",                  // DEPLOYMENT label text (failure) [Dark Rose]
-    "deployment_value_failure": "#7F1D1D",                  // DEPLOYMENT value text (failure) [Dark Rose]
+    // DEPLOYMENT tile (fallback bgs; chips above usually drive colors)
+    "deployment_success_bg": "#ECFDF5",                     // Success bg [Mint 50]
+    "deployment_failure_bg": "#FEF2F2",                     // Failure bg [Rosé 50]
+    "deployment_label_success": "#374151",                  // Success label [Slate 700]
+    "deployment_value_success": "#065F46",                  // Success value [Deep Green]
+    "deployment_label_failure": "#7F1D1D",                  // Failure label [Dark Rose]
+    "deployment_value_failure": "#7F1D1D",                  // Failure value [Dark Rose]
 
-    // PMD — CHANGESET tile (static)
-    "pmd_bg": "#FFF0F0",                                    // PMD tile bg [Rosé Tint]
-    "pmd_text": "#7F1D1D",                                  // PMD high-value emphasis [Dark Rose]
+    // PMD — CHANGESET tile (static accent)
+    "pmd_bg":   "#FFF0F0",                                  // PMD bg [Rosé Tint]
+    "pmd_text": "#7F1D1D",                                  // PMD text [Dark Rose]
 
-    // DURATION tile (static)
-    "time_bg":  "#EEF2FF",                                  // Duration tile bg [Indigo 50]
-    "time_text":"#1D4ED8"                                   // Duration value text [Blue 700]
+    // DURATION tile (static accent)
+    "time_bg":   "#EEF2FF",                                 // Duration bg [Indigo 50]
+    "time_text": "#1D4ED8"                                  // Duration text [Blue 700]
   },
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -169,11 +169,11 @@
   // ─────────────────────────────────────────────────────────────────────────
   "tables": {
     "pmd_review": {
-      "header_bg":    "#0B1B3A",                            // Table header strip [Navy Night]
-      "header_text":  "#FFFFFF",                            // Table header text  [White]
-      "row_border":   "#1E293B",                            // Table line/border  [Slate 800] (CSV: header strip border)
-      "row_zebra_even":"#FFFFFF",                           // Table rows even    [White] (CSV neutral row)
-      "row_zebra_odd": "#FFFFFF"                            // Table rows odd     [White] (CSV neutral row)
+      "header_bg":     "#0B1B3A",                           // Table header strip [Navy Night]
+      "header_text":   "#FFFFFF",                           // Table header text [White]
+      "row_border":    "#1E293B",                           // Row/border [Slate 800]
+      "row_zebra_even":"#FFFFFF",                           // Even row [White]
+      "row_zebra_odd": "#FFFFFF"                            // Odd row  [White]
     }
   },
 
@@ -182,99 +182,115 @@
   // ─────────────────────────────────────────────────────────────────────────
   "sections": {
     "pmd_review": {
-      "title": "PMD Review",                                // The “PMD Review” section heading text
+      "title": "PMD Review",                                // “PMD Review” heading
       "typography": {
-        "title_px":  "12",                                  // PMD Review title size (px)
-        "header_px": "11",                                  // Table header font size (px)
-        "cell_px":   "10"                                   // Table cell font size (px)
+        "title_px":  "12",                                  // Title size (px)
+        "header_px": "11",                                  // Table header size (px)
+        "cell_px":   "10"                                   // Table cell size (px)
       },
-      // Optional per-section palette overrides (kept equal to CSV values)
+      // Optional per-section palette overrides (kept in sync with table)
       "palette": {
-        "header_bg":       "#0B1B3A",                       // Override: header strip [Navy Night]
-        "header_text":     "#FFFFFF",                       // Override: header text [White]
-        "row_border":      "#1E293B",                       // Override: line/border [Slate 800]
-        "row_zebra_even":  "#FFFFFF",                       // Override: zebra even [White]
-        "row_zebra_odd":   "#FFFFFF"                        // Override: zebra odd  [White]
+        "header_bg":       "#0B1B3A",                       // Header strip [Navy Night]
+        "header_text":     "#FFFFFF",                       // Header text [White]
+        "row_border":      "#1E293B",                       // Border [Slate 800]
+        "row_zebra_even":  "#FFFFFF",                       // Zebra even [White]
+        "row_zebra_odd":   "#FFFFFF"                        // Zebra odd  [White]
       },
 
-      // Column order/visibility — can hide by setting "show": false
+      // Column order/visibility — set "show": false to hide
       "table": {
         "columns": [
-          { "key": "name",           "label": "NAME",             "align": "left",  "width": "35%", "show": true  }, // File/class/trigger name
-          { "key": "original_pair",  "label": "ORIGINAL (HIGH)",  "align": "right", "width": "15%", "show": true  }, // Original total-(high)
-          { "key": "current_pair",   "label": "CURRENT (HIGH)",   "align": "right", "width": "15%", "show": true  }, // Current  total-(high)
-          { "key": "delta_high",     "label": "Δ HIGH",           "align": "right", "width": "10%", "show": true  }, // Delta badge
-          { "key": "author",         "label": "AUTHOR",           "align": "left",  "width": "25%", "show": true  }  // Git author
-          // Extra columns supported by the function (set show: true to enable):
-          // { "key": "original_total", "label": "ORIGINAL (TOTAL)", "align": "right", "width": "10%", "show": false },
-          // { "key": "original_high",  "label": "ORIGINAL (HIGH)",  "align": "right", "width": "10%", "show": false },
-          // { "key": "current_total",  "label": "CURRENT (TOTAL)",  "align": "right", "width": "10%", "show": false },
-          // { "key": "current_high",   "label": "CURRENT (HIGH)",   "align": "right", "width": "10%", "show": false }
+          { "key": "name",           "label": "NAME",             "align": "left",  "width": "35%", "show": true  },
+          { "key": "original_pair",  "label": "ORIGINAL (HIGH)",  "align": "right", "width": "15%", "show": true  },
+          { "key": "current_pair",   "label": "CURRENT (HIGH)",   "align": "right", "width": "15%", "show": true  },
+          { "key": "delta_high",     "label": "Δ HIGH",           "align": "right", "width": "10%", "show": true  },
+          { "key": "author",         "label": "AUTHOR",           "align": "left",  "width": "25%", "show": true  }
         ]
       }
     }
   },
 
   // ─────────────────────────────────────────────────────────────────────────
-  // PMD REVIEW EXTRAS: legend, row states, links (from CSV rows)
+  // PMD REVIEW EXTRAS: legend, row states, links (CSV-aligned)
   // ─────────────────────────────────────────────────────────────────────────
   "pmd_review": {
-    "legend_red_bg":        "#FFEFEF",                      // Legend swatch (regression) [Rosé 100]
-    "legend_red_border":    "#F5BCBC",                      // Legend border (approx) [Soft red] (CSV didn’t specify; kept prior soft tone)
-    "legend_green_bg":      "#F0FFF4",                      // Legend swatch (improvement/success) [Mint White]
-    "legend_green_border":  "#A7F3D0",                      // Legend border (approx mint) [Mint border]
-    "legend_neutral_bg":    "#FFFFFF",                      // Legend swatch (neutral) [White]
-    "legend_neutral_border":"#D0D7DE",                      // Legend border (neutral) [Gray Blue 300/350]
+    // Legend swatches
+    "legend_red_bg":         "#FFEFEF",                     // Regression legend bg [Rosé 100]
+    "legend_red_border":     "#F5BCBC",                     // Regression legend border [Soft Red]
+    "legend_green_bg":       "#F0FFF4",                     // Improvement legend bg [Mint White]
+    "legend_green_border":   "#A7F3D0",                     // Improvement legend border [Mint Border]
+    "legend_neutral_bg":     "#FFFFFF",                     // Neutral legend bg [White]
+    "legend_neutral_border": "#D0D7DE",                     // Neutral legend border [Gray Blue 300/350]
 
-    "delta_reg_bg":         "#FFE3E3",                      // Δ pill background (regression) [Rosé 150]
-    "delta_reg_border":     "#F5BCBC",                      // Δ pill border (regression) [Soft red]
-    "delta_reg_text":       "#B91C1C",                      // Δ pill text (regression) [Bright Red]
+    // Δ pill colors (REGRESSION / IMPROVEMENT / NEUTRAL)
+    "delta_reg_bg":          "#FFE3E3",                     // Δ>0 bg [Rosé 150]
+    "delta_reg_border":      "#F5BCBC",                     // Δ>0 border [Soft Red]
+    "delta_reg_text":        "#B91C1C",                     // Δ>0 text [Bright Red]
 
-    "delta_imp_success_bg": "#F0FFF4",                      // Δ pill background (improvement when SUCCESS) [Mint White]
-    "delta_imp_success_border":"#A7F3D0",                   // Δ pill border (improvement SUCCESS) [Mint border]
-    "delta_imp_success_text":"#065F46",                     // Δ pill text (improvement SUCCESS) [Deep Green]
+    // ✅ Added generic keys the function expects (map to “success/green” tones)
+    "delta_imp_bg":          "#F0FFF4",                     // Δ<0 bg (generic) [Mint White]
+    "delta_imp_border":      "#A7F3D0",                     // Δ<0 border (generic) [Mint Border]
+    "delta_imp_text":        "#065F46",                     // Δ<0 text (generic) [Deep Green]
 
-    "delta_imp_failure_bg": "#FDF2F2",                      // Δ pill background (improvement when FAILURE) [Rosé 50]
-    "delta_imp_failure_border":"#FECACA",                   // Δ pill border (improvement FAILURE) [Rosé 300]
-    "delta_imp_failure_text":"#7F1D1D",                     // Δ pill text (improvement FAILURE) [Dark Rose]
+    // (We still keep the variants in case you want per-result overrides later)
+    "delta_imp_success_bg":     "#F0FFF4",                  // Δ<0 bg on SUCCESS [Mint White]
+    "delta_imp_success_border": "#A7F3D0",                  // Δ<0 border on SUCCESS [Mint Border]
+    "delta_imp_success_text":   "#065F46",                  // Δ<0 text on SUCCESS [Deep Green]
+    "delta_imp_failure_bg":     "#FDF2F2",                  // Δ<0 bg on FAILURE [Rosé 50]
+    "delta_imp_failure_border": "#FECACA",                  // Δ<0 border on FAILURE [Rosé 300]
+    "delta_imp_failure_text":   "#7F1D1D",                  // Δ<0 text on FAILURE [Dark Rose]
 
-    "neutral_left_stripe":  "#D0D7DE",                      // Left stripe for neutral rows [Gray Blue 300/350]
-    "regression_row_bg":    "#FFEFEF",                      // Row background when Δ>0 [Rosé 100]
-    "regression_left_stripe":"#B91C1C",                     // Left stripe when Δ>0 [Bright Red] (uses CSV high text)
-    "improve_success_row_bg":"#F0FFF4",                     // Row background (improvement on SUCCESS) [Mint White]
-    "improve_success_left_stripe":"#065F46",                // Left stripe (improvement SUCCESS) [Deep Green]
-    "improve_success_text": "#065F46",                      // Row text (improvement SUCCESS) [Deep Green]
-    "improve_failure_row_bg":"#FDF2F2",                     // Row background (improvement on FAILURE) [Rosé 50]
-    "improve_failure_left_stripe":"#7F1D1D",                // Left stripe (improvement FAILURE) [Dark Rose]
-    "improve_failure_text":"#7F1D1D",                       // Row text (improvement FAILURE) [Dark Rose]
+    // ✅ Generic NEUTRAL delta (already used by function; kept explicit)
+    "delta_neutral_bg":      "#EEEEEE",                     // Δ=0 bg [Light Gray]
+    "delta_neutral_border":  "#DDDDDD",                     // Δ=0 border [Gray]
+    "delta_neutral_text":    "#444444",                     // Δ=0 text [Charcoal]
 
-    "link_normal": "#0A58CA",                               // Regular inline link color [Blue link]
-    "link_high":   "#B91C1C",                               // Link color for “high” emphasis [Bright Red]
-    "text_high":   "#B91C1C",                               // Text color for “regression/high” rows [Bright Red]
-    "text_normal": "#1F2937"                                // Text color for neutral rows [Slate 800]
+    // Row left stripe + row backgrounds
+    "neutral_left_stripe":   "#D0D7DE",                     // Neutral row left stripe [Gray Blue 300/350]
+    "regression_row_bg":     "#FFEFEF",                     // Δ>0 row bg [Rosé 100]
+    "regression_left_stripe":"#B91C1C",                     // Δ>0 left stripe [Bright Red]
+
+    // ✅ Added generic IMPROVEMENT row keys the function expects
+    "improvement_row_bg":       "#F0FFF4",                  // Δ<0 row bg (generic) [Mint White]
+    "improvement_left_stripe":  "#065F46",                  // Δ<0 left stripe (generic) [Deep Green]
+    "improvement_text":         "#065F46",                  // Δ<0 row text (generic) [Deep Green]
+
+    // (We still keep the explicit “success/failure” improvement variants)
+    "improve_success_row_bg":    "#F0FFF4",                 // Δ<0 row bg on SUCCESS [Mint White]
+    "improve_success_left_stripe":"#065F46",                // Δ<0 left stripe on SUCCESS [Deep Green]
+    "improve_success_text":      "#065F46",                 // Δ<0 text on SUCCESS [Deep Green]
+    "improve_failure_row_bg":    "#FDF2F2",                 // Δ<0 row bg on FAILURE [Rosé 50]
+    "improve_failure_left_stripe":"#7F1D1D",                // Δ<0 left stripe on FAILURE [Dark Rose]
+    "improve_failure_text":      "#7F1D1D",                 // Δ<0 text on FAILURE [Dark Rose]
+
+    // Links & text
+    "link_normal": "#0A58CA",                               // Normal link [Blue Link]
+    "link_high":   "#B91C1C",                               // High emphasis link [Bright Red]
+    "text_high":   "#B91C1C",                               // High/regression text [Bright Red]
+    "text_normal": "#1F2937"                                // Neutral row text [Slate 800]
   },
 
   // ─────────────────────────────────────────────────────────────────────────
-  // CHANGESET LIST COLORS (succeeded/failed lists)
+  // CHANGESET LIST COLORS (success/failure lists)
   // ─────────────────────────────────────────────────────────────────────────
   "success_section": {
-    "file_row_bg":      "#F8FAFC",                          // Title row background (success list) [Blue Gray 50]
-    "file_row_border":  "#D0D7DE",                          // Title row border (success list) [Gray Blue 300/350]
-    "author_row_bg":    "#FFFFFF",                          // Details row background (success list) [White]
-    "author_row_border":"#D0D7DE",                          // Details row border (success list) [Gray Blue 300/350]
-    "title_text":       "#065F46"                           // Section title text (success) [Deep Green]
+    "file_row_bg":       "#F8FAFC",                         // File row bg [Blue Gray 50]
+    "file_row_border":   "#D0D7DE",                         // File row border [Gray Blue 300/350]
+    "author_row_bg":     "#FFFFFF",                         // Author row bg [White]
+    "author_row_border": "#D0D7DE",                         // Author row border [Gray Blue 300/350]
+    "title_text":        "#065F46"                          // Section title [Deep Green]
   },
 
   "failure_section": {
-    "error_row_bg":      "#FFF1F2",                         // Title row background (failure list) [Rosé 75]
-    "error_row_border":  "#FECACA",                         // Title row border (failure list) [Rosé 300]
-    "author_row_bg":     "#FFFFFF",                         // Details row background (failure list) [White]
-    "author_row_border": "#D0D7DE",                         // Details row border (failure list) [Gray Blue 300/350]
-    "title_text":        "#7F1D1D"                          // Section title text (failure) [Dark Rose]
+    "error_row_bg":       "#FFF1F2",                        // Error row bg [Rosé 75]
+    "error_row_border":   "#FECACA",                        // Error row border [Rosé 300]
+    "author_row_bg":      "#FFFFFF",                        // Author row bg [White]
+    "author_row_border":  "#D0D7DE",                        // Author row border [Gray Blue 300/350]
+    "title_text":         "#7F1D1D"                         // Section title [Dark Rose]
   },
 
   // ─────────────────────────────────────────────────────────────────────────
-  // FOOTER (CSV shows a light slate footer under the card)
+  // FOOTER
   // ─────────────────────────────────────────────────────────────────────────
   "footer": {
     "bg":   "#F1F5F9",                                      // Footer background [Slate 100]
@@ -287,12 +303,12 @@
   // ─────────────────────────────────────────────────────────────────────────
   "formatters": {
     "duration": "h:mm:ss",                                  // Duration format (h:mm:ss)
-    "percent":  "0.0%",                                     // Reserved (for future % formatting)
-    "number":   "#,##0"                                     // Reserved (for future number formatting)
+    "percent":  "0.0%",                                     // Reserved for future use
+    "number":   "#,##0"                                     // Reserved for future use
   },
 
   // ─────────────────────────────────────────────────────────────────────────
-  // STRINGS & ICONS (icons provided to avoid WARNs; edit to taste)
+  // STRINGS & ICONS (to avoid WARNs; edit to taste)
   // ─────────────────────────────────────────────────────────────────────────
   "strings": {
     "header": {
@@ -320,9 +336,9 @@
       "success_title":   "Changeset file/s ..."             // Success list heading
     },
     "icons": {
-      "deployment":   "✅",                                  // Optional icon for DEPLOYMENT tile
-      "pmd_changeset":"🧩",                                  // Optional icon for PMD tile
-      "duration":     "⏱️"                                  // Optional icon for Duration tile
+      "deployment":   "✅",                                  // Icon for DEPLOYMENT tile
+      "pmd_changeset":"🧩",                                  // Icon for PMD tile
+      "duration":     "⏱️"                                  // Icon for Duration tile
     },
     "quick_links": {
       "tile_1": "Open Logs",                                // Quick link text
