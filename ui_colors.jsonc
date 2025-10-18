@@ -1,194 +1,211 @@
 {
-  //////////////////////////////////////////////////////////////////////////////
-  // ui_colors.jsonc — FULLY ANNOTATED (compatible with old + new function)
-  //////////////////////////////////////////////////////////////////////////////
-  // SCHEMA NOTES:
-  // - meta.schema_version: required.
-  // - typography: global font family, sizes, weights, and line-heights.
-  // - components.*: primitive tokens for chips/tables (radius, padding, gaps).
-  // - header/plate/run_details: banner + card colors (includes legacy keys).
-  // - chips.*: per-chip config with color_rules (deployment, pmd_changeset),
-  //            numeric thresholds (duration), and optional force_* overrides.
-  // - quick_links: button backgrounds + labels (tile_3 is “TMD High Patterns”).
-  // - status_summary: colors + radius; legacy tile-bg keys retained.
-  // - tables.pmd_review + sections.pmd_review: allow per-section palette,
-  //   column order/visibility (columns[].show: false hides without breaking table).
-  // - pmd_review: legend colors, Δ pill colors, and row tints/stripes.
-  // - strings.*: all static labels + optional icons (✅ ⚠️ ⛔ etc.).
-  // - formatters: duration/percent/number formatting strings.
+  ////////////////////////////////////////////////////////////////////////////
+  // ui_colors.jsonc — HUMAN-READABLE THEME (every line explains usage)
+  ////////////////////////////////////////////////////////////////////////////
 
   "meta": {
-    "schema_version": "1"
+    "schema_version": "1"                                   // Version gate for runtime checks
   },
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // TYPOGRAPHY: global sizes + tunables the function reads
+  // ─────────────────────────────────────────────────────────────────────────
   "typography": {
-    "font_family": "Arial, Helvetica, sans-serif",
+    "font_family": "Arial, Helvetica, sans-serif",          // Global font stack
+
     "scale": {
-      "base_px": "10",          // Base body size (px)
-      "section_hdr_px": "11",   // Section headings
-      "main_hdr_px": "14",      // Top banner
-      "run_hdr_px": "11"        // “Run Details” bar title
+      "base_px":        "10",                               // Base body text size (px)
+      "section_hdr_px": "11",                               // Small section headers (px)
+      "main_hdr_px":    "14",                               // Big top header text (px)
+      "run_hdr_px":     "11"                                // “Run Details” bar text (px)
     },
+
     "weights": {
-      "normal": "400",
-      "bold": "700"
+      "normal": "400",                                      // Regular font weight
+      "bold":   "700"                                       // Emphasis font weight
     },
+
     "line_height": {
-      "base": "12px",
-      "header": "16px"
+      "base":   "12px",                                     // Body line-height (tight)
+      "header": "16px"                                      // Header line-height (tight)
     }
   },
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // PRIMITIVE TOKENS: shared paddings/radii/borders to get tiny gaps
+  // ─────────────────────────────────────────────────────────────────────────
   "components": {
     "chip": {
-      "radius_px": "4",
-      "pad_y_px": "6",
-      "pad_x_px": "8",
-      "gap_px": "6",
-      "border_color": "#d0d7de",
-      "border_width_px": "1"
+      "radius_px":       "4",                               // Chip corner radius
+      "pad_y_px":        "6",                               // Chip vertical padding
+      "pad_x_px":        "8",                               // Chip horizontal padding
+      "gap_px":          "6",                               // Gap between chips
+      "border_color":    "#D0D7DE",                         // Generic chip border [Gray Blue 300/350]
+      "border_width_px": "1"                                // Chip border width (px)
     },
     "table": {
-      "radius_px": "4",
-      "pad_y_px": "6",
-      "pad_x_px": "8",
-      "border_color": "#e5e7eb",
-      "row_zebra_even": "#ffffff",
-      "row_zebra_odd":  "#f7f7f7"
+      "radius_px":       "4",                               // Table corner radius
+      "pad_y_px":        "6",                               // Cell vertical padding
+      "pad_x_px":        "8",                               // Cell horizontal padding
+      "border_color":    "#D0D7DE",                         // Row/divider border [Gray Blue 300/350] (from CSV: Generic chip/card border)
+      "row_zebra_even":  "#FFFFFF",                         // Even row background [White]
+      "row_zebra_odd":   "#FFFFFF"                          // Odd  row background [White] (CSV neutral row = white)
     }
   },
 
-  // Top banner
+  // ─────────────────────────────────────────────────────────────────────────
+  // PAGE / HEADER / PLATE
+  // ─────────────────────────────────────────────────────────────────────────
   "header": {
-    "success_bg": "#146c43",   // dark emerald
-    "failure_bg": "#8d1b1b",   // dark red/burgundy
-    "text": "#ffffff"
+    "success_bg": "#658354",                                // Top header bar when SUCCESS [Matte Green / desaturated fern]
+    "failure_bg": "#A94442",                                // Top header bar when FAILURE [Rich Red]
+    "text":       "#FFFFFF"                                 // Top header bar text [White]
   },
 
-  // Page/card
   "plate": {
-    "page_bg":    "#f6f8fa",
-    "background": "#ffffff",
-    "border":     "#d0d7de"
+    "page_bg":    "#F3F5F7",                                // Whole page background [Cloud Gray]
+    "background": "#FFFFFF",                                // Card background [White]
+    "border":     "#D0D7DE"                                 // Card/outer border [Gray Blue 300/350] (CSV: Outer card border)
   },
 
-  // Run Details bar (supports old + new keys)
+  // Title strip inside the Run Details box (and used by code for other strips)
   "run_details": {
-    "strip_success_bg": "#146c43",
-    "strip_failure_bg": "#8d1b1b",
-    "title_text": "#ffffff",        // legacy
-    "title_bg_success": "#146c43",  // used by new function
-    "title_bg_failure": "#8d1b1b",
-    "title_text_success": "#ffffff",
-    "title_text_failure": "#ffffff"
+    "title_bg_success":  "#146C43",                         // Section bar when SUCCESS [Cadence Green / deep emerald]
+    "title_bg_failure":  "#8D1B1B",                         // Section bar when FAILURE [Burgundy / dark red]
+    "title_text_success":"#FFFFFF",                         // Section bar text on SUCCESS [White]
+    "title_text_failure":"#FFFFFF"                          // Section bar text on FAILURE [White]
   },
 
-  // CHIP SYSTEM (per-chip settings + legacy fallbacks)
+  // ─────────────────────────────────────────────────────────────────────────
+  // CHIP SYSTEM: legacy + new per-chip configs and rules
+  // ─────────────────────────────────────────────────────────────────────────
   "chips": {
-    "success_text": "#0f5132",   // deep green text (legacy fallback)
-    "failure_text": "#842029",   // deep maroon text (legacy fallback)
-    "border": "#d0d7de",
+    // Legacy chip palettes used for Run Details metadata chips (exact CSV values)
+    "success_bg":   "#F0FFF4",                              // Chip background on SUCCESS [Mint White]
+    "failure_bg":   "#FDF2F2",                              // Chip background on FAILURE [Rosé 50]
+    "success_text": "#065F46",                              // Chip text on SUCCESS [Deep Green / pine]
+    "failure_text": "#7F1D1D",                              // Chip text on FAILURE [Dark Rose / mulberry]
+    "border":       "#D0D7DE",                              // Default chip border [Gray Blue 300/350]
 
-    // DEPLOYMENT chip — match result text
+    // New: deployment status chip (JSONC-driven)
     "deployment": {
       "color_rules": [
-        { "match_type": "text",  "match": "Succeeded",       "label": "DEPLOYMENT",
-          "color": { "bg": "#ecfdf5", "text": "#065f46", "border": "#a7f3d0" } },
-        { "match_type": "regex", "match": "(?i)warn|partial","label": "DEPLOYMENT",
-          "color": { "bg": "#fffbeb", "text": "#92400e", "border": "#fde68a" } },
-        { "match_type": "regex", "match": "(?i)fail|error",  "label": "DEPLOYMENT",
-          "color": { "bg": "#fef2f2", "text": "#7f1d1d", "border": "#fecaca" } }
+        { "match_type": "text",  "match": "Succeeded", "label": "DEPLOYMENT",
+          "color": { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" } }, // Success → green (CSV DEPLOYMENT tile bg + green text)
+        { "match_type": "regex", "match": "(?i)warn|partial", "label": "DEPLOYMENT",
+          "color": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" } }, // Warning → amber (not in CSV; standard amber)
+        { "match_type": "regex", "match": "(?i)fail|error", "label": "DEPLOYMENT",
+          "color": { "bg": "#FEF2F2", "text": "#7F1D1D", "border": "#D0D7DE" } }  // Fail → red (CSV failure tile bg + red text)
       ]
-      // "force_color": { "bg": "#111827", "text": "#ffffff", "border": "#111827" },
-      // "force_label": "DEPLOYMENT (OVERRIDE)"
+      // "force_color": { "bg": "#111827", "text": "#FFFFFF", "border": "#111827" }, // Optional hard override
+      // "force_label": "DEPLOYMENT (OVERRIDE)"                                     // Optional label override
     },
 
-    // PMD — CHANGESET chip — classify by total HIGH count
+    // New: PMD — CHANGESET chip rules (derive band by numeric high count)
     "pmd_changeset": {
       "color_rules": [
-        { "match_type": "regex", "match": "^0$",     "label": "PMD — CHANGESET",
-          "color": { "bg": "#ecfdf5", "text": "#065f46", "border": "#a7f3d0" } },
+        { "match_type": "regex", "match": "^0$",    "label": "PMD — CHANGESET",
+          "color": { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" } }, // 0 ⇒ green (CSV success green)
         { "match_type": "regex", "match": "^[1-2]$", "label": "PMD — CHANGESET",
-          "color": { "bg": "#fffbeb", "text": "#92400e", "border": "#fde68a" } },
+          "color": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" } }, // 1–2 ⇒ amber (not in CSV; standard amber)
         { "match_type": "regex", "match": "^[3-9]\\d*$", "label": "PMD — CHANGESET",
-          "color": { "bg": "#fef2f2", "text": "#7f1d1d", "border": "#fecaca" } }
+          "color": { "bg": "#FFF0F0", "text": "#7F1D1D", "border": "#D0D7DE" } }  // ≥3 ⇒ red (CSV PMD tile bg + red text)
       ]
-      // "force_color": { "bg": "#111827", "text": "#ffffff", "border": "#111827" },
-      // "force_label": "PMD — CHANGESET (OVERRIDE)"
     },
 
-    // DURATION chip — thresholds in milliseconds
+    // New: duration chip rules (thresholds in milliseconds)
     "duration": {
-      "thresholds_ms": [ 300000, 600000 ], // <=5m ok, <=10m warn, else fail
+      "thresholds_ms": [ 300000, 600000 ],                 // 5m ok, 10m warn (editable)
       "colors": {
-        "ok":   { "bg": "#ecfdf5", "text": "#065f46", "border": "#a7f3d0" },
-        "warn": { "bg": "#fffbeb", "text": "#92400e", "border": "#fde68a" },
-        "fail": { "bg": "#fef2f2", "text": "#7f1d1d", "border": "#fecaca" }
+        "ok":   { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" }, // OK → green (CSV success green)
+        "warn": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" }, // WARN → amber (not in CSV; standard amber)
+        "fail": { "bg": "#FEF2F2", "text": "#7F1D1D", "border": "#D0D7DE" }  // FAIL → red (CSV failure red)
       }
-      // "force_color": { "bg": "#111827", "text": "#ffffff", "border": "#111827" },
-      // "force_label": "DURATION (OVERRIDE)"
+      // "force_color": { "bg": "#111827", "text": "#FFFFFF", "border": "#111827" }, // Optional hard override
+      // "force_label": "DURATION (OVERRIDE)"                                      // Optional label override
     }
   },
 
-  // Quick links (inside Run Details)
+  // ─────────────────────────────────────────────────────────────────────────
+  // QUICK LINKS: 4 tiles under Run Details (all use your CSV blue)
+  // ─────────────────────────────────────────────────────────────────────────
   "quick_links": {
-    "tile_1_bg": "#1f6feb",  // Open Logs
-    "tile_2_bg": "#0969da",  // Original PMD Report
-    "tile_3_bg": "#1750a7",  // TMD High Patterns
-    "tile_4_bg": "#0a3069",  // ForceDeploy
-    "text": "#ffffff",
-    "gap_px": "6"
+    "tile_1_bg": "#2E4CA4",                                 // Tile background [Cadence Blue] (Open Logs)
+    "tile_2_bg": "#2E4CA4",                                 // Tile background [Cadence Blue] (Original PMD Report)
+    "tile_3_bg": "#2E4CA4",                                 // Tile background [Cadence Blue] (TMD High Patterns)
+    "tile_4_bg": "#2E4CA4",                                 // Tile background [Cadence Blue] (ForceDeploy)
+    "text":     "#FFFFFF",                                  // Tile label text [White]
+    "gap_px":   "6"                                         // Space between tiles (px)
   },
 
-  // Status Summary (titles + legacy tile bgs)
+  // ─────────────────────────────────────────────────────────────────────────
+  // STATUS SUMMARY (3 tiles): DEPLOYMENT / PMD — CHANGESET / DURATION
+  // ─────────────────────────────────────────────────────────────────────────
   "status_summary": {
-    "title_text": "#111827",
-    "label_text": "#374151",
-    "value_text": "#111827",
-    "corner_radius": "6",
+    "title_text": "#1F2937",                                // Section small title [Slate 800 / near-black]
+    "label_text": "#374151",                                // Tile label text [Slate 700]
+    "value_text": "#1F2937",                                // Generic value text [Slate 800]
+    "corner_radius": "6",                                   // Tile radius (px)
 
-    // Legacy backgrounds retained for safety:
-    "deployment_success_bg": "#ecfdf5",
-    "deployment_failure_bg": "#fef2f2",
-    "pmd_bg": "#fff7ed",
-    "time_bg": "#eef2ff"
+    // DEPLOYMENT tile backgrounds by result
+    "deployment_success_bg": "#ECFDF5",                     // DEPLOYMENT tile bg (success) [Mint Green 50]
+    "deployment_failure_bg": "#FEF2F2",                     // DEPLOYMENT tile bg (failure) [Rosé 50]
+    "deployment_label_success": "#374151",                  // DEPLOYMENT label text (success) [Slate 700]
+    "deployment_value_success": "#065F46",                  // DEPLOYMENT value text (success) [Deep Green]
+    "deployment_label_failure": "#7F1D1D",                  // DEPLOYMENT label text (failure) [Dark Rose]
+    "deployment_value_failure": "#7F1D1D",                  // DEPLOYMENT value text (failure) [Dark Rose]
+
+    // PMD — CHANGESET tile (static)
+    "pmd_bg": "#FFF0F0",                                    // PMD tile bg [Rosé Tint]
+    "pmd_text": "#7F1D1D",                                  // PMD high-value emphasis [Dark Rose]
+
+    // DURATION tile (static)
+    "time_bg":  "#EEF2FF",                                  // Duration tile bg [Indigo 50]
+    "time_text":"#1D4ED8"                                   // Duration value text [Blue 700]
   },
 
-  // Table palettes (section-neutral)
+  // ─────────────────────────────────────────────────────────────────────────
+  // TABLE PALETTES (PMD Review)
+  // ─────────────────────────────────────────────────────────────────────────
   "tables": {
     "pmd_review": {
-      "header_bg": "#111827",
-      "header_text": "#ffffff",
-      "row_border": "#e5e7eb",
-      "row_zebra_even": "#ffffff",
-      "row_zebra_odd":  "#f7f7f7"
+      "header_bg":    "#0B1B3A",                            // Table header strip [Navy Night]
+      "header_text":  "#FFFFFF",                            // Table header text  [White]
+      "row_border":   "#1E293B",                            // Table line/border  [Slate 800] (CSV: header strip border)
+      "row_zebra_even":"#FFFFFF",                           // Table rows even    [White] (CSV neutral row)
+      "row_zebra_odd": "#FFFFFF"                            // Table rows odd     [White] (CSV neutral row)
     }
   },
 
-  // Sections (per-section overrides, columns, and typography)
+  // ─────────────────────────────────────────────────────────────────────────
+  // SECTION-SPECIFIC SETTINGS
+  // ─────────────────────────────────────────────────────────────────────────
   "sections": {
     "pmd_review": {
-      "title": "PMD Review",
+      "title": "PMD Review",                                // The “PMD Review” section heading text
       "typography": {
-        "title_px": "12",
-        "header_px": "11",
-        "cell_px": "10"
+        "title_px":  "12",                                  // PMD Review title size (px)
+        "header_px": "11",                                  // Table header font size (px)
+        "cell_px":   "10"                                   // Table cell font size (px)
       },
+      // Optional per-section palette overrides (kept equal to CSV values)
       "palette": {
-        "header_bg": "#111827",
-        "header_text": "#ffffff",
-        "row_border": "#e5e7eb",
-        "row_zebra_even": "#ffffff",
-        "row_zebra_odd":  "#f7f7f7"
+        "header_bg":       "#0B1B3A",                       // Override: header strip [Navy Night]
+        "header_text":     "#FFFFFF",                       // Override: header text [White]
+        "row_border":      "#1E293B",                       // Override: line/border [Slate 800]
+        "row_zebra_even":  "#FFFFFF",                       // Override: zebra even [White]
+        "row_zebra_odd":   "#FFFFFF"                        // Override: zebra odd  [White]
       },
+
+      // Column order/visibility — can hide by setting "show": false
       "table": {
         "columns": [
-          { "key": "name",          "label": "NAME",            "align": "left",  "width": "35%", "show": true  },
-          { "key": "original_pair", "label": "ORIGINAL (HIGH)", "align": "right", "width": "15%", "show": true  },
-          { "key": "current_pair",  "label": "CURRENT (HIGH)",  "align": "right", "width": "15%", "show": true  },
-          { "key": "delta_high",    "label": "Δ HIGH",          "align": "right", "width": "10%", "show": true  },
-          { "key": "author",        "label": "AUTHOR",          "align": "left",  "width": "25%", "show": true  }
-          // Optional extras:
+          { "key": "name",           "label": "NAME",             "align": "left",  "width": "35%", "show": true  }, // File/class/trigger name
+          { "key": "original_pair",  "label": "ORIGINAL (HIGH)",  "align": "right", "width": "15%", "show": true  }, // Original total-(high)
+          { "key": "current_pair",   "label": "CURRENT (HIGH)",   "align": "right", "width": "15%", "show": true  }, // Current  total-(high)
+          { "key": "delta_high",     "label": "Δ HIGH",           "align": "right", "width": "10%", "show": true  }, // Delta badge
+          { "key": "author",         "label": "AUTHOR",           "align": "left",  "width": "25%", "show": true  }  // Git author
+          // Extra columns supported by the function (set show: true to enable):
           // { "key": "original_total", "label": "ORIGINAL (TOTAL)", "align": "right", "width": "10%", "show": false },
           // { "key": "original_high",  "label": "ORIGINAL (HIGH)",  "align": "right", "width": "10%", "show": false },
           // { "key": "current_total",  "label": "CURRENT (TOTAL)",  "align": "right", "width": "10%", "show": false },
@@ -198,117 +215,120 @@
     }
   },
 
-  // PMD Review extras (legend, stripes, links, Δ pills)
+  // ─────────────────────────────────────────────────────────────────────────
+  // PMD REVIEW EXTRAS: legend, row states, links (from CSV rows)
+  // ─────────────────────────────────────────────────────────────────────────
   "pmd_review": {
-    // Duplicate header keys for older scripts:
-    "header_bg":   "#111827",
-    "header_text": "#ffffff",
-    "row_border":  "#e5e7eb",
+    "legend_red_bg":        "#FFEFEF",                      // Legend swatch (regression) [Rosé 100]
+    "legend_red_border":    "#F5BCBC",                      // Legend border (approx) [Soft red] (CSV didn’t specify; kept prior soft tone)
+    "legend_green_bg":      "#F0FFF4",                      // Legend swatch (improvement/success) [Mint White]
+    "legend_green_border":  "#A7F3D0",                      // Legend border (approx mint) [Mint border]
+    "legend_neutral_bg":    "#FFFFFF",                      // Legend swatch (neutral) [White]
+    "legend_neutral_border":"#D0D7DE",                      // Legend border (neutral) [Gray Blue 300/350]
 
-    // Legend colors
-    "legend_red_bg":     "#ffefef",
-    "legend_red_border": "#f5bcbc",
-    "legend_green_bg":   "#ecfdf5",
-    "legend_green_border":"#a7f3d0",
-    "legend_neutral_bg": "#ffffff",
-    "legend_neutral_border": "#dddddd",
+    "delta_reg_bg":         "#FFE3E3",                      // Δ pill background (regression) [Rosé 150]
+    "delta_reg_border":     "#F5BCBC",                      // Δ pill border (regression) [Soft red]
+    "delta_reg_text":       "#B91C1C",                      // Δ pill text (regression) [Bright Red]
 
-    // Δ pill colors
-    "delta_reg_bg": "#ffe3e3",
-    "delta_reg_border": "#f5bcbc",
-    "delta_reg_text": "#b71c1c",
+    "delta_imp_success_bg": "#F0FFF4",                      // Δ pill background (improvement when SUCCESS) [Mint White]
+    "delta_imp_success_border":"#A7F3D0",                   // Δ pill border (improvement SUCCESS) [Mint border]
+    "delta_imp_success_text":"#065F46",                     // Δ pill text (improvement SUCCESS) [Deep Green]
 
-    "delta_imp_bg": "#ecfdf5",
-    "delta_imp_border": "#a7f3d0",
-    "delta_imp_text": "#065f46",
+    "delta_imp_failure_bg": "#FDF2F2",                      // Δ pill background (improvement when FAILURE) [Rosé 50]
+    "delta_imp_failure_border":"#FECACA",                   // Δ pill border (improvement FAILURE) [Rosé 300]
+    "delta_imp_failure_text":"#7F1D1D",                     // Δ pill text (improvement FAILURE) [Dark Rose]
 
-    "delta_neutral_bg": "#eeeeee",
-    "delta_neutral_border": "#dddddd",
-    "delta_neutral_text": "#444444",
+    "neutral_left_stripe":  "#D0D7DE",                      // Left stripe for neutral rows [Gray Blue 300/350]
+    "regression_row_bg":    "#FFEFEF",                      // Row background when Δ>0 [Rosé 100]
+    "regression_left_stripe":"#B91C1C",                     // Left stripe when Δ>0 [Bright Red] (uses CSV high text)
+    "improve_success_row_bg":"#F0FFF4",                     // Row background (improvement on SUCCESS) [Mint White]
+    "improve_success_left_stripe":"#065F46",                // Left stripe (improvement SUCCESS) [Deep Green]
+    "improve_success_text": "#065F46",                      // Row text (improvement SUCCESS) [Deep Green]
+    "improve_failure_row_bg":"#FDF2F2",                     // Row background (improvement on FAILURE) [Rosé 50]
+    "improve_failure_left_stripe":"#7F1D1D",                // Left stripe (improvement FAILURE) [Dark Rose]
+    "improve_failure_text":"#7F1D1D",                       // Row text (improvement FAILURE) [Dark Rose]
 
-    // Row stripes/tints
-    "neutral_left_stripe":   "#dcdcdc",
-    "regression_row_bg":     "#ffefef",
-    "regression_left_stripe":"#c62828",
-    "improvement_row_bg":    "#ecfdf5",
-    "improvement_left_stripe":"#2e7d32",
-    "improvement_text":      "#065f46",
-
-    // Links & text
-    "link_normal": "#0a58ca",
-    "link_high":   "#b91c1c",
-    "text_high":   "#b91c1c",
-    "text_normal": "#1f2937"
+    "link_normal": "#0A58CA",                               // Regular inline link color [Blue link]
+    "link_high":   "#B91C1C",                               // Link color for “high” emphasis [Bright Red]
+    "text_high":   "#B91C1C",                               // Text color for “regression/high” rows [Bright Red]
+    "text_normal": "#1F2937"                                // Text color for neutral rows [Slate 800]
   },
 
-  // Success / Failure lists
+  // ─────────────────────────────────────────────────────────────────────────
+  // CHANGESET LIST COLORS (succeeded/failed lists)
+  // ─────────────────────────────────────────────────────────────────────────
   "success_section": {
-    "file_row_bg":     "#f8fafc",
-    "file_row_border": "#d0d7de",
-    "author_row_bg":   "#ffffff",
-    "author_row_border":"#d0d7de",
-    "title_text":      "#065f46"
-  },
-  "failure_section": {
-    "error_row_bg":     "#fff1f2",
-    "error_row_border": "#fecaca",
-    "author_row_bg":    "#ffffff",
-    "author_row_border":"#d0d7de",
-    "title_text":       "#7f1d1d"
+    "file_row_bg":      "#F8FAFC",                          // Title row background (success list) [Blue Gray 50]
+    "file_row_border":  "#D0D7DE",                          // Title row border (success list) [Gray Blue 300/350]
+    "author_row_bg":    "#FFFFFF",                          // Details row background (success list) [White]
+    "author_row_border":"#D0D7DE",                          // Details row border (success list) [Gray Blue 300/350]
+    "title_text":       "#065F46"                           // Section title text (success) [Deep Green]
   },
 
-  // Footer
+  "failure_section": {
+    "error_row_bg":      "#FFF1F2",                         // Title row background (failure list) [Rosé 75]
+    "error_row_border":  "#FECACA",                         // Title row border (failure list) [Rosé 300]
+    "author_row_bg":     "#FFFFFF",                         // Details row background (failure list) [White]
+    "author_row_border": "#D0D7DE",                         // Details row border (failure list) [Gray Blue 300/350]
+    "title_text":        "#7F1D1D"                          // Section title text (failure) [Dark Rose]
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // FOOTER (CSV shows a light slate footer under the card)
+  // ─────────────────────────────────────────────────────────────────────────
   "footer": {
-    "bg": "#0b1020",
-    "text": "#e5e7eb",
+    "bg":   "#F1F5F9",                                      // Footer background [Slate 100]
+    "text": "#64748B",                                      // Footer text [Slate 500]
     "copyright_text": "© 2025 Cadence Design Systems, Inc. | SFDC Deployment Report generated by the Cadence DevOps Team"
   },
 
-  // Central formatters
+  // ─────────────────────────────────────────────────────────────────────────
+  // FORMATTERS (centralized)
+  // ─────────────────────────────────────────────────────────────────────────
   "formatters": {
-    "duration": "h:mm:ss",
-    "percent":  "0.0%",
-    "number":   "#,##0"
+    "duration": "h:mm:ss",                                  // Duration format (h:mm:ss)
+    "percent":  "0.0%",                                     // Reserved (for future % formatting)
+    "number":   "#,##0"                                     // Reserved (for future number formatting)
   },
 
-  // Strings, labels & icons
+  // ─────────────────────────────────────────────────────────────────────────
+  // STRINGS & ICONS (icons provided to avoid WARNs; edit to taste)
+  // ─────────────────────────────────────────────────────────────────────────
   "strings": {
     "header": {
-      "title_core": "Deployment",
-      "title_suffix": "Report",
-      "success_word": "Success",
-      "failure_word": "Failure"
+      "title_core":   "Deployment",                         // Header middle word
+      "title_suffix": "Report",                             // Header last word
+      "success_word": "Success",                            // Header success word
+      "failure_word": "Failure"                             // Header failure word
     },
-    "run_details": { "title": "Run Details" },
+    "run_details": {
+      "title": "Run Details"                                // Run Details strip title
+    },
     "chips": {
-      "repo": "REPO",
-      "branch": "BRANCH",
-      "request_id": "REQUEST ID",
-      "run_ist": "RUN (IST)",
-      "org_api": "ORG NAME + API",
-      "deploy_user": "DEPLOY USER"
+      "repo": "REPO", "branch": "BRANCH", "request_id": "REQUEST ID",
+      "run_ist": "RUN (IST)", "org_api": "ORG NAME + API", "deploy_user": "DEPLOY USER"
     },
     "sections": {
-      "status_summary": "Status Summary",
-      "deployment_tile": "DEPLOYMENT",
-      "pmd_tile": "PMD — CHANGESET",
-      "duration_tile": "DURATION",
-      "duration_start": "Start",
-      "duration_end": "End",
-      "pmd_review": "PMD Review",
-      "failure_title": "All Component Failures:",
-      "success_title": "Changeset file/s ..."
+      "status_summary": "Status Summary",                   // Title over status tiles
+      "deployment_tile": "DEPLOYMENT",                      // Tile caption
+      "pmd_tile":        "PMD — CHANGESET",                 // Tile caption
+      "duration_tile":   "DURATION",                        // Tile caption
+      "duration_start":  "Start",                           // Label inside duration tile
+      "duration_end":    "End",                             // Label inside duration tile
+      "pmd_review":      "PMD Review",                      // PMD Review section heading
+      "failure_title":   "All Component Failures:",         // Failure list heading
+      "success_title":   "Changeset file/s ..."             // Success list heading
     },
     "icons": {
-      "deployment": "",       // e.g., "✅ "
-      "pmd_changeset": "",    // e.g., "🧩 "
-      "duration": ""          // e.g., "⏱️ "
+      "deployment":   "✅",                                  // Optional icon for DEPLOYMENT tile
+      "pmd_changeset":"🧩",                                  // Optional icon for PMD tile
+      "duration":     "⏱️"                                  // Optional icon for Duration tile
     },
     "quick_links": {
-      "tile_1": "Open Logs",
-      "tile_2": "Original PMD Report",
-      "tile_3": "TMD High Patterns",
-      "tile_4": "ForceDeploy"
+      "tile_1": "Open Logs",                                // Quick link text
+      "tile_2": "Original PMD Report",                      // Quick link text
+      "tile_3": "TMD High Patterns",                        // Quick link text (requested)
+      "tile_4": "ForceDeploy"                               // Quick link text
     }
   }
 }
