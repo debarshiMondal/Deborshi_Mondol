@@ -1,8 +1,14 @@
-<13>Oct 18 14:15:45 SFDC_DEPLOY:[]: 
-<13>Oct 18 14:15:45 SFDC_DEPLOY:[]: [WARN] Missing key .strings.icons.deployment; using fallback []
-<13>Oct 18 14:15:45 SFDC_DEPLOY:[]: [WARN] Missing key .strings.icons.pmd_changeset; using fallback []
-<13>Oct 18 14:15:45 SFDC_DEPLOY:[]: [WARN] Missing key .strings.icons.duration; using fallback []
-<13>Oct 18 14:15:45 SFDC_DEPLOY:[]: [WARN] Missing color .chips.success_bg; using #f0fff4
-<13>Oct 18 14:15:45 SFDC_DEPLOY:[]: cp: cannot stat '/tmp/sbx.Changeset.log': No such file or directory
-<13>Oct 18 14:15:45 SFDC_DEPLOY:[]: cp: cannot stat 'CodeAnalyser/CodeAnalysisReport.html': No such file or directory
-<13>Oct 18 14:15:45 SFDC_DEPLOY:[]: cp: cannot stat 'build/sbx.forceDeploy.txt': No such file or directory
+18 14:31:06 SFDC_DEPLOY:[]: 
+<13>Oct 18 14:31:06 SFDC_DEPLOY:[]: 
+<13>Oct 18 14:31:06 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.delta_imp_bg; using #ecfdf5
+<13>Oct 18 14:31:06 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.delta_imp_border; using #a7f3d0
+<13>Oct 18 14:31:06 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.delta_imp_text; using #065f46
+<13>Oct 18 14:31:06 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.delta_neutral_bg; using #eeeeee
+<13>Oct 18 14:31:06 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.delta_neutral_border; using #dddddd
+<13>Oct 18 14:31:06 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.delta_neutral_text; using #444444
+<13>Oct 18 14:31:06 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.improvement_row_bg; using #ecfdf5
+<13>Oct 18 14:31:06 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.improvement_left_stripe; using #2e7d32
+<13>Oct 18 14:31:06 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.improvement_text; using #065f46
+<13>Oct 18 14:31:06 SFDC_DEPLOY:[]: cp: cannot stat '/tmp/sbx.Changeset.log': No such file or directory
+<13>Oct 18 14:31:06 SFDC_DEPLOY:[]: cp: cannot stat 'CodeAnalyser/CodeAnalysisReport.html': No such file or directory
+<13>Oct 18 14:31:06 SFDC_DEPLOY:[]: cp: cannot stat 'build/sbx.forceDeploy.txt': No such file or directory
