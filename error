@@ -1,3 +1,2 @@
-[codedev@vlsj-deploybox SFDC]$ bash build/script/deploySFDC_git_sfcli_2.0.sh -o sbx
-build/script/deploySFDC_git_sfcli_2.0.sh: line 1685: syntax error near unexpected token `<'
-build/script/deploySFDC_git_sfcli_2.0.sh: line 1685: `      echo "</tbody></table>" >>"$HTMLLog"'
+# BAD (inner quotes around 0 aren’t escaped)
+echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing="0" border="0" width="100%" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;\">" >>"$HTMLLog"
