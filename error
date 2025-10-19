@@ -1,2 +1,9 @@
-# BAD (inner quotes around 0 aren’t escaped)
-echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing="0" border="0" width="100%" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;\">" >>"$HTMLLog"
+<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.delta_imp_success_bg; using #ecfdf5
+<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.delta_imp_success_border; using #a7f3d0
+<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.delta_imp_success_text; using #065f46
+<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.improve_success_row_bg; using #ecfdf5
+<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.improve_success_left_stripe; using #065f46
+<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.improve_success_text; using #065f46
+<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: cp: cannot stat '/tmp/sbx.Changeset.log': No such file or directory
+<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: cp: cannot stat 'CodeAnalyser/CodeAnalysisReport.html': No such file or directory
+<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: cp: cannot stat 'build/sbx.forceDeploy.txt': No such file or directory
