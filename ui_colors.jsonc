@@ -1,215 +1,162 @@
 {
-  // ui_colors.jsonc — everything you asked for is controllable here:
-  // - All COLORS (per section + success/failure where applicable)
-  // - Typography (font family + sizes)
-  // - All static TEXT labels
-  // Notes: Every line explains what the key does. Color names are shown in (parentheses).
-
+  // Meta
   "meta": {
-    "schema_version": "1" // Version gate the script checks
+    "schema_version": "1" // version gate used by the script
   },
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // TYPOGRAPHY: global font family + sizes the script reads
-  // ─────────────────────────────────────────────────────────────────────────
+  // Typography (font + sizes)
   "typography": {
-    "font_family": "Arial, Helvetica, sans-serif", // Global font stack
-
+    "font_family": "Arial, Helvetica, sans-serif", // font stack
     "scale": {
-      "base_px":        "10", // Base body text size (px)
-      "section_hdr_px": "11", // Small section headers (px)
-      "main_hdr_px":    "14", // Top title bar text (px)
-      "run_hdr_px":     "11"  // “Run Details” strip title (px)
+      "base_px":        "10", // body size (px)
+      "section_hdr_px": "11", // small headers (px)
+      "main_hdr_px":    "14", // top title bar (px)
+      "run_hdr_px":     "11"  // “Run Details” bar (px)
     },
-
     "weights": {
-      "normal": "400",  // Regular font weight
-      "bold":   "700"   // Emphasis font weight
+      "normal": "400",  // normal weight
+      "bold":   "700"   // bold weight
     },
-
     "line_height": {
-      "base":   "12px", // Tight body line-height
-      "header": "16px"  // Tight header/strip line-height
+      "base":   "12px", // tight body LH
+      "header": "16px"  // tight header LH
     }
   },
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // PRIMITIVE TOKENS: thin borders + tiny paddings (Outlook-friendly)
-  // ─────────────────────────────────────────────────────────────────────────
-  "components": {
-    "chip": {
-      "radius_px":       "4",        // Chip corner radius
-      "pad_y_px":        "6",        // Chip vertical padding
-      "pad_x_px":        "8",        // Chip horizontal padding
-      "gap_px":          "6",        // Gap between chips
-      "border_color":    "#D0D7DE",  // Thin chip border (Gray-Blue 350)
-      "border_width_px": "1"         // 1px = “thin layer” look
-    },
-    "table": {
-      "radius_px":       "4",        // Table corner radius
-      "pad_y_px":        "6",        // Cell vertical padding
-      "pad_x_px":        "8",        // Cell horizontal padding
-      "border_color":    "#1E293B",  // Table row/divider borders (Slate 800) — from CSV header border
-      "row_zebra_even":  "#FFFFFF",  // Even row bg (White)
-      "row_zebra_odd":   "#FFFFFF"   // Odd row bg  (White) — CSV shows neutral rows white
-    }
-  },
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // PAGE / TITLE BAR / CARD CHROME
-  // ─────────────────────────────────────────────────────────────────────────
+  // Page shell + title bar
   "header": {
-    "success_bg": "#658354", // Title bar when SUCCESS (Matte Green / desaturated fern)
-    "failure_bg": "#A94442", // Title bar when FAILURE (Rich Red)
-    "text":       "#FFFFFF"  // Title bar text (White)
+    "success_bg": "#658354", // (Fern Green)
+    "failure_bg": "#A94442", // (Brick Red)
+    "text":       "#FFFFFF"  // (White)
   },
-
   "plate": {
-    "page_bg":    "#F3F5F7", // Whole page background (Cloud Gray from CSV)
-    "background": "#FFFFFF", // Card background (White)
-    "border":     "#D0D7DE"  // Card outer border (Gray-Blue 350)
+    "page_bg":    "#F3F5F7", // (Cloud Gray)
+    "background": "#FFFFFF", // (White)
+    "border":     "#D0D7DE"  // (Gray Blue 300)
   },
 
-  // Run Details strip: small colored bar inside the card (full width)
+  // Run Details title strip (success/failure)
   "run_details": {
-    "title_bg_success":   "#146C43", // Strip bg on SUCCESS (Deep Emerald)
-    "title_bg_failure":   "#8D1B1B", // Strip bg on FAILURE (Burgundy)
-    "title_text_success": "#FFFFFF", // Strip text on SUCCESS (White)
-    "title_text_failure": "#FFFFFF"  // Strip text on FAILURE (White)
+    "title_bg_success":   "#146C43", // (Deep Emerald)
+    "title_bg_failure":   "#8D1B1B", // (Burgundy)
+    "title_text_success": "#FFFFFF", // (White)
+    "title_text_failure": "#FFFFFF"  // (White)
   },
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // CHIPS: legacy backgrounds + JSONC-driven rules for status tiles
-  // ─────────────────────────────────────────────────────────────────────────
+  // Chip defaults (used by status tiles + fallbacks)
   "chips": {
-    // Legacy chip palette (used for the 6 info chips in Run Details)
-    "success_bg":   "#F0FFF4", // Chip bg when success context (Mint White)
-    "failure_bg":   "#FDF2F2", // Chip bg when failure context (Rose 50)
-    "success_text": "#065F46", // Chip text when success (Deep Pine Green)
-    "failure_text": "#7F1D1D", // Chip text when failure (Dark Rose)
-    "border":       "#D0D7DE", // Chip border (Gray-Blue 350)
+    "success_bg":   "#F0FFF4", // (Mint White)
+    "failure_bg":   "#FDF2F2", // (Rose 50)
+    "success_text": "#065F46", // (Pine Green)
+    "failure_text": "#7F1D1D", // (Dark Rose)
+    "border":       "#D0D7DE", // (Gray Blue 300)
 
-    // Deployment tile (Status Summary): color by value
+    // DEPLOYMENT chip rules
     "deployment": {
       "color_rules": [
         { "match_type": "text",  "match": "Succeeded", "label": "DEPLOYMENT",
-          "color": { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" } }, // Success → green (Mint 50 / Deep Green)
+          "color": { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" } }, // (Mint 50 / Pine / Gray 300)
         { "match_type": "regex", "match": "(?i)warn|partial", "label": "DEPLOYMENT",
-          "color": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" } }, // Warning → amber (Amber 50/400)
+          "color": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" } }, // (Amber 50 / Amber 800 / Amber 300)
         { "match_type": "regex", "match": "(?i)fail|error", "label": "DEPLOYMENT",
-          "color": { "bg": "#FEF2F2", "text": "#7F1D1D", "border": "#D0D7DE" } }  // Fail → red (Rose 50 / Dark Rose)
+          "color": { "bg": "#FEF2F2", "text": "#7F1D1D", "border": "#D0D7DE" } }  // (Rose 50 / Dark Rose / Gray 300)
       ]
-      // "force_color": { "bg": "#111827", "text": "#FFFFFF", "border": "#111827" }, // Optional override
-      // "force_label": "DEPLOYMENT (OVERRIDE)"                                     // Optional override
+      // "force_color": { "bg": "#111827", "text": "#FFFFFF", "border": "#111827" }, // optional override
+      // "force_label": "DEPLOYMENT (OVERRIDE)"
     },
 
-    // PMD — CHANGESET tile: color by numeric high count
+    // PMD — CHANGESET chip rules (by numeric high count)
     "pmd_changeset": {
       "color_rules": [
         { "match_type": "regex", "match": "^0$", "label": "PMD — CHANGESET",
-          "color": { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" } }, // 0 ⇒ green
+          "color": { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" } }, // (Mint / Pine / Gray 300)
         { "match_type": "regex", "match": "^[1-2]$", "label": "PMD — CHANGESET",
-          "color": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" } }, // 1–2 ⇒ amber
+          "color": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" } }, // (Amber / Amber 800 / Amber 300)
         { "match_type": "regex", "match": "^[3-9]\\d*$", "label": "PMD — CHANGESET",
-          "color": { "bg": "#FFF0F0", "text": "#7F1D1D", "border": "#D0D7DE" } }  // ≥3 ⇒ red (Rose tint)
+          "color": { "bg": "#FFF0F0", "text": "#7F1D1D", "border": "#D0D7DE" } }  // (Rose Tint / Dark Rose / Gray 300)
       ]
     },
 
-    // Duration tile: thresholds in milliseconds
+    // Duration chip thresholds (ms)
     "duration": {
-      "thresholds_ms": [ 300000, 600000 ], // OK ≤5m, WARN ≤10m, else FAIL
+      "thresholds_ms": [ 300000, 600000 ], // 5m ok, 10m warn
       "colors": {
-        "ok":   { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" }, // Green
-        "warn": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" }, // Amber
-        "fail": { "bg": "#FEF2F2", "text": "#7F1D1D", "border": "#D0D7DE" }  // Red
+        "ok":   { "bg": "#ECFDF5", "text": "#065F46", "border": "#D0D7DE" }, // (Mint / Pine / Gray 300)
+        "warn": { "bg": "#FFFBEB", "text": "#92400E", "border": "#FDE68A" }, // (Amber / Amber 800 / Amber 300)
+        "fail": { "bg": "#FEF2F2", "text": "#7F1D1D", "border": "#D0D7DE" }  // (Rose 50 / Dark Rose / Gray 300)
       }
-      // "force_color": { "bg": "#111827", "text": "#FFFFFF", "border": "#111827" }, // Optional override
-      // "force_label": "DURATION (OVERRIDE)"                                       // Optional override
+      // "force_color": { "bg": "#111827", "text": "#FFFFFF", "border": "#111827" },
+      // "force_label": "DURATION (OVERRIDE)"
     }
   },
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // QUICK LINKS: 3 blue CTAs + ForceDeploy (simple solid pills)
-  // ─────────────────────────────────────────────────────────────────────────
+  // Quick links (blue tiles row)
   "quick_links": {
-    "tile_1_bg": "#2E4CA4", // Open Logs button (Cadence Blue / Royal Blue)
-    "tile_2_bg": "#2E4CA4", // Original PMD Report button (same blue)
-    "tile_3_bg": "#2E4CA4", // TMD High Patterns button (same blue)
-    "tile_4_bg": "#2E4CA4", // ForceDeploy button (same blue)
-    "text":     "#FFFFFF",  // Button text (White)
-    "gap_px":   "6"         // Space between buttons (px)
+    "tile_1_bg": "#2E4CA4", // (Royal Blue)
+    "tile_2_bg": "#2E4CA4", // (Royal Blue)
+    "tile_3_bg": "#2E4CA4", // (Royal Blue) — TMD High Patterns
+    "tile_4_bg": "#2E4CA4", // (Royal Blue)
+    "text":     "#FFFFFF"   // (White)
   },
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // STATUS SUMMARY: 3 equal boxes (Deployment / PMD / Duration)
-  // ─────────────────────────────────────────────────────────────────────────
+  // Status Summary card (3 mini boxes)
   "status_summary": {
-    "title_text":  "#1F2937", // Small section title (Slate 800)
-    "label_text":  "#374151", // Mini-box label (Slate 700)
-    "value_text":  "#1F2937", // Generic values (Slate 800)
-    "corner_radius": "6",     // Mini-box radius (px)
+    "title_text": "#1F2937", // (Slate 800)
+    "label_text": "#374151", // (Slate 700)
+    "value_text": "#1F2937", // (Slate 800)
 
-    // Deployment tile backgrounds by outcome
-    "deployment_success_bg":   "#ECFDF5", // Success bg (Mint 50)
-    "deployment_failure_bg":   "#FEF2F2", // Failure bg (Rose 50)
-    "deployment_label_success": "#374151", // Success label (Slate 700)
-    "deployment_value_success": "#065F46", // Success value (Deep Green)
-    "deployment_label_failure": "#7F1D1D", // Failure label (Dark Rose)
-    "deployment_value_failure": "#7F1D1D", // Failure value (Dark Rose)
+    // Deployment tile bg by outcome
+    "deployment_success_bg": "#ECFDF5", // (Mint 50)
+    "deployment_failure_bg": "#FEF2F2", // (Rose 50)
+    "deployment_label_success": "#374151",  // (Slate 700)
+    "deployment_value_success": "#065F46",  // (Pine Green)
+    "deployment_label_failure": "#7F1D1D",  // (Dark Rose)
+    "deployment_value_failure": "#7F1D1D",  // (Dark Rose)
 
-    // PMD tile colors
-    "pmd_bg":   "#FFF0F0", // PMD tile background (Rose tint)
-    "pmd_text": "#7F1D1D", // PMD tile text (Dark Rose)
+    // PMD tile
+    "pmd_bg":   "#FFF0F0", // (Rose Tint)
+    "pmd_text": "#7F1D1D", // (Dark Rose)
 
-    // Duration tile colors
-    "time_bg":   "#EEF2FF", // Duration background (Indigo 50)
-    "time_text": "#1D4ED8"  // Duration text (Blue 700)
+    // Duration tile
+    "time_bg":  "#EEF2FF", // (Indigo 50)
+    "time_text":"#1D4ED8"  // (Blue 700)
   },
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // TABLE PALETTE: PMD Review tables (header + borders + zebras)
-  // ─────────────────────────────────────────────────────────────────────────
+  // Table palette for PMD Review
   "tables": {
     "pmd_review": {
-      "header_bg":     "#0B1B3A", // Table header strip (Navy Night)
-      "header_text":   "#FFFFFF", // Table header text (White)
-      "row_border":    "#1E293B", // Row separators / column borders (Slate 800)
-      "row_zebra_even":"#FFFFFF", // Even rows (White)
-      "row_zebra_odd": "#FFFFFF"  // Odd  rows (White)
+      "header_bg":     "#0B1B3A", // (Navy Night)
+      "header_text":   "#FFFFFF", // (White)
+      "row_border":    "#1E293B", // (Slate 800)
+      "row_zebra_even":"#FFFFFF", // (White)
+      "row_zebra_odd": "#FFFFFF"  // (White)
     }
   },
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // SECTION SETTINGS: PMD Review (title, palette overrides, columns)
-  // ─────────────────────────────────────────────────────────────────────────
+  // Section config (PMD Review title, fonts, columns, palette overrides)
   "sections": {
     "pmd_review": {
-      "title": "PMD Review", // Card title shown above the PMD tables
-
+      "title": "PMD Review", // card title text
       "typography": {
-        "title_px":  "12", // PMD card title size (px)
-        "header_px": "11", // Table header size (px)
-        "cell_px":   "10"  // Table body size (px)
+        "title_px":  "12", // title size (px)
+        "header_px": "11", // header font (px)
+        "cell_px":   "10"  // cell font (px)
       },
-
-      // Optional palette overrides (kept equal to table palette)
       "palette": {
-        "header_bg":       "#0B1B3A", // Header strip (Navy Night)
-        "header_text":     "#FFFFFF", // Header text (White)
-        "row_border":      "#1E293B", // Row/col borders (Slate 800)
-        "row_zebra_even":  "#FFFFFF", // Even rows (White)
-        "row_zebra_odd":   "#FFFFFF"  // Odd  rows (White)
+        "header_bg":      "#0B1B3A", // (Navy Night)
+        "header_text":    "#FFFFFF", // (White)
+        "row_border":     "#1E293B", // (Slate 800)
+        "row_zebra_even": "#FFFFFF", // (White)
+        "row_zebra_odd":  "#FFFFFF"  // (White)
       },
-
-      // Column order + visibility (hide by setting "show": false)
       "table": {
         "columns": [
-          { "key": "name",           "label": "NAME",            "align": "left",  "width": "35%", "show": true  }, // Clickable file/class/trigger name
-          { "key": "original_pair",  "label": "ORIGINAL (HIGH)", "align": "right", "width": "15%", "show": true  }, // Original total-(high)
-          { "key": "current_pair",   "label": "CURRENT (HIGH)",  "align": "right", "width": "15%", "show": true  }, // Current  total-(high)
-          { "key": "delta_high",     "label": "Δ HIGH",          "align": "right", "width": "10%", "show": true  }, // Δ pill
-          { "key": "author",         "label": "AUTHOR",          "align": "left",  "width": "25%", "show": true  }  // Git author
-          // Optional extras the script supports:
+          { "key": "name",          "label": "NAME",            "align": "left",   "width": "35%", "show": true }, // file/class/trigger
+          { "key": "original_pair", "label": "ORIGINAL (HIGH)", "align": "right",  "width": "15%", "show": true }, // n-(high)
+          { "key": "current_pair",  "label": "CURRENT (HIGH)",  "align": "right",  "width": "15%", "show": true }, // n-(high)
+          { "key": "delta_high",    "label": "Δ HIGH",          "align": "center", "width": "10%", "show": true }, // pill
+          { "key": "author",        "label": "AUTHOR",          "align": "left",   "width": "25%", "show": true }  // last author
+          // Optional extras supported by script (set show:true to enable):
           // { "key": "original_total", "label": "ORIGINAL (TOTAL)", "align": "right", "width": "10%", "show": false },
           // { "key": "original_high",  "label": "ORIGINAL (HIGH)",  "align": "right", "width": "10%", "show": false },
           // { "key": "current_total",  "label": "CURRENT (TOTAL)",  "align": "right", "width": "10%", "show": false },
@@ -219,98 +166,91 @@
     }
   },
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // PMD REVIEW EXTRAS: legend swatches, Δ pill colors, row states, links
-  // (keys here map exactly to what the function reads to avoid WARNs)
-  // ─────────────────────────────────────────────────────────────────────────
+  // PMD Review: links, legend, row states, Δ-pill (incl. success/failure variants)
   "pmd_review": {
-    // Legend swatches (small colored squares)
-    "legend_red_bg":         "#FFEFEF", // Regression sample (Rose 100)
-    "legend_red_border":     "#F5BCBC", // Regression border (Soft Red)
-    "legend_green_bg":       "#F0FFF4", // Improvement sample (Mint White)
-    "legend_green_border":   "#A7F3D0", // Improvement border (Mint 300)
-    "legend_neutral_bg":     "#FFFFFF", // Neutral sample (White)
-    "legend_neutral_border": "#D0D7DE", // Neutral border (Gray-Blue 350)
+    "link_normal": "#0A58CA", // (Link Blue)
+    "link_high":   "#B91C1C", // (Bright Red)
+    "text_high":   "#B91C1C", // (Bright Red)
+    "text_normal": "#1F2937", // (Slate 800)
 
-    // Δ pill (numeric change badge)
-    "delta_reg_bg":          "#FFE3E3", // Regression pill bg (Rose 150)
-    "delta_reg_border":      "#F5BCBC", // Regression pill border (Soft Red)
-    "delta_reg_text":        "#B91C1C", // Regression pill text (Bright Red)
+    // Legend
+    "legend_red_bg":       "#FFEFEF", // (Rose 100)
+    "legend_red_border":   "#F5BCBC", // (Soft Red)
+    "legend_green_bg":     "#F0FFF4", // (Mint White)
+    "legend_green_border": "#A7F3D0", // (Mint Border)
+    "legend_neutral_bg":   "#FFFFFF", // (White)
+    "legend_neutral_border":"#D0D7DE",// (Gray Blue 300)
 
-    // Improvement pill (generic keys the current script expects)
-    "delta_imp_bg":          "#ECFDF5", // Improvement pill bg (Mint 50)
-    "delta_imp_border":      "#A7F3D0", // Improvement pill border (Mint 300)
-    "delta_imp_text":        "#065F46", // Improvement pill text (Deep Green)
+    // Δ pill + row tint — SUCCESS
+    "delta_imp_success_bg":      "#ECFDF5", // (Mint 50)
+    "delta_imp_success_border":  "#A7F3D0", // (Mint Border)
+    "delta_imp_success_text":    "#065F46", // (Pine)
+    "improve_success_row_bg":    "#ECFDF5", // (Mint 50)
+    "improve_success_left_stripe":"#065F46",// (Pine)
+    "improve_success_text":      "#065F46", // (Pine)
 
-    // Neutral pill (for Δ = 0)
-    "delta_neutral_bg":      "#EEEEEE", // Neutral pill bg (Light Gray)
-    "delta_neutral_border":  "#DDDDDD", // Neutral pill border (Gray)
-    "delta_neutral_text":    "#444444", // Neutral pill text (Gray 700)
+    // Δ pill + row tint — FAILURE
+    "delta_imp_failure_bg":      "#FDF2F2", // (Rose 50)
+    "delta_imp_failure_border":  "#FECACA", // (Rose 300)
+    "delta_imp_failure_text":    "#7F1D1D", // (Dark Rose)
+    "improve_failure_row_bg":    "#FDF2F2", // (Rose 50)
+    "improve_failure_left_stripe":"#7F1D1D",// (Dark Rose)
+    "improve_failure_text":      "#7F1D1D", // (Dark Rose)
 
-    // Row states (full-row tint + left stripe)
-    "neutral_left_stripe":       "#D0D7DE", // Neutral row stripe (Gray-Blue 350)
-    "regression_row_bg":         "#FFEFEF", // Row bg when Δ>0 (Rose 100)
-    "regression_left_stripe":    "#B91C1C", // Left stripe when Δ>0 (Bright Red)
-    "improvement_row_bg":        "#ECFDF5", // Row bg when Δ<0 (Mint 50)
-    "improvement_left_stripe":   "#2E7D32", // Left stripe when Δ<0 (Green 700)
-    "improvement_text":          "#065F46", // Row text when Δ<0 (Deep Green)
-
-    // Links + text emphasis in the tables
-    "link_normal": "#0A58CA", // Standard link (Blue link)
-    "link_high":   "#B91C1C", // “High” link (Bright Red)
-    "text_high":   "#B91C1C", // High-attention text (Bright Red)
-    "text_normal": "#1F2937"  // Normal row text (Slate 800)
+    // Regression / Neutral (shared)
+    "delta_reg_bg":        "#FFE3E3", // (Rose 150)
+    "delta_reg_border":    "#F5BCBC", // (Soft Red)
+    "delta_reg_text":      "#B91C1C", // (Bright Red)
+    "delta_neutral_bg":    "#EEEEEE", // (Light Gray)
+    "delta_neutral_border":"#DDDDDD", // (Gray)
+    "delta_neutral_text":  "#444444", // (Charcoal)
+    "neutral_left_stripe": "#D0D7DE", // (Gray Blue 300)
+    "regression_row_bg":   "#FFEFEF", // (Rose 100)
+    "regression_left_stripe":"#B91C1C" // (Bright Red)
   },
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // CHANGESET LIST COLORS (Succeeded / Failed panels)
-  // ─────────────────────────────────────────────────────────────────────────
+  // Changeset list (success variant)
   "success_section": {
-    "file_row_bg":       "#F8FAFC", // File row (top) background (Blue-Gray 50)
-    "file_row_border":   "#D0D7DE", // File row border (Gray-Blue 350)
-    "author_row_bg":     "#FFFFFF", // Git info row background (White)
-    "author_row_border": "#D0D7DE", // Git info row border (Gray-Blue 350)
-    "title_text":        "#065F46"  // Section title text (Deep Green)
+    "file_row_bg":      "#F8FAFC", // (Blue Gray 50)
+    "file_row_border":  "#D0D7DE", // (Gray Blue 300)
+    "author_row_bg":    "#FFFFFF", // (White)
+    "author_row_border":"#D0D7DE", // (Gray Blue 300)
+    "title_text":       "#065F46"  // (Pine)
   },
 
+  // Failures list (failure variant)
   "failure_section": {
-    "error_row_bg":       "#FFF1F2", // Error row background (Rose 75)
-    "error_row_border":   "#FECACA", // Error row border (Rose 300)
-    "author_row_bg":      "#FFFFFF", // Git info row background (White)
-    "author_row_border":  "#D0D7DE", // Git info row border (Gray-Blue 350)
-    "title_text":         "#7F1D1D"  // Section title text (Dark Rose)
+    "error_row_bg":      "#FFF1F2", // (Rose 75)
+    "error_row_border":  "#FECACA", // (Rose 300)
+    "author_row_bg":     "#FFFFFF", // (White)
+    "author_row_border": "#D0D7DE", // (Gray Blue 300)
+    "title_text":        "#7F1D1D"  // (Dark Rose)
   },
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // FOOTER BAR (simple, light, full width)
-  // ─────────────────────────────────────────────────────────────────────────
+  // Footer bar
   "footer": {
-    "bg":   "#F1F5F9", // Footer background (Slate 100)
-    "text": "#64748B", // Footer text (Slate 500)
+    "bg":   "#F1F5F9", // (Slate 100)
+    "text": "#64748B", // (Slate 500)
     "copyright_text": "© 2025 Cadence Design Systems, Inc. | SFDC Deployment Report generated by the Cadence DevOps Team"
   },
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // FORMATTERS (centralized, referenced by the function)
-  // ─────────────────────────────────────────────────────────────────────────
+  // Centralized formatting
   "formatters": {
-    "duration": "h:mm:ss", // Duration formatter (e.g., 01h:23m:45s)
-    "percent":  "0.0%",    // Reserved for future %
-    "number":   "#,##0"    // Reserved for future number grouping
+    "duration": "h:mm:ss", // duration format
+    "percent":  "0.0%",    // reserved
+    "number":   "#,##0"    // reserved
   },
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // STRINGS & ICONS: all visible labels + small emoji (to avoid WARNs)
-  // ─────────────────────────────────────────────────────────────────────────
+  // All static strings + icons (edit freely)
   "strings": {
     "header": {
-      "title_core":   "Deployment", // Middle word in the title bar
-      "title_suffix": "Report",     // Last word in the title bar
-      "success_word": "Success",    // Word used when success
-      "failure_word": "Failure"     // Word used when failure
+      "title_core":   "Deployment", // middle word in top title
+      "title_suffix": "Report",     // last word
+      "success_word": "Success",    // success marker
+      "failure_word": "Failure"     // failure marker
     },
     "run_details": {
-      "title": "Run Details"        // Card header inside the Run Details section
+      "title": "Run Details" // card header text
     },
     "chips": {
       "repo": "REPO",
@@ -321,20 +261,20 @@
       "deploy_user": "DEPLOY USER"
     },
     "sections": {
-      "status_summary": "Status Summary",     // Card title for the 3 mini-boxes
-      "deployment_tile": "DEPLOYMENT",        // Left mini-box label
-      "pmd_tile":        "PMD — CHANGESET",   // Middle mini-box label
-      "duration_tile":   "DURATION",          // Right mini-box label
-      "duration_start":  "Start",             // Start time label
-      "duration_end":    "End",               // End time label
-      "pmd_review":      "PMD Review",        // PMD card title text
-      "failure_title":   "All Component Failures:", // Failures list title
-      "success_title":   "Changeset file/s ..."     // Success list title
+      "status_summary": "Status Summary",
+      "deployment_tile": "DEPLOYMENT",
+      "pmd_tile":        "PMD — CHANGESET",
+      "duration_tile":   "DURATION",
+      "duration_start":  "Start",
+      "duration_end":    "End",
+      "pmd_review":      "PMD Review",
+      "failure_title":   "All Component Failures:",
+      "success_title":   "Changeset file/s ..."
     },
     "icons": {
-      "deployment":    "✅", // Optional icon for Deployment tile (keeps WARNs away)
-      "pmd_changeset": "🧩", // Optional icon for PMD tile
-      "duration":      "⏱️"  // Optional icon for Duration tile
+      "deployment":    "✅", // DEPLOYMENT icon
+      "pmd_changeset": "🧩", // PMD icon
+      "duration":      "⏱️"  // Duration icon
     },
     "quick_links": {
       "tile_1": "Open Logs",
