@@ -397,7 +397,7 @@ CELL
     if [ -n "$fbg$ftx$fbd$flb" ]; then echo "${fbg}|${ftx}|${fbd}|${flb}"; return; fi
     if [ "$name" = "duration" ]; then colors="$(_chip_pick_duration ".chips.duration" "$ms")"; else colors="$(_chip_pick_by_rules ".chips.${name}" "$val")"; fi
     IFS='|' read -r bg tx bd lbl <<<"$colors"
-    [ -z "$bg$tx$bd" ] && { bg="$(_col '.chips.success_bg' '#f0fff4')"; tx="$(_col '.chips.success_text' '#065f46')"; bd="$_chip_border_col"; } # safe fallback
+    [ -z "$bg$tx$bd" ] && { bg="$(_col '.chips.success_bg' '#f0fff4')"; tx="$(_col '.chips.success_text' '#065f46')"; bd="$_chip_border_col"; }
     echo "${bg}|${tx}|${bd}|${lbl}"
   }
 
@@ -405,8 +405,8 @@ CELL
   _mini_bar_html(){ # percent (0..100)
     local pct="$1"
     local h="6"
-    local bg="$(_table_border)"
-    echo "<div style=\"height:${h}px;background:${_table_border};width:${pct}%;\"></div>"
+    local bg="${_table_border}"
+    echo "<div style=\"height:${h}px;background:${bg};width:${pct}%;\"></div>"
   }
 
   # ---------- header (centered title, logo left) ----------
@@ -721,7 +721,8 @@ NWB
     } >>"$HTMLLog"
 
     if [ "$CLASS_COUNT" -gt 0 ]; then
-      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0"\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;border-radius:${_table_radius}px;overflow:hidden;\">" >>"$HTMLLog"
+      # FIXED: removed stray quote after cellspacing
+      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;border-radius:${_table_radius}px;overflow:hidden;\">" >>"$HTMLLog"
       _render_pmd_header "$PMD_COLS_JSON" >>"$HTMLLog"
       row_num=0
       for classeBase in $(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null | xargs -n1 -I{} basename {}); do
@@ -773,7 +774,8 @@ NWB
       [[ "$FILE" =~ "src/customMetadata/"    ]] && FILE=$(echo "$FILE" | sed -e "s/^src/src\/env\/${SFDC_ORG}/")
       gh_href="$(_urlenc_spaces "${FILE}")"
       [ -n "$_GH_ROOT" ] && gh_url="${_GH_ROOT}/tree/${_BRANCH}/${gh_href}" || gh_url=""
-      echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0"\" cellspacing=\"0\" border=\"0\" style=\"margin-top:4px;\">
+      # FIXED: removed stray quote after cellpadding
+      echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:4px;\">
               <tr><td style=\"background:$(_gets '.success_section.file_row_bg' '#f8fafc');padding:4px 6px;border:1px solid $(_gets '.success_section.file_row_border' '#d0d7de');\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;${_FONT_BASE}\">[$((NUM++))] $( [ -n \"$gh_url\" ] && echo "<a href=\"$gh_url\" style=\"color:inherit;text-decoration:underline;\">$(_esc <<<"$FILE")</a>" || _esc <<<"$FILE")</pre></td></tr>
               <tr><td style=\"background:$(_gets '.success_section.author_row_bg' '#ffffff');padding:4px 6px;border-left:1px solid $(_gets '.success_section.author_row_border' '#d0d7de');border-right:1px solid $(_gets '.success_section.author_row_border' '#d0d7de');border-bottom:1px solid $(_gets '.success_section.author_row_border' '#d0d7de');\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;${_FONT_BASE}\">Last author... $(git log -1 "$FILE" | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')</pre></td></tr>
             </table>" >>"$HTMLLog"
