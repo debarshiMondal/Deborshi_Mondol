@@ -1,9 +1,15 @@
-<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.delta_imp_success_bg; using #ecfdf5
-<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.delta_imp_success_border; using #a7f3d0
-<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.delta_imp_success_text; using #065f46
-<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.improve_success_row_bg; using #ecfdf5
-<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.improve_success_left_stripe; using #065f46
-<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: [WARN] Missing color .pmd_review.improve_success_text; using #065f46
-<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: cp: cannot stat '/tmp/sbx.Changeset.log': No such file or directory
-<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: cp: cannot stat 'CodeAnalyser/CodeAnalysisReport.html': No such file or directory
-<13>Oct 19 15:51:52 SFDC_DEPLOY:[]: cp: cannot stat 'build/sbx.forceDeploy.txt': No such file or directory
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: 
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.chip.radius_px; using fallback [4]
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.chip.pad_y_px; using fallback [6]
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.chip.pad_x_px; using fallback [8]
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.chip.gap_px; using fallback [6]
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing color .components.chip.border_color; using #d0d7de
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.chip.border_width_px; using fallback [1]
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.table.radius_px; using fallback [4]
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.table.pad_y_px; using fallback [6]
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.table.pad_x_px; using fallback [8]
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing color .components.table.border_color; using #d0d7de
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing color .components.table.row_zebra_even; using #ffffff
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing color .components.table.row_zebra_odd; using #ffffff
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .quick_links.gap_px; using fallback [6]
+<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .status_summary.corner_radius; using fallback [6]
