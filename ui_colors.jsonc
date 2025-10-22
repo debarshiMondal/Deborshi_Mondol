@@ -3,28 +3,29 @@
   // ui_colors.jsonc
   // Purpose: Central, Outlook-first theme + copy for HTML_REPORT().
   // Notes: JSON with comments (JSONC). The Bash strips comments to strict JSON.
-  // All colors include an English name in brackets.
+  // Every property line explains why it exists; colors include an English name
+  // in brackets for quick visual understanding.
   // =====================================================================
 
   "meta": {
-    "version": "1.5-outlook-simple-rails", // Version label for tracing config provenance.
-    "owner": "Release Eng",                // Who is responsible for this theme file.
-    "notes": "Centered section bars with top/bottom rails; thin borders; neutral meters; improvement rows use light-red per legend." // Human note about design choices.
+    "version": "1.5-outlook-simple-rails", // Version label to track the config used by a run.
+    "owner": "Release Eng",                // Team or person responsible for maintaining this theme.
+    "notes": "Centered section bars with thin rails; thin borders; neutral meters; improvements use light-red per legend." // Human-readable summary of design choices.
   },
 
   // ---------------------------------------------------------------------
   // HEADER (top strip: logo left, title centered)
-  // Used for the very top banner behind the page heading.
+  // Applies only to the very top banner behind the page heading.
   // ---------------------------------------------------------------------
   "header": {
-    "success_bg": "#2e7d32", // Header background when report = SUCCEEDED [green].
-    "failure_bg": "#a94442", // Header background when report = FAILED [light red / brick red].
-    "text": "#ffffff"        // Header text color (logo caption + title) [white].
+    "success_bg": "#2e7d32", // Header background when report SUCCEEDED [green].
+    "failure_bg": "#a94442", // Header background when report FAILED [light red / brick red].
+    "text": "#ffffff"        // Header text color (title) [white].
   },
 
   // ---------------------------------------------------------------------
   // PAGE / CARD chrome
-  // Affects page background and the outer "main card" that wraps sections.
+  // Sets the page background and outer card that wraps all sections.
   // ---------------------------------------------------------------------
   "plate": {
     "page_bg": "#f6f8fa",   // Whole email/page background [very light gray].
@@ -34,52 +35,51 @@
 
   // ---------------------------------------------------------------------
   // RUN DETAILS title bar (stateful full-width bar with center text)
-  // The rail stripes use chip border colors; these are the solid bar colors.
-  // strip_* are kept for legacy validation.
+  // Bars are solid; top/bottom "rails" use chip border colors (see chips.*).
+  // strip_* keys are kept for validation compatibility with older scripts.
   // ---------------------------------------------------------------------
   "run_details": {
     "title_bg_success": "#2e7d32",   // Bar background when success [green].
     "title_bg_failure": "#a94442",   // Bar background when failure [light red].
-    "title_text_success": "#ffffff", // Bar text when success [white].
-    "title_text_failure": "#ffffff", // Bar text when failure [white].
-    "strip_success_bg": "#90EE90",   // Legacy key (not rendered) [light green].
-    "strip_failure_bg": "#C3B091",   // Legacy key (not rendered) [light beige/brown].
-    "title_text": "#000000"          // Fallback bar text color if per-state text missing [black].
+    "title_text_success": "#ffffff", // Bar text color when success [white].
+    "title_text_failure": "#ffffff", // Bar text color when failure [white].
+    "strip_success_bg": "#90EE90",   // Legacy key, ignored by layout [light green].
+    "strip_failure_bg": "#C3B091",   // Legacy key, ignored by layout [light beige/brown].
+    "title_text": "#000000"          // Fallback bar text if per-state text is missing [black].
   },
 
   // ---------------------------------------------------------------------
   // CHIPS (small info boxes inside Run Details)
-  // Each chip has a background, text color, and a thin outline (border_*).
-  // Also supplies the rail color for section bars via border_*.
+  // Also supplies a rail/border color that the section bars reuse.
   // ---------------------------------------------------------------------
   "chips": {
     "success_bg": "#ecfdf5",        // Chip background in success [mint].
     "failure_bg": "#fef2f2",        // Chip background in failure [very light red].
     "success_text": "#065f46",      // Chip body text in success [deep teal].
     "failure_text": "#7f1d1d",      // Chip body text in failure [dark maroon].
-    "border": "#a7f3d0",            // Generic chip border fallback [pale mint/teal].
-    "border_success": "#a7f3d0",    // Chip border + rail stripe color in success [pale mint/teal].
-    "border_failure": "#fecaca",    // Chip border + rail stripe color in failure [pale red].
-    "label_success_text": "#047857",// Chip small uppercase label in success [teal].
-    "label_failure_text": "#a94442" // Chip small uppercase label in failure [light red/brick red].
+    "border": "#a7f3d0",            // Generic border fallback [pale mint/teal].
+    "border_success": "#a7f3d0",    // Border (and section rail) in success [pale mint/teal].
+    "border_failure": "#fecaca",    // Border (and section rail) in failure [pale red].
+    "label_success_text": "#047857",// Small uppercase label in success [teal].
+    "label_failure_text": "#a94442" // Small uppercase label in failure [light red/brick red].
   },
 
   // ---------------------------------------------------------------------
   // QUICK LINKS (buttons in Run Details)
-  // Simple solid buttons with white text and thin borders (from chip border).
+  // Simple solid buttons with white text; thin border comes from chips.border_*.
   // ---------------------------------------------------------------------
   "quick_links": {
     "tile_1_bg": "#0D9488", // "Open Logs" button background [teal].
     "tile_2_bg": "#0D9488", // "Original PMD Report" button background [teal].
-    "tile_3_bg": "#0D9488", // Reserved (same styling) [teal].
+    "tile_3_bg": "#0D9488", // Reserved button background [teal].
     "tile_4_bg": "#0D9488", // "ForceDeploy" button background [teal].
     "text": "#ffffff",      // Button text color [white].
-    "gap_px": "10"          // Horizontal spacing between quick link buttons (pixels as string or number).
+    "gap_px": "10"          // Horizontal spacing between buttons (pixels).
   },
 
   // ---------------------------------------------------------------------
-  // STATUS SUMMARY tiles (3 small boxes)
-  // Controls backgrounds + text colors for Deployment / PMD — CHANGESET / DURATION.
+  // STATUS SUMMARY tiles (three small boxes)
+  // Controls backgrounds and text colors for Deployment / PMD — CHANGESET / Duration.
   // ---------------------------------------------------------------------
   "status_summary": {
     "deployment_success_bg": "#ecfdf5", // Deployment tile background when success [mint].
@@ -87,30 +87,29 @@
     "pmd_bg": "#fff7ed",                // PMD tile background [peach / light orange].
     "time_bg": "#eff6ff",               // Duration tile background [very light blue].
 
-    "title_text": "#1a365d",            // Section title color ("Status Summary") [navy/dark blue].
+    "title_text": "#1a365d",            // Section heading color ("Status Summary") [navy/dark blue].
 
-    "label_text": "#047857",            // Generic label fallback color [teal].
-    "value_text": "#065f46",            // Generic value fallback color [deep teal].
+    "label_text": "#047857",            // Generic tile label fallback [teal].
+    "value_text": "#065f46",            // Generic tile value fallback [deep teal].
 
     "deployment_label_success": "#047857", // Deployment label text (success) [teal].
     "deployment_value_success": "#065f46", // Deployment value text (success) [deep teal].
     "deployment_label_failure": "#a94442", // Deployment label text (failure) [light red].
     "deployment_value_failure": "#7f1d1d", // Deployment value text (failure) [dark maroon].
 
-    "pmd_text": "#9a3412",              // PMD tile text color [burnt orange].
-    "time_text": "#1d4ed8",             // Duration tile text color [blue].
+    "pmd_text": "#9a3412",              // PMD tile text [burnt orange].
+    "time_text": "#1d4ed8",             // Duration tile text [blue].
 
-    "corner_radius": "8px"              // Visual radius for tiles (kept small; Outlook-safe look with borders).
+    "corner_radius": "8px"              // Rounded corners for tiles (subtle, Outlook-safe).
   },
 
   // ---------------------------------------------------------------------
   // PMD REVIEW (legend + Classes/Triggers tables)
-  // Controls table header, grid lines, link/text emphasis, row palettes,
-  // neutral meters, and Δ pills. Improvement rows intentionally light-red
-  // per the requested legend text.
+  // Table header, grid lines, emphasis colors, row palettes, neutral meters,
+  // and Δ pills. Improvement rows intentionally use light-red per legend.
   // ---------------------------------------------------------------------
   "pmd_review": {
-    "header_bg": "#eaf2ff",          // Table header strip background [very light blue].
+    "header_bg": "#eaf2ff",          // Table header background [very light blue].
     "header_text": "#274690",        // Table header text [indigo/royal blue].
     "row_border": "#e6eefc",         // Horizontal grid lines [pale blue-gray].
 
@@ -133,145 +132,140 @@
     "delta_neu_bg": "#eeeeee",       // Δ=0 pill background [light gray].
     "delta_neu_border": "#dddddd",   // Δ=0 pill border [light gray].
 
-    // (Optional) meters behind numbers (proportional width)
-    "meter_track": "#e5e7eb",        // Track/background of the meter [cool gray].
-    "meter_fill": "#9ca3af",         // Fill/foreground of the meter [medium gray].
+    // Tiny meter bars behind Original/Current numbers
+    "meter_track": "#e5e7eb",        // Meter track background [cool gray].
+    "meter_fill": "#9ca3af",         // Meter fill foreground [medium gray].
 
-    // Regression (Δ > 0): entire row lightly red, left stripe strong red,
-    // and Δ pill in red family.
+    // Regression (Δ > 0) — red family
     "regression_row_bg": "#ffefef",  // Regression row background [very light red].
     "regression_left_stripe": "#c62828", // Regression left stripe [red].
     "delta_reg_bg": "#ffe3e3",       // Δ>0 pill background [light red].
     "delta_reg_border": "#f5bcbc",   // Δ>0 pill border [pale red].
     "delta_reg_text": "#b71c1c",     // Δ>0 pill text [dark red].
 
-    // Improvement (Δ < 0) when overall report is SUCCEEDED
-    // (per request: use light-red family, not green).
-    "improve_success_row_bg": "#fef2f2",       // Improvement row background (success) [very light red].
+    // Improvement (Δ < 0) when overall report is SUCCEEDED — light-red family
+    "improve_success_row_bg": "#fef2f2",       // Improvement row (success) background [very light red].
     "improve_success_left_stripe": "#a94442",  // Improvement left stripe (success) [light red].
     "improve_success_text": "#7f1d1d",         // Improvement text (success) [dark maroon].
-    "improve_success_bg": "#fef2f2",           // (Alias not used by code; kept for readability) [very light red].
     "delta_imp_success_bg": "#fef2f2",         // Δ<0 pill background (success) [very light red].
     "delta_imp_success_border": "#fecaca",     // Δ<0 pill border (success) [pale red].
     "delta_imp_success_text": "#7f1d1d",       // Δ<0 pill text (success) [dark maroon].
 
-    // Improvement (Δ < 0) when overall report is FAILED
-    // (same light-red family for consistent legend).
-    "improve_failure_row_bg": "#fef2f2",       // Improvement row background (failure) [very light red].
+    // Improvement (Δ < 0) when overall report is FAILED — same light-red family
+    "improve_failure_row_bg": "#fef2f2",       // Improvement row (failure) background [very light red].
     "improve_failure_left_stripe": "#a94442",  // Improvement left stripe (failure) [light red].
     "improve_failure_text": "#7f1d1d",         // Improvement text (failure) [dark maroon].
-    "improve_failure_bg": "#fef2f2",           // (Alias not used by code; kept for readability) [very light red].
     "delta_imp_failure_bg": "#fef2f2",         // Δ<0 pill background (failure) [very light red].
     "delta_imp_failure_border": "#fecaca",     // Δ<0 pill border (failure) [pale red].
     "delta_imp_failure_text": "#7f1d1d"        // Δ<0 pill text (failure) [dark maroon].
   },
 
   // ---------------------------------------------------------------------
-  // SUCCESS / FAILURE sections
-  // Colors for the "Changeset file/s ..." list and the "All Component Failures" list.
+  // SUCCESS / FAILURE sections (changeset list and component failures)
+  // Colors for the file rows and the commit detail rows.
   // ---------------------------------------------------------------------
   "success_section": {
     "file_row_bg": "#ecfdf5",       // File path row background [mint].
     "file_row_border": "#a7f3d0",   // File row border [pale mint/teal].
     "author_row_bg": "#e0e0e0",     // Author/commit info row background [gray].
-    "author_row_border": "#d1d1d1", // Author row border [light gray].
-    "title_text": "#1a365d"         // Section bar text color when in success area [navy/dark blue].
+    "author_row_border": "#d1d1d1", // Author/commit row border [light gray].
+    "title_text": "#1a365d"         // Section bar text color [navy/dark blue].
   },
   "failure_section": {
     "error_row_bg": "#fef2f2",      // Failure error row background [very light red].
     "error_row_border": "#fecaca",  // Failure error row border [pale red].
     "author_row_bg": "#e0e0e0",     // Failure author info row background [gray].
     "author_row_border": "#d1d1d1", // Failure author info row border [light gray].
-    "title_text": "#1a365d"         // Section bar text color when in failure area [navy/dark blue].
+    "title_text": "#1a365d"         // Section bar text color [navy/dark blue].
   },
 
   // ---------------------------------------------------------------------
   // LEGACY fallbacks (do not remove) — older script keys still probed.
   // ---------------------------------------------------------------------
   "changeset": {
-    "file_row_bg": "#ecfdf5",       // Legacy: file row background [mint].
-    "file_row_border": "#a7f3d0",   // Legacy: file row border [pale mint/teal].
-    "author_row_bg": "#e0e0e0",     // Legacy: author row background [gray].
-    "author_row_border": "#d1d1d1", // Legacy: author row border [light gray].
-    "title_text": "#1a365d"         // Legacy: section title color [navy/dark blue].
+    "file_row_bg": "#ecfdf5",       // Legacy file row background [mint].
+    "file_row_border": "#a7f3d0",   // Legacy file row border [pale mint/teal].
+    "author_row_bg": "#e0e0e0",     // Legacy author row background [gray].
+    "author_row_border": "#d1d1d1", // Legacy author row border [light gray].
+    "title_text": "#1a365d"         // Legacy section title color [navy/dark blue].
   },
   "failures": {
-    "error_row_bg": "#fef2f2",      // Legacy: failure error row background [very light red].
-    "error_row_border": "#fecaca",  // Legacy: failure error row border [pale red].
-    "author_row_bg": "#e0e0e0",     // Legacy: failure author row background [gray].
-    "author_row_border": "#d1d1d1", // Legacy: failure author row border [light gray].
-    "title_text": "#1a365d"         // Legacy: section title color [navy/dark blue].
+    "error_row_bg": "#fef2f2",      // Legacy failure row background [very light red].
+    "error_row_border": "#fecaca",  // Legacy failure row border [pale red].
+    "author_row_bg": "#e0e0e0",     // Legacy author row background [gray].
+    "author_row_border": "#d1d1d1", // Legacy author row border [light gray].
+    "title_text": "#1a365d"         // Legacy section title color [navy/dark blue].
   },
 
   // ---------------------------------------------------------------------
   // FOOTER (bottom slim bar)
-  // Background + text color, and the static copyright sentence.
+  // Static copyright line + dynamic status sentence.
   // ---------------------------------------------------------------------
   "footer": {
     "bg": "#111111", // Footer bar background [near black].
     "text": "#ffffff", // Footer text color [white].
-    "copyright_text": "© 2025 Cadence Design Systems, Inc. | SFDC Deployment Report generated by the Cadence DevOps Team" // Copyright line shown after the dynamic status sentence.
+    "copyright_text": "© 2025 Cadence Design Systems, Inc. | SFDC Deployment Report generated by the Cadence DevOps Team" // Copyright line appended after the status sentence.
   },
 
   // ---------------------------------------------------------------------
-  // TYPOGRAPHY (system fonts, Outlook-friendly sizes)
-  // All sizes are in px as strings for clarity (Bash reads them as strings).
+  // TYPOGRAPHY (system fonts, Outlook-safe sizes)
+  // Strings for clarity; Bash reads as strings then injects into CSS.
   // ---------------------------------------------------------------------
   "typography": {
-    "font_family": "Arial,Helvetica,sans-serif", // Email-safe stack; Outlook renders reliably.
-    "base_px": "10",   // Base text size + chip label size (px).
-    "section_hdr_px": "11", // Section bar text size (px).
-    "main_hdr_px": "14", // Top banner title size (px).
-    "run_hdr_px": "11"  // (Kept for compatibility; not used with new section bars) (px).
+    "font_family": "Arial,Helvetica,sans-serif", // Email-safe stack with reliable Outlook rendering.
+    "base_px": "10",   // Base text size + chip labels (px).
+    "section_hdr_px": "11", // Section bar text (px).
+    "main_hdr_px": "14", // Top banner title (px).
+    "run_hdr_px": "11"  // Kept for compatibility; not directly used by new bars (px).
   },
 
   // ---------------------------------------------------------------------
   // STRINGS (user-visible labels)
-  // All copy lines shown in the email; safe to localize here.
+  // All user-facing copy lives here so Bash doesn’t hard-code text.
   // ---------------------------------------------------------------------
   "strings": {
     "header": {
-      "title_core": "Deployment", // Middle word of the top heading (e.g., "ORG Deployment ...").
-      "title_suffix": "Report",   // Trailing word of the top heading (e.g., "... Report").
-      "success_word": "Success",  // Inserted when report succeeded.
-      "failure_word": "Failure"   // Inserted when report failed.
+      "title_core": "Deployment", // Middle word of the header (e.g., "ORG Deployment ...").
+      "title_suffix": "Report",   // Ending word of the header (e.g., "... Report").
+      "success_word": "Success",  // Shown when report succeeded.
+      "failure_word": "Failure"   // Shown when report failed.
     },
-    "run_details": { "title": "Run Details" }, // Title for the first card (Run Details).
+    "run_details": { "title": "Run Details" }, // Title for the first card.
     "chips": {
-      "repo": "REPO",                  // Chip label for repository URL.
-      "branch": "BRANCH",              // Chip label for branch name.
-      "request_id": "REQUEST ID",      // Chip label for deployment/request id.
-      "run_ist": "RUN (IST)",          // Chip label for runtime (IST) timestamp.
-      "org_api": "ORG NAME + API",     // Chip label for Org + API version.
-      "deploy_user": "DEPLOY USER"     // Chip label for who triggered deployment.
+      "repo": "REPO",                  // Repository URL label.
+      "branch": "BRANCH",              // Branch name label.
+      "request_id": "REQUEST ID",      // Deployment/request ID label.
+      "run_ist": "RUN (IST)",          // Run timestamp (IST) label.
+      "org_api": "ORG NAME + API",     // Org + API version label.
+      "deploy_user": "DEPLOY USER"     // Who triggered deployment.
     },
     "quick_links": {
-      "tile_1": "Open Logs",           // Button label to open logs.
-      "tile_2": "Original PMD Report", // Button label to open original PMD summary.
-      "tile_3": "Reserved",            // Reserved button label (kept for layout parity).
-      "tile_4": "ForceDeploy"          // Button label for ForceDeploy view.
+      "tile_1": "Open Logs",           // Button text.
+      "tile_2": "Original PMD Report", // Button text.
+      "tile_3": "Reserved",            // Button text (not used visually but kept).
+      "tile_4": "ForceDeploy"          // Button text.
     },
     "sections": {
       "status_summary": "Status Summary",          // Title for the second card.
-      "pmd_review": "PMD Review",                  // Title for the third (large) card.
-      "success_title": "Changeset file/s ...",     // Title for the fourth card (success path).
-      "failure_title": "All Component Failures:",  // Title when showing failures (failure path).
-      "deployment_tile": "DEPLOYMENT",             // Label inside the first tile of Status Summary.
-      "pmd_tile": "PMD — CHANGESET",               // Label inside the second tile of Status Summary.
-      "duration_tile": "DURATION",                 // Label inside the third tile of Status Summary.
+      "pmd_review": "PMD Review",                  // Title for the third card.
+      "success_title": "Changeset file/s ...",     // Title for the changeset card (success path).
+      "failure_title": "All Component Failures:",  // Title for the failures card (failure path).
+      "deployment_tile": "DEPLOYMENT",             // Label inside first status tile.
+      "pmd_tile": "PMD — CHANGESET",               // Label inside second status tile.
+      "duration_tile": "DURATION",                 // Label inside third status tile.
       "duration_start": "Start",                   // Label before start time.
       "duration_end": "End"                        // Label before end time.
     },
     "legend": {
-      "red": "Red = got worse (Δ High > 0)",                 // Legend text for regression rows.
-      "green": "Light red = improvement (Δ High < 0)",       // Legend text for improvement rows (intentionally light-red, not green).
-      "white": "White/Grey = no change (Δ High = 0)",        // Legend text for neutral rows.
-      "high_explainer": "“High” = value in parentheses; count of high-severity PMD findings (pattern-based).", // Legend explainer for (High).
-      "delta_explainer": "Δ High = Current High − Original High." // Legend explainer for Delta.
+      "red": "Red = got worse (Δ High > 0)",           // Legend text for regression.
+      "green": "Light red = improvement (Δ High < 0)", // Legend text for improvement (intentional).
+      "white": "White/Grey = no change (Δ High = 0)",  // Legend text for neutral.
+      "high_explainer": "“High” = value in parentheses; count of high-severity PMD findings (pattern-based).", // What (High) means.
+      "delta_explainer": "Δ High = Current High − Original High." // What Δ High means.
     },
     "footer": {
-      "success": "{ORG} • Deployment Success Report — generated automatically.", // Dynamic footer line when success (ORG substituted at runtime).
-      "failure": "{ORG} • Deployment Failure Report — generated automatically. Review the logs for root cause." // Dynamic footer line when failure.
+      "success": "{ORG} • Deployment Success Report — generated automatically.", // Status sentence when success (ORG substituted at runtime).
+      "failure": "{ORG} • Deployment Failure Report — generated automatically. Review the logs for root cause." // Status sentence when failure.
     }
   }
 }
