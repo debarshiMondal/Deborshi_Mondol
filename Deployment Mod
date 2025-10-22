@@ -847,8 +847,6 @@ CountDeployable()
 }
 
 
-
-
 ChangeSetDeploy()
 {
 
@@ -861,8 +859,18 @@ changesetFile=$(find changeSetDeploy/force-app/main/default/ -type f | egrep -v 
 
 echo "Deploy $SFDC_ORG ... Press <Ctrl>+C to cancel within 20 sec"
 sleep 20
+
+# ---- capture START (IST) just before the deploy kicks off ----
+START_TIME_IST="$(TZ=Asia/Kolkata date +'%m/%d/%Y %I:%M:%S %p IST')"
+START_EPOCH="$(TZ=Asia/Kolkata date +%s)"
+
 #Changeset deploy
 sf project deploy start --concise --source-dir changeSetDeploy/force-app --target-org $SFDC_ORG 2>&1 | tee $LOG
+
+# ---- capture END (IST) immediately after the deploy completes ----
+END_TIME_IST="$(TZ=Asia/Kolkata date +'%m/%d/%Y %I:%M:%S %p IST')"
+END_EPOCH="$(TZ=Asia/Kolkata date +%s)"
+
 antReturnCode=`egrep -o "Status: Succeeded|ALREADY_IN_PROCESS|EXCEEDED_MAX_SIZE_REQUEST|UNKNOWN_EXCEPTION|Failed to send request" $LOG | sort -u`
 
 case $antReturnCode in
@@ -945,252 +953,744 @@ esac
 }
 
 
-HTML_REPORT()
-{
+HTML_REPORT() {
+  Report=$1
 
-	Report=$1
+  : > "$HTMLLog"
 
-	echo "<HTML>" > $HTMLLog
-	echo "<BODY>" >> $HTMLLog
-	echo "<table width=100%>" >> $HTMLLog
-	
-	if [ "${Report}" == "SUCCEEDED" ]
-	then
-		echo "<H3><tr><td bgcolor="SeaShell">${SFDC_ORG} deployment succeeded report</td></tr></H3>" >> $HTMLLog
- 		echo "<H5><PRE><tr><td bgcolor=\"LightGreen\">`egrep -A3 "Status: Succeeded" $LOG | sed 's/^/ /'`</td></tr></PRE></H5>" >> $HTMLLog
+  # ---- config / prerequisites ----
+  UI_COLORS_JSONC=${property}/ui_colors.jsonc
+  UI_COLORS_JSONC="${UI_COLORS_JSONC:-ui_colors.jsonc}"
+  UI_COLORS_JSON_STRICT="/tmp/ui_colors.$$.$RANDOM.json"
 
-	elif [ "${Report}" == "FAILED" ]
-	then
-		echo "<H3><tr><td bgcolor="SeaShell">${SFDC_ORG} deployment failure report</td></tr></H3>" >> $HTMLLog
-		echo "<H5><PRE><tr><td bgcolor="Khaki">`egrep -A3 "Status: Failed" $LOG | sed 's/^/ /'`</td></tr></PRE></H5>" >> $HTMLLog
-	fi
+  _esc(){ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
+  _fatal(){
+    echo "[FATAL] $1"
+    printf "%s\n" "[FATAL] $1" | mutt -s "---${SFDC_ORG}--- UI Color Config Error" "${mutt_MAIL_LIST}" 2>/dev/null
+    rm -f "$UI_COLORS_JSON_STRICT" 2>/dev/null
+    exit 1
+  }
+  command -v jq >/dev/null 2>&1 || _fatal "jq not found (needed for UI colors)."
+  [ -f "$UI_COLORS_JSONC" ] || _fatal "UI colors JSONC not found at: $UI_COLORS_JSONC"
 
-	echo "<tr><td bgcolor="LightBlue"></tr></td>" >> $HTMLLog
-    echo "GIT Repo URL: $(git config --get remote.origin.url)" >> $HTMLLog
-	echo "<br/>Current Branch: $(git rev-parse --abbrev-ref HEAD)" >> $HTMLLog   	
-	echo "<tr><td bgcolor="Yellow"></tr></td>" >> $HTMLLog
-	echo "<a href="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}">Log and changeset</a>" >> $HTMLLog
-	echo "<a href="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/$(basename ${HTMLFDLog}).${DATE}">ForceDeploy</a>" >> $HTMLLog
-	
-	echo "<br/>API used: ${SetAPI}" >> $HTMLLog
-	
-	
-	if [ -f /tmp/CodeAnalysisReport.txt ]	
-	then
-			echo "<br/>No PMD code review generated because classes or triggers do not exist in changeSet" >> $HTMLLog
-	else
+  # strip JSONC comments -> strict JSON
+  sed -E ':a; s@/\*[^*]*\*+([^/*][^*]*\*+)*/@@g; ta' "$UI_COLORS_JSONC" \
+  | sed -E 's@\r$@@' \
+  | sed -E 's@//[[:space:]]*.*$@@' \
+  | sed '/^[[:space:]]*$/d' > "$UI_COLORS_JSON_STRICT" \
+  || _fatal "Failed producing strict JSON from $UI_COLORS_JSONC"
 
-	echo "<br/><tr><td bgcolor="Salmon">PMD code review comments</td></tr>" >> $HTMLLog
+  [ -s "$UI_COLORS_JSON_STRICT" ] || _fatal "Empty strict JSON after stripping ($UI_COLORS_JSONC)."
+  jq empty "$UI_COLORS_JSON_STRICT" >/dev/null 2>&1 || _fatal "ui_colors.jsonc invalid after stripping comments."
 
-	echo "<br/><tr><td bgcolor="Lime"><a href="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}">Original PMD Report</a></td></tr>" >> $HTMLLog
+  HEX_RE='^#[0-9A-Fa-f]{6}$'
+  _getc(){ jq -r "$1 // empty" "$UI_COLORS_JSON_STRICT"; }
+  _ishex(){ [[ "$1" =~ $HEX_RE ]]; }
+  _gets(){ local key="$1" dflt="$2" v; v=$(_getc "$key"); [ -n "$v" ] && printf '%s' "$v" || printf '%s' "$dflt"; }
 
-	echo "<tr><td><table style="width:35%" border="1"><tr><th bgcolor="Cyan">Class Name</th><th bgcolor="Cyan">Original Warning Count - (High Severity Count) </th><th bgcolor="Cyan">Current Warning Count - (High Severity Count) </th></tr>" >> $HTMLLog
-	for classeName in `ls changeSetDeploy/force-app/main/default/classes/*.cls`
-	do
+  required_keys=(
+    '.header.success_bg' '.header.failure_bg' '.header.text'
+    '.plate.page_bg' '.plate.background' '.plate.border'
+    '.run_details.strip_success_bg' '.run_details.strip_failure_bg' '.run_details.title_text'
+    '.chips.success_bg' '.chips.failure_bg' '.chips.success_text' '.chips.failure_text' '.chips.border'
+    '.quick_links.tile_1_bg' '.quick_links.tile_2_bg' '.quick_links.tile_3_bg' '.quick_links.tile_4_bg' '.quick_links.text' '.quick_links.gap_px'
+    '.status_summary.deployment_success_bg' '.status_summary.deployment_failure_bg'
+    '.status_summary.pmd_bg' '.status_summary.time_bg'
+    '.status_summary.title_text' '.status_summary.label_text' '.status_summary.value_text' '.status_summary.corner_radius'
+    '.pmd_review.header_bg' '.pmd_review.header_text' '.pmd_review.row_border'
+    '.pmd_review.link_normal' '.pmd_review.link_high' '.pmd_review.text_high' '.pmd_review.text_normal'
+    '.success_section.file_row_bg' '.success_section.file_row_border' '.success_section.author_row_bg' '.success_section.author_row_border' '.success_section.title_text'
+    '.failure_section.error_row_bg' '.failure_section.error_row_border' '.failure_section.author_row_bg' '.failure_section.author_row_border' '.failure_section.title_text'
+    '.footer.bg' '.footer.text'
+  )
+  bad=0
+  for k in "${required_keys[@]}"; do
+    v=$(_getc "$k")
+    if [ -z "$v" ]; then
+      if [[ "$k" == .success_section* ]]; then
+        case "$k" in
+          *.file_row_bg)       v=$(_getc '.changeset.file_row_bg');;
+          *.file_row_border)   v=$(_getc '.changeset.file_row_border');;
+          *.author_row_bg)     v=$(_getc '.changeset.author_row_bg');;
+          *.author_row_border) v=$(_getc '.changeset.author_row_border');;
+          *.title_text)        v=$(_getc '.changeset.title_text');;
+        esac
+      elif [[ "$k" == .failure_section* ]]; then
+        case "$k" in
+          *.error_row_bg)      v=$(_getc '.failures.error_row_bg');;
+          *.error_row_border)  v=$(_getc '.failures.error_row_border');;
+          *.author_row_bg)     v=$(_getc '.failures.author_row_bg');;
+          *.author_row_border) v=$(_getc '.failures.author_row_border');;
+          *.title_text)        v=$(_getc '.failures.title_text');;
+        esac
+      fi
+    fi
+    if [[ "$k" =~ gap_px|corner_radius ]]; then
+      [ -n "$v" ] || { echo "[FATAL] Missing value for $k"; bad=1; }
+    else
+      _ishex "$v" || { echo "[FATAL] Missing/invalid color for key $k"; bad=1; }
+    fi
+  done
+  [ $bad -eq 0 ] || _fatal "ui_colors.jsonc failed validation."
 
+  # ---- read colors ----
+  _hdr_s=$(_getc '.header.success_bg'); _hdr_f=$(_getc '.header.failure_bg'); _hdr_txt=$(_getc '.header.text')
+  _page_bg=$(_getc '.plate.page_bg'); _plate_bg=$(_getc '.plate.background'); _plate_border=$(_getc '.plate.border')
+  _run_s=$(_getc '.run_details.strip_success_bg'); _run_f=$(_getc '.run_details.strip_failure_bg'); _run_title=$(_getc '.run_details.title_text')
 
-	classeNameMod=`echo $classeName | sed 's/changeSetDeploy\/src\/classes\///g' |sed s/.cls/.cls_currpmd.html/`
+  _chip_bg_s=$(_getc '.chips.success_bg')
+  _chip_bg_f=$(_getc '.chips.failure_bg')
+  _chip_txt_s=$(_getc '.chips.success_text')
+  _chip_txt_f=$(_getc '.chips.failure_text')
+  _chip_border_default=$(_getc '.chips.border')
+  _chip_border_s=$(_getc '.chips.border_success')
+  _chip_border_f=$(_getc '.chips.border_failure')
 
-	CurrseverityFile=`echo ${classeNameMod} | sed s/.cls_currpmd.html/.cls_currpmd.txt/`
-	OrgseverityFile=`echo ${classeNameMod} | sed s/.cls_currpmd.html/.cls_orgpmd.txt/`
+  _ql1=$(_getc '.quick_links.tile_1_bg'); _ql2=$(_getc '.quick_links.tile_2_bg'); _ql3=$(_getc '.quick_links.tile_3_bg'); _ql4=$(_getc '.quick_links.tile_4_bg'); _ql_text=$(_getc '.quick_links.text'); _ql_gap=$(_getc '.quick_links.gap_px')
+  _status_s=$(_getc '.status_summary.deployment_success_bg'); _status_f=$(_getc '.status_summary.deployment_failure_bg'); _status_pmd=$(_getc '.status_summary.pmd_bg'); _status_time=$(_getc '.status_summary.time_bg')
+  _status_title=$(_getc '.status_summary.title_text'); _status_label=$(_getc '.status_summary.label_text'); _status_value=$(_getc '.status_summary.value_text'); _status_radius=$(_getc '.status_summary.corner_radius')
 
-	OriginalPmd=`grep "Original PMD Warnings Total" /data/public/pmd_rule/$SFDC_ORG/$classeNameMod | cut -d ":" -f 2`
-	Currentpmd=`grep "Current PMD Warnings Total" /data/public/pmd_rule/$SFDC_ORG/$classeNameMod | cut -d ":" -f 2`
+  _pmd_hdr_bg=$(_getc '.pmd_review.header_bg'); _pmd_hdr_text=$(_getc '.pmd_review.header_text'); _pmd_row_border=$(_getc '.pmd_review.row_border'); _pmd_link_normal=$(_getc '.pmd_review.link_normal'); _pmd_link_high=$(_getc '.pmd_review.link_high'); _pmd_text_high=$(_getc '.pmd_review.text_high'); _pmd_text_normal=$(_getc '.pmd_review.text_normal')
 
+  _succ_file_bg=$(_getc '.success_section.file_row_bg'); _succ_file_border=$(_getc '.success_section.file_row_border'); _succ_auth_bg=$(_getc '.success_section.author_row_bg'); _succ_auth_border=$(_getc '.success_section.author_row_border'); _succ_title=$(_getc '.success_section.title_text')
+  _fail_err_bg=$(_getc '.failure_section.error_row_bg'); _fail_err_border=$(_getc '.failure_section.error_row_border'); _fail_auth_bg=$(_getc '.failure_section.author_row_bg'); _fail_auth_border=$(_getc '.failure_section.author_row_border'); _fail_title=$(_getc '.failure_section.title_text')
+  _foot_bg=$(_getc '.footer.bg'); _foot_text=$(_getc '.footer.text'); _foot_copy=$(_getc '.footer.copyright_text')
 
+  # ---- extra JSON-driven options ----
+  _chip_label_s=$(_getc '.chips.label_success_text')
+  _chip_label_f=$(_getc '.chips.label_failure_text')
 
+  _run_title_bg_s=$(_getc '.run_details.title_bg_success')
+  _run_title_bg_f=$(_getc '.run_details.title_bg_failure')
+  _run_title_txt_s=$(_gets '.run_details.title_text_success' "$_run_title")
+  _run_title_txt_f=$(_gets '.run_details.title_text_failure' "$_run_title")
 
-	classeNameMod_mod=`echo ${classeNameMod} | sed s/.cls_currpmd.html//`
+  _dep_label_s=$(_gets '.status_summary.deployment_label_success' "$_status_label")
+  _dep_value_s=$(_gets '.status_summary.deployment_value_success' "$_status_value")
+  _dep_label_f=$(_gets '.status_summary.deployment_label_failure' "$_status_label")
+  _dep_value_f=$(_gets '.status_summary.deployment_value_failure' "$_status_value")
+  _pmd_textcol=$(_gets '.status_summary.pmd_text' "$_status_value")
+  _time_textcol=$(_gets '.status_summary.time_text' "$_status_value")
 
-	#echo $OriginalPmd > /data/code/sfdc_deploySandbox/branches/release2020_Q1/Org.txt
-	#echo $Currentpmd > /data/code/sfdc_deploySandbox/branches/release2020_Q1/Cur.txt
+  _leg_red_bg=$(_gets '.pmd_review.legend_red_bg' '#ffefef')
+  _leg_red_bd=$(_gets '.pmd_review.legend_red_border' '#f5bcbc')
+  _leg_green_bg=$(_gets '.pmd_review.legend_green_bg' '#ecfdf5')
+  _leg_green_bd=$(_gets '.pmd_review.legend_green_border' '#a7f3d0')
+  _leg_neu_bg=$(_gets '.pmd_review.legend_neutral_bg' '#ffffff')
+  _leg_neu_bd=$(_gets '.pmd_review.legend_neutral_border' '#dddddd')
 
-	#pattern="ApexUnitTestShouldNotUseSeeAllDataTrue\UnusedLocalVariable\|ClassNamingConventions\|FieldDeclarationsShouldBeAtStart\|FieldNamingConventions\|FormalParameterNamingConventions\|LocalVariableNamingConventions\|MethodNamingConventions\|PropertyNamingConventions\|ExcessiveClassLength\|ExcessiveParameterList\|ApexDoc\|ApexCSRF\|AvoidDirectAccessTriggerMap\|AvoidHardcodingId\|AvoidNonExistentAnnotations\|EmptyCatchBlock\|EmptyIfStmt\|EmptyStatementBlock\|EmptyTryOrFinallyBlock\|EmptyWhileStmt\|InaccessibleAuraEnabledGetter\|MethodWithSameNameAsEnclosingClass\|OverrideBothEqualsAndHashcode\|TestMethodsMustBeInTestClasses\|AvoidDmlStatementsInLoops\|AvoidSoqlInLoops\|AvoidSoslInLoops\|OperationWithLimitsInLoop\|ApexBadCrypto\|ApexDangerousMethods\|ApexInsecureEndpoint\|ApexOpenRedirect\|ApexSharingViolations\|ApexSOQLInjection\|ApexSuggestUsingNamedCred"
+  _pmd_reg_row_bg=$(_gets '.pmd_review.regression_row_bg' '#ffefef')
+  _pmd_reg_left=$(_gets '.pmd_review.regression_left_stripe' '#c62828')
+  _delta_reg_bg=$(_gets '.pmd_review.delta_reg_bg' '#ffe3e3')
+  _delta_reg_bd=$(_gets '.pmd_review.delta_reg_border' '#f5bcbc')
+  _delta_reg_tx=$(_gets '.pmd_review.delta_reg_text' '#b71c1c')
 
-	pattern="ApexUnitTestShouldNotUseSeeAllDataTrue:\|UnusedLocalVariable:\|ClassNamingConventions:\|FieldDeclarationsShouldBeAtStart:\|FieldNamingConventions:\|FormalParameterNamingConventions:\|LocalVariableNamingConventions:\|MethodNamingConventions:\|PropertyNamingConventions:\|ExcessiveClassLength:\|ExcessiveParameterList:\|ApexDoc:\|ApexCSRF:\|AvoidDirectAccessTriggerMap:\|AvoidHardcodingId:\|AvoidNonExistentAnnotations:\|EmptyCatchBlock:\|EmptyIfStmt:\|EmptyStatementBlock:\|EmptyTryOrFinallyBlock:\|EmptyWhileStmt:\|InaccessibleAuraEnabledGetter:\|MethodWithSameNameAsEnclosingClass:\|OverrideBothEqualsAndHashcode:\|TestMethodsMustBeInTestClasses:\|AvoidDmlStatementsInLoops:\|AvoidSoqlInLoops:\|AvoidSoslInLoops:\|OperationWithLimitsInLoop:\|ApexBadCrypto:\|ApexDangerousMethods:\|ApexInsecureEndpoint:\|ApexOpenRedirect:\|ApexSharingViolations:\|ApexSOQLInjection:\|ApexSuggestUsingNamedCred:"
+  _pmd_imp_row_bg_s=$(_gets '.pmd_review.improve_success_row_bg' '#ecfdf5')
+  _pmd_imp_left_s=$(_gets '.pmd_review.improve_success_left_stripe' '#2e7d32')
+  _pmd_imp_tx_s=$(_gets '.pmd_review.improve_success_text' '#065f46')
+  _delta_imp_bg_s=$(_gets '.pmd_review.delta_imp_success_bg' '#ecfdf5')
+  _delta_imp_bd_s=$(_gets '.pmd_review.delta_imp_success_border' '#a7f3d0')
+  _delta_imp_tx_s=$(_gets '.pmd_review.delta_imp_success_text' '#065f46')
 
-	CurrseverityCnt=`grep -o $pattern PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$CurrseverityFile | wc -l`
-	OrgseverityCnt=`grep -o $pattern PMDReport/orgpmdoutput/src/classes/$OrgseverityFile | wc -l`
+  _pmd_imp_row_bg_f=$(_gets '.pmd_review.improve_failure_row_bg' '#fef2f2')
+  _pmd_imp_left_f=$(_gets '.pmd_review.improve_failure_left_stripe' '#a94442')
+  _pmd_imp_tx_f=$(_gets '.pmd_review.improve_failure_text' '#7f1d1d')
+  _delta_imp_bg_f=$(_gets '.pmd_review.delta_imp_failure_bg' '#fef2f2')
+  _delta_imp_bd_f=$(_gets '.pmd_review.delta_imp_failure_border' '#fecaca')
+  _delta_imp_tx_f=$(_gets '.pmd_review.delta_imp_failure_text' '#7f1d1d')
 
-	#severity=`grep $pattern /data/public/pmd_rule/$SFDC_ORG/$classeNameMod`
+  # ---- strings / typography ----
+  _fontfam="$(_gets '.typography.font_family' 'Arial,Helvetica,sans-serif')"
+  _base="$(_gets '.typography.base_px' '10')"
+  _sect="$(_gets '.typography.section_hdr_px' '11')"
+  _main="$(_gets '.typography.main_hdr_px' '14')"
+  _run="$(_gets '.typography.run_hdr_px' '11')"
 
-	#if ([[ $Currentpmd -gt $OriginalPmd ]] && [[ ! -z "$severity" ]])
-	if [ $CurrseverityCnt -gt $OrgseverityCnt ]
-	then
-	echo "<tr><th style="text-align:left"><a href="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$classeNameMod">$classeNameMod_mod</a></th><th style="text-align:right" bgcolor="Tomato">${OriginalPmd}-($OrgseverityCnt)</th><th style="text-align:right" bgcolor="Tomato">${Currentpmd}-($CurrseverityCnt)</th></tr>" >> $HTMLLog
-	else
-	echo "<tr><th style="text-align:left"><a href="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$classeNameMod">$classeNameMod_mod</a></th><th style="text-align:right">${OriginalPmd}-($OrgseverityCnt)</th><th style="text-align:right">${Currentpmd}-($CurrseverityCnt)</th></tr>" >> $HTMLLog
-	fi
+  _STR_HDR_CORE="$(_gets '.strings.header.title_core' 'Deployment')"
+  _STR_HDR_SUFFIX="$(_gets '.strings.header.title_suffix' 'Report')"
+  _STR_HDR_SUCCESS="$(_gets '.strings.header.success_word' 'Success')"
+  _STR_HDR_FAILURE="$(_gets '.strings.header.failure_word' 'Failure')"
 
-	done
-	echo "</table></td></tr>" >> $HTMLLog
+  _STR_RUN_TITLE="$(_gets '.strings.run_details.title' 'Run Details')"
+  _STR_CHIP_REPO="$(_gets '.strings.chips.repo' 'REPO')"
+  _STR_CHIP_BRANCH="$(_gets '.strings.chips.branch' 'BRANCH')"
+  _STR_CHIP_REQID="$(_gets '.strings.chips.request_id' 'REQUEST ID')"
+  _STR_CHIP_RUNIST="$(_gets '.strings.chips.run_ist' 'RUN (IST)')"
+  _STR_CHIP_ORGAPI="$(_gets '.strings.chips.org_api' 'ORG NAME + API')"
+  _STR_CHIP_DEPUSER="$(_gets '.strings.chips.deploy_user' 'DEPLOY USER')"
 
+  _STR_SECT_STATUS="$(_gets '.strings.sections.status_summary' 'Status Summary')"
+  _STR_TILE_DEPLOY="$(_gets '.strings.sections.deployment_tile' 'DEPLOYMENT')"
+  _STR_TILE_PMD="$(_gets '.strings.sections.pmd_tile' 'PMD — CHANGESET')"
+  _STR_TILE_DUR="$(_gets '.strings.sections.duration_tile' 'DURATION')"
+  _STR_DUR_START="$(_gets '.strings.sections.duration_start' 'Start')"
+  _STR_DUR_END="$(_gets '.strings.sections.duration_end' 'End')"
+  _STR_PMD_REVIEW="$(_gets '.strings.sections.pmd_review' 'PMD Review')"
 
-	echo "<tr><td><table style="width:35%" border="1"><tr><th bgcolor="Cyan">Trigger Name</th><th bgcolor="Cyan">Original Warning Count</th><th bgcolor="Cyan">Current Warning Count</th></tr>" >> $HTMLLog
-	for triggerName in `ls changeSetDeploy/force-app/main/default/triggers/*.trigger`
-	do
+  # Fonts (computed from json)
+  _FONT_BASE="font:${_base}px ${_fontfam};"
+  _FONT_BASE_BOLD="font:bold ${_base}px ${_fontfam};"
+  _FONT_SECTION_HDR="font:bold ${_sect}px ${_fontfam};"
+  _FONT_MAIN_HDR="font:bold ${_main}px ${_fontfam};"
+  _FONT_RUN_HDR="font:bold ${_run}px ${_fontfam};"
 
-	triggerNameMod=`echo $triggerName | sed 's/changeSetDeploy\/src\/triggers\///g' |sed s/.trigger/.trigger_currpmd.html/`
+  # ---- runtime values ----
+  _RUN_IST="$(TZ=Asia/Kolkata date +'%d.%b.%Y %H:%M IST')"
+  _API="${SetAPI:-N/A}"
+  _BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo N/A)"
+  _REPO="$(git config --get remote.origin.url 2>/dev/null || echo N/A)"
 
+  _REQID=""
+  if [ -f "$LOG" ]; then
+    _REQID="$(grep -m1 -E 'Deploy ID[[:space:]]*:' "$LOG" | xargs | cut -d: -f2- | cut '-d ' -f2-)"
+  fi
+  _DEPUSER=""
+  if [ -f "$LOG" ]; then
+    _DEPUSER="$(grep -m1 -E 'Target Org[[:space:]]*:' "$LOG" | xargs | cut -d: -f2- | cut '-d ' -f2-)"
+  fi
 
-	OriginalPmd=`grep "Original PMD Warnings Total" /data/public/pmd_rule/$SFDC_ORG/$triggerNameMod | cut -d ":" -f 2`
-	Currentpmd=`grep "Current PMD Warnings Total" /data/public/pmd_rule/$SFDC_ORG/$triggerNameMod | cut -d ":" -f 2`
+  if [ -f "$LOG.filtered" ]; then
+    COMP_PASS="$(jq -r 'try (.result.details.componentSuccesses|length) catch 0' "$LOG.filtered" 2>/dev/null)"
+    COMP_FAIL="$(jq -r 'try (.result.details.componentFailures|length) catch 0' "$LOG.filtered" 2>/dev/null)"
+  else
+    COMP_PASS="$(find changeSetDeploy/force-app/main/default -type f | egrep -v 'customSettings|staticResourceFolders.txt' | wc -l | xargs)"
+    COMP_FAIL=0
+  fi
 
-	triggerNameMod_mod=`echo ${triggerNameMod} | sed s/.trigger_currpmd.html// `
+  PAT_FILE="build/property/pmd_high_patterns.txt"
+  pattern="$(grep -Ehv '^\s*($|#)' "$PAT_FILE" | tr -d '\r' | paste -sd'|' -)"
+  [ -n "$pattern" ] || _fatal "PMD patterns file is empty: $PAT_FILE"
 
+  CLASS_COUNT=$(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null | wc -l | xargs)
+  TRIGGER_COUNT=$(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null | wc -l | xargs)
 
+  _sum_grep_matches() {
+    local dir="$1"
+    local total=0 n
+    if [ -d "$dir" ]; then
+      n=$(find "$dir" -maxdepth 1 -type f -name '*.txt' -print0 2>/dev/null \
+          | xargs -0 -r grep -Eh "$pattern" 2>/dev/null | wc -l | xargs)
+      total=$(( total + ${n:-0} ))
+    fi
+    echo "$total"
+  }
+  PMD_HIGH_CLS=$(_sum_grep_matches "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes")
+  PMD_HIGH_TRG=$(_sum_grep_matches "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers")
+  PMD_HIGH_TOTAL=$(( PMD_HIGH_CLS + PMD_HIGH_TRG ))
 
-	echo "<tr><th style="text-align:left"><a href="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/$triggerNameMod">$triggerNameMod_mod</a></th><th style="text-align:right">${OriginalPmd}</th><th style="text-align:right">${Currentpmd}</th></tr>" >> $HTMLLog
+  if [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; then
+    PMD_HIGH_CLS=0
+    PMD_HIGH_TRG=0
+    PMD_HIGH_TOTAL=0
+  fi
 
+  if [ -z "$START_TIME_IST" ] && [ -f "$deployLogFile" ]; then
+    START_TIME_IST="$(tac "$deployLogFile" | grep -m1 'Build Start Time - ' | sed 's/.* - //')"
+  fi
+  if [ -z "$END_TIME_IST" ] && [ -f "$deployLogFile" ]; then
+    END_TIME_IST="$(tac "$deployLogFile" | grep -m1 'Build End Time - ' | sed 's/.* - //')"
+  fi
 
-	done
-	echo "</table></td></tr>" >> $HTMLLog
+  _time_only(){
+    local ts="$1"
+    [ -n "$ts" ] || { echo ""; return; }
+    TZ=Asia/Kolkata date -d "$ts" +'%I:%M %p IST' 2>/dev/null || echo "$ts"
+  }
+  START_TIME_IST_ONLY="$(_time_only "$START_TIME_IST")"
+  END_TIME_IST_ONLY="$(_time_only "$END_TIME_IST")"
 
+  if [ -n "$START_TIME_IST" ] && [ -n "$END_TIME_IST" ]; then
+    _start_sec=$(TZ=Asia/Kolkata date -d "$START_TIME_IST" +%s 2>/dev/null || echo "")
+    _end_sec=$(TZ=Asia/Kolkata date -d "$END_TIME_IST" +%s 2>/dev/null || echo "")
+    if [ -n "$_start_sec" ] && [ -n "$_end_sec" ]; then
+      _dur=$(( _end_sec - _start_sec ))
+      _h=$((_dur/3600)); _m=$(((_dur%3600)/60)); _s=$((_dur%60))
+      TOTAL_DURATION=$(printf "%02dh:%02dm:%02ds" "$_h" "$_m" "$_s")
+    else
+      TOTAL_DURATION="${TOTAL_DURATION:-N/A}"
+    fi
+  else
+    TOTAL_DURATION="${TOTAL_DURATION:-N/A}"
+  fi
 
-	fi
+  if [ "$Report" != "SUCCEEDED" ] && [ -f "$LOG.filtered" ] && { [ -z "$START_TIME_IST" ] || [ -z "$END_TIME_IST" ]; }; then
+    JSON_CREATED="$(jq -r '.result.createdDate // empty' "$LOG.filtered" 2>/dev/null)"
+    JSON_COMPLETED="$(jq -r '.result.completedDate // empty' "$LOG.filtered" 2>/dev/null)"
+    if [ -n "$JSON_CREATED" ]; then
+        START_TIME_IST="$(TZ=Asia/Kolkata date -d "$JSON_CREATED" +'%m/%d/%Y %I:%M:%S %p IST')"
+    fi
+    if [ -n "$JSON_COMPLETED" ]; then
+        END_TIME_IST="$(TZ=Asia/Kolkata date -d "$JSON_COMPLETED"  +'%m/%d/%Y %I:%M:%S %p IST')"
+    fi
+    START_TIME_IST_ONLY="$(_time_only "$START_TIME_IST")"
+    END_TIME_IST_ONLY="$(_time_only "$END_TIME_IST")"
+    _start_sec=$(TZ=Asia/Kolkata date -d "$START_TIME_IST" +%s 2>/dev/null || echo "")
+    _end_sec=$(TZ=Asia/Kolkata date -d "$END_TIME_IST" +%s 2>/dev/null || echo "")
+    if [ -n "$_start_sec" ] && [ -n "$_end_sec" ]; then
+        _dur=$(( _end_sec - _start_sec ))
+        _h=$((_dur/3600)); _m=$(((_dur%3600)/60)); _s=$((_dur%60))
+        TOTAL_DURATION=$(printf "%02dh:%02dm:%02ds" "$_h" "$_m" "$_s")
+    fi
+  fi
 
-	SAVEIFS=$IFS
-	IFS=$(echo -en "\n\b")
-	
-	if [ "${Report}" == "SUCCEEDED" ]
-	then
-		# Collect files from the SF CLI changeset structure and convert paths from
-		# changeSetDeploy/force-app/main/default to the old format (src/...)
-		find changeSetDeploy/force-app/main/default -type f | \
-		egrep -v "customSettings|staticResourceFolders.txt" | \
-		sed 's|^changeSetDeploy/force-app/main/default|src|' | sort -u > ${DEPLOYEDFILE}
+  OPEN_LOGS_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
+  ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
+  FORCE_DEPLOY_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/$(basename "${HTMLFDLog:-$HTMLLog}").${DATE}"
 
-		changesetFile=$(find changeSetDeploy/force-app/main/default -type f | egrep -v "customSettings|staticResourceFolders.txt" | wc -l)
-		echo "<tr><td bgcolor=\"SeaShell\">Changeset file/s ...[${changesetFile}]</td></tr>" >> $HTMLLog
+  if [ "$Report" = "SUCCEEDED" ]; then
+    _hdr_bg="$_hdr_s"; _status_bg="$_status_s"; _chip_bg="$_chip_bg_s"; _chip_txt="$_chip_txt_s"
+    _chip_border="${_chip_border_s:-$_chip_border_default}"
+  else
+    _hdr_bg="$_hdr_f"; _status_bg="$_status_f"; _chip_bg="$_chip_bg_f"; _chip_txt="$_chip_txt_f"
+    _chip_border="${_chip_border_f:-$_chip_border_default}"
+  fi
 
-		NUM=1
-		for FILE in `cat ${DEPLOYEDFILE}`
-		do
-			if [ "${FILE}" == "src/labels/CustomLabels.labels-meta.xml" ]
-			then
-				FILE=src/env/${SFDC_ORG}/customLabel/CustomLabels.labels-meta.xml
-			elif [ ! -z "$(echo $FILE | grep ^"customSettings")" ]
-			then
-				FILE=$(echo "${FILE}" | sed -e 's/^customSettings\///g')
-			elif [[ "${FILE}" =~ "src/remoteSiteSettings/" ]]
-			then
-				FILE=$(echo "${FILE}" | sed -e "s/^src/src\/env\/${SFDC_ORG}/g")
-			elif [[ "${FILE}" =~ "src/customMetadata/" ]]
-			then
-				FILE=$(echo "${FILE}" | sed -e "s/^src/src\/env\/${SFDC_ORG}/g")
-			fi
+  # Run Details bar colors + chip label color + deployment tile text colors
+  if [ "$Report" = "SUCCEEDED" ]; then
+    _run_hdr_bg="${_run_title_bg_s:-$_hdr_bg}"
+    _run_hdr_txt="${_run_title_txt_s:-#ffffff}"
+    _chip_label="${_chip_label_s:-$_chip_txt}"
+    _dep_label_col="$_dep_label_s"
+    _dep_value_col="$_dep_value_s"
+  else
+    _run_hdr_bg="${_run_title_bg_f:-$_hdr_bg}"
+    _run_hdr_txt="${_run_title_txt_f:-#ffffff}"
+    _chip_label="${_chip_label_f:-$_chip_txt}"
+    _dep_label_col="$_dep_label_f"
+    _dep_value_col="$_dep_value_f"
+  fi
 
-			echo "<tr><td bgcolor=\"LightGreen\"><PRE>" >> $HTMLLog
-			echo " [$((NUM++))] ${FILE}" >> ${HTMLLog}
-			echo "</PRE></td></tr>" >> $HTMLLog
-			LastAuthor=`git log -1 ${FILE} | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g'`
-			echo "<tr><td bgcolor=\"Gainsboro\"><PRE>" >> $HTMLLog
-			echo "Last author... ${LastAuthor}" >> $HTMLLog
-			echo "</PRE></td></tr>" >> $HTMLLog
-		done
-		echo "</table>" >> $HTMLLog
+  resolve_src_from_json_name() {
+    local jname="$1" stem f_cs f_src
+    stem="$(basename "${jname}")"; stem="${stem%.*}"
+    f_cs="$(find changeSetDeploy/force-app/main/default -type f -name "${stem}.*" -o -type d -name "${stem}" 2>/dev/null | head -n1)"
+    if [ -n "$f_cs" ] && [ -d "$f_cs" ]; then
+      f_cs="$(find "$f_cs" -type f -name "${stem}.*" 2>/dev/null | head -n1)"
+    fi
+    if [ -z "$f_cs" ] && [ -f "$SFCliBuildList" ]; then
+      f_cs="$(grep -F "/${stem}." "$SFCliBuildList" | head -n1)"
+    fi
+    if [ -z "$f_cs" ]; then
+      f_cs="$(find src -type f -name "${stem}.*" 2>/dev/null | head -n1)"
+    fi
+    [ -z "$f_cs" ] && return 1
+    if [[ "$f_cs" == changeSetDeploy/force-app/main/default/* ]]; then
+      f_src="${f_cs/changeSetDeploy\/force-app\/main\/default/src}"
+    else
+      f_src="$f_cs"
+    fi
+    case "$f_src" in
+      src/labels/CustomLabels.labels-meta.xml)
+        f_src="src/env/${SFDC_ORG}/customLabel/CustomLabels.labels-meta.xml";;
+      src/customMetadata/*|src/remoteSiteSettings/*)
+        f_src="${f_src/src/src\/env\/${SFDC_ORG}}";;
+    esac
+    printf '%s\n' "$f_src"
+  }
 
-	
-		
-	elif [ "${Report}" == "FAILED" ]
-	then
-		# Title row in the HTML
-		echo "<tr><td bgcolor=\"SeaShell\">All Component Failures:</td></tr>" >> "$HTMLLog"
+  # ---- Logo plumbing (per-org local file -> public URL) ----
+  ASSET_LOCAL="build/property/assets/logo.png"
+  ASSET_PUBLIC_DIR="/data/public/assets/${SFDC_ORG}/"
+  ASSET_NAME="$(basename "$ASSET_LOCAL")"
+  PUBLIC_BASE_URL="https://cdnsfdc.cadence.com/assets/${SFDC_ORG}"
+  mkdir -p "$ASSET_PUBLIC_DIR"
+  if [ -s "$ASSET_LOCAL" ]; then
+    cp -u "$ASSET_LOCAL" "${ASSET_PUBLIC_DIR}${ASSET_NAME}"
+    REPORT_LOGO="${PUBLIC_BASE_URL}/${ASSET_NAME}"
+  elif [ -s "build/property/assets/default/logo.png" ]; then
+    cp -u "build/property/assets/default/logo.png" "${ASSET_PUBLIC_DIR}logo.png"
+    REPORT_LOGO="${PUBLIC_BASE_URL}/logo.png"
+  else
+    REPORT_LOGO=""
+  fi
+  export REPORT_LOGO
 
-		i=1
-		# Loop through each failure in the JSON
-		# -c ensures each JSON object is on a single line
-		for failure in $(jq -c '.result.details.componentFailures[]' "$LOG.filtered"); do
+  # Visible placeholder logo (32x32) if not supplied
+  _logo_src="${REPORT_LOGO:-data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABbklEQVRYR+2WvUrDUBSGv7mQhCIWIhrCwiCKGxsLW1tZWrcQBBFFxMIgY2thYW1trE3/AW0trY2NgYCFhY2Ah2ZLcvIGc6SZnMu7MnDkzs5ISkHcGiKKb8GfAYkAZcADuAl6A+cAF8A+8BvzMFQJgGjAJF7JrkFPhCnVwBZwBngAVgJ3gDdaAF0AC2B24Bn4B0oAPQrt/EtgLP8bW3vcAR0DLeAIWAFW4AA8AD8BPwBR4KfLz0UJTgMerre8N3n2mS8RmqbJ5fLwOu6Lqte13Xdf1SmLIsg2maZv+puu6/X6/1qtFqtRqNRuPxOBwOguVyuaZpms/ncLlc1Wo1QqlU2mwWQqG43W6/X6XS6XQ6/X6z2Qy+Wy2Ww2pVJJOp0Ot9uNvN9vt9vtfLpeL4/H4gEqlwufzyWRyOBwOt9sN4PF4n8/nzczMTHq9Ho/HYTabzWKx2Gw2g29vb6/X6+Uy2bIsf0Wg0mh8OhzqdDq/Xa5Ik2mz2fz6f12g04HA4PB4PJBIJBK/Xi0Qi0W63S5IkHo+Hw+Fw2Gw2Wq0WmUzGx8cH+P1+AJKqqjzP+/0f6DBFYCJifcEAAAAASUVORK5CYII=}"
 
-			# Extract fileName and problem
-			fileName=$(echo "$failure" | jq -r '.fileName')
-			errorMsg=$(echo "$failure" | jq -r '.problem')
+  _CARD_WIDTH=880
 
-			# 1) Remove newlines/carriage returns
-			# 2) Escape special HTML chars (&, <, >) so they don't break formatting
-			sanitizedErrorMsg=$(echo "$errorMsg" \
-			| tr '\n' ' ' \
-			| tr '\r' ' ' \
-			| sed -e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+  # --- GitHub link helpers ---
+  _repo_http_root(){
+    local r="$1"
+    if [[ "$r" =~ ^https?:// ]]; then
+      r="${r%.git}"; r="${r%/}"; echo "$r"; return
+    elif [[ "$r" =~ ^git@([^:]+):(.+)$ ]]; then
+      local host="${BASH_REMATCH[1]}"; local path="${BASH_REMATCH[2]}"
+      path="${path%.git}"
+      echo "https://${host}/${path}"; return
+    fi
+    echo ""
+  }
+  _urlenc_spaces(){ echo "$1" | sed -e 's/%/%25/g' -e 's/ /%20/g' -e 's/#/%23/g' -e 's/+/%2B/g'; }
+  _GH_ROOT="$(_repo_http_root "$_REPO")"
 
-			# Print an ANT-like error line in Khaki
-			echo "<tr><td bgcolor=\"Khaki\"><PRE>$i. $fileName -- Error: $sanitizedErrorMsg</PRE></td></tr>" >> "$HTMLLog"
+  # Helper: bulletproof chip TD (fixed grid for Outlook) — with thin borders
+  _chip_td(){
+    local label="$1"
+    local value="$2"
+    local pr="$3"
+    cat <<CELL
+<td valign="top" width="260" style="padding:0 ${pr}px 10px 0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:${_chip_bg};border:1px solid ${_chip_border};">
+    <tr>
+      <td style="padding:6px 8px;${_FONT_BASE};color:${_chip_txt};line-height:12px;">
+        <div style="font:700 ${_base}px ${_fontfam};color:${_chip_label};letter-spacing:.3px;text-transform:uppercase;">${label}</div>
+        <div style="margin-top:2px;word-wrap:break-word;word-break:break-word;${_FONT_BASE};color:${_chip_txt};">
+          $(_esc <<<"$value")
+        </div>
+      </td>
+    </tr>
+  </table>
+</td>
+CELL
+  }
 
-			# Locate the file in your local repo for the Git log
-			# (Adjust 'find src' if your directory structure differs)
-			gitFile=$(find src -type f -iname "$(basename "$fileName")" | head -n 1)
+  # Header
+  cat >>"$HTMLLog" <<HTML_TOP
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+  a.cta { text-decoration:none !important; color:${_ql_text} !important; }
+  a.cta:hover { text-decoration:underline !important; }
+  .wrap { word-wrap:break-word; word-break:break-word; }
+</style>
+</head>
+<body style="margin:0;padding:0;background:${_page_bg};">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_page_bg};"><tr><td align="center">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${_CARD_WIDTH}" style="max-width:${_CARD_WIDTH}px;margin:6px auto;">
+    <tr>
+      <td style="background:${_hdr_bg};padding:6px 10px;color:${_hdr_txt};${_FONT_MAIN_HDR}line-height:16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+          <tr>
+            <td style="padding:0 10px 0 0;vertical-align:middle;">
+              <img src="${_logo_src}" alt="Logo" width="32" height="32" style="height:32px;width:32px;display:block;border:0;outline:0;">
+            </td>
+            <td style="padding:0;${_FONT_MAIN_HDR}color:${_hdr_txt};vertical-align:middle;white-space:nowrap;">
+              ${SFDC_ORG} ${_STR_HDR_CORE} $([ "$Report" = "SUCCEEDED" ] && echo "${_STR_HDR_SUCCESS}" || echo "${_STR_HDR_FAILURE}") ${_STR_HDR_SUFFIX}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+HTML_TOP
 
-			# If not found, and extension is not among the known pairs (e.g., .cls, .page, .trigger),
-			# then try appending '-meta.xml' to handle metadata like 'roles', 'profiles', etc.
-			if [ -z "$gitFile" ]; then
-				# Extract extension
-				ext=$(echo "$fileName" | sed 's/.*\.//')
+  # Card open
+  cat >>"$HTMLLog" <<EOF
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${_CARD_WIDTH}" style="max-width:${_CARD_WIDTH}px;background:${_plate_bg};border:1px solid ${_plate_border};">
+    <tr><td style="padding:10px 12px;">
+      <!-- Run Details -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid ${_chip_border};border-radius:4px;">
+        <tr>
+          <td align="center" style="padding:6px 8px;${_FONT_RUN_HDR}color:${_run_hdr_txt};background:${_run_hdr_bg};border-bottom:1px solid ${_chip_border};">
+            ${_STR_RUN_TITLE}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:8px;">
+            <!-- Fixed 3x2 grid for Outlook -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                $(_chip_td "${_STR_CHIP_REPO}" "$_REPO" 10)
+                $(_chip_td "${_STR_CHIP_BRANCH}" "$_BRANCH" 10)
+                $(_chip_td "${_STR_CHIP_REQID}" "$_REQID" 0)
+              </tr>
+              <tr>
+                $(_chip_td "${_STR_CHIP_RUNIST}" "$_RUN_IST" 10)
+                $(_chip_td "${_STR_CHIP_ORGAPI}" "${SFDC_ORG} • ${_API}" 10)
+                $(_chip_td "${_STR_CHIP_DEPUSER}" "$_DEPUSER" 0)
+              </tr>
+            </table>
 
-				# Known pairs that we do NOT alter (already have separate file & meta.xml)
-				# Adjust this list as needed for your org
-				knownPairs="cls page trigger component"
+            <!-- Quick links buttons (inside Run Details) -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 2px 0;">
+              <tr>
+                <td style="padding:0 ${_ql_gap}px 0 0;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql1};border-radius:3px;">
+                    <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
+                      <a class="cta" href="${OPEN_LOGS_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">$(_gets '.strings.quick_links.tile_1' 'Open Logs')</a>
+                    </td></tr>
+                  </table>
+                </td>
+                <td style="padding:0 ${_ql_gap}px 0 0;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql2};border-radius:3px;">
+                    <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
+                      <a class="cta" href="${ORIG_PMD_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">$(_gets '.strings.quick_links.tile_2' 'Original PMD Report')</a>
+                    </td></tr>
+                  </table>
+                </td>
+                <td>
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql4};border-radius:3px;">
+                    <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
+                      <a class="cta" href="${FORCE_DEPLOY_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">$(_gets '.strings.quick_links.tile_4' 'ForceDeploy')</a>
+                    </td></tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
 
-				# If extension is not in knownPairs, try adding '-meta.xml'
-				if ! echo "$knownPairs" | grep -qw "$ext"; then
-					metaCandidate="$(basename "$fileName")-meta.xml"
-					fallbackFile=$(find src -type f -iname "$metaCandidate" | head -n 1)
-					if [ -n "$fallbackFile" ]; then
-						gitFile="$fallbackFile"
-					fi
-				fi
-			fi
+          </td>
+        </tr>
+      </table>
+EOF
 
-			# Print Git log in Gainsboro
-			echo "<tr><td bgcolor=\"Gainsboro\"><PRE>" >> "$HTMLLog"
-			if [ -n "$gitFile" ]; then
-				LastAuthor=$(git log -1 "$gitFile" 2>/dev/null \
-					| sed -e 's/$/\ |/g' \
-					| xargs \
-					| sed -e 's/| |/|\ Comment:/g')
-				echo "GIT log >>> $gitFile" >> "$HTMLLog"
-				echo "$LastAuthor" >> "$HTMLLog"
-			else
-				echo "No Git log available for $fileName" >> "$HTMLLog"
-			fi
-			echo "</PRE></td></tr>" >> "$HTMLLog"
+  # Status Summary
+  _status_counts_html() {
+    if [ "$Report" = "SUCCEEDED" ]; then
+      echo "Passed: ${COMP_PASS}"
+    else
+      echo "Passed: ${COMP_PASS} &nbsp; • &nbsp; Failed: ${COMP_FAIL}"
+    fi
+  }
+  _pmd_summary_html() {
+    if [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; then
+      local warn_color="#c62828"
+      echo "<div style=\"${_FONT_BASE_BOLD}color:${warn_color};\">Classes: 0 &nbsp; • &nbsp; Triggers: 0</div>"
+      echo "<div style=\"${_FONT_BASE_BOLD}color:${warn_color};\">PMD analysis skipped</div>"
+    else
+      echo "<div style=\"${_FONT_BASE_BOLD}color:${_pmd_textcol};\">Classes: ${CLASS_COUNT} &nbsp; • &nbsp; Triggers: ${TRIGGER_COUNT}</div>"
+      echo "<div style=\"${_FONT_BASE}color:${_pmd_textcol};\">High (Classes): ${PMD_HIGH_CLS} &nbsp; • &nbsp; High (Triggers): ${PMD_HIGH_TRG}</div>"
+    fi
+  }
 
-			i=$((i+1))
-		done
+  cat >>"$HTMLLog" <<EOF
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:6px;">
+    <tr><td style="padding:4px 2px 2px 2px;${_FONT_SECTION_HDR}color:${_status_title};">${_STR_SECT_STATUS}</td></tr>
+  </table>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+      <td width="33%" valign="top" style="padding:2px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_bg};border-radius:${_status_radius};">
+          <tr><td style="padding:6px;" valign="top">
+            <div style="${_FONT_BASE}color:${_dep_label_col};">${_STR_TILE_DEPLOY}</div>
+            <div style="${_FONT_BASE_BOLD}color:${_dep_value_col};">$([ "$Report" = "SUCCEEDED" ] && echo "Succeeded" || echo "Failed")</div>
+            <div style="${_FONT_BASE}color:${_dep_value_col};">$(_status_counts_html)</div>
+          </td></tr>
+        </table>
+      </td>
+      <td width="33%" valign="top" style="padding:2px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_pmd};border-radius:${_status_radius};">
+          <tr><td style="padding:6px;" valign="top">
+            <div style="${_FONT_BASE}color:${_status_label};">${_STR_TILE_PMD}</div>
+            $(_pmd_summary_html)
+          </td></tr>
+        </table>
+      </td>
+      <td width="33%" valign="top" style="padding:2px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_time};border-radius:${_status_radius};">
+          <tr><td style="padding:6px;" valign="top">
+            <div style="${_FONT_BASE}color:${_status_label};">${_STR_TILE_DUR}</div>
+            <div style="${_FONT_BASE_BOLD}color:${_time_textcol};">${TOTAL_DURATION}</div>
+            <div style="${_FONT_BASE}color:${_time_textcol};white-space:nowrap;">
+              ${_STR_DUR_START}: ${START_TIME_IST_ONLY:-N/A} &nbsp;•&nbsp; ${_STR_DUR_END}: ${END_TIME_IST_ONLY:-N/A}
+            </div>
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+EOF
 
-		# Close out the table
-		echo "</table>" >> "$HTMLLog"
+  # PMD Review (only if there is at least one class or trigger)
+  _delta_pill(){
+    local d="$1" bg bd col
+    if [ "$d" -gt 0 ]; then
+      bg="${_delta_reg_bg}"; bd="${_delta_reg_bd}"; col="${_delta_reg_tx}"
+    elif [ "$d" -lt 0 ]; then
+      if [ "$Report" = "SUCCEEDED" ]; then
+        bg="${_delta_imp_bg_s}"; bd="${_delta_imp_bd_s}"; col="${_delta_imp_tx_s}"
+      else
+        bg="${_delta_imp_bg_f}"; bd="${_delta_imp_bd_f}"; col="${_delta_imp_tx_f}"
+      fi
+    else
+      bg="${_delta_neu_bg:-#eeeeee}"; bd="${_delta_neu_border:-#dddddd}"; col="${_pmd_text_normal}"
+    fi
+    cat <<PILL
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid $bd;background:$bg;">
+  <tr><td style="font:bold ${_base}px ${_fontfam};color:$col;padding:1px 5px;white-space:nowrap;">$d</td></tr>
+</table>
+PILL
+  }
 
+  _emit_pmd_table_row(){
+    local display="$1" link="$2" author="$3" op="$4" oh="$5" cp="$6" ch="$7" delta="$8" row_num="$9"
+    local bg_color="#ffffff" text_color="${_pmd_text_normal}" link_color="${_pmd_link_normal}" row_left="$(_gets '.pmd_review.neutral_left_stripe' '#dcdcdc')"
+    [ $((row_num % 2)) -eq 1 ] && bg_color="$(_gets '.pmd_review.zebra_alt_bg' '#f7f7f7')"
+    if [ "$delta" -gt 0 ]; then
+      bg_color="${_pmd_reg_row_bg}"; row_left="${_pmd_reg_left}"; text_color="${_pmd_text_high}"; link_color="${_pmd_link_high}"
+    elif [ "$delta" -lt 0 ]; then
+      if [ "$Report" = "SUCCEEDED" ]; then
+        bg_color="${_pmd_imp_row_bg_s}"; row_left="${_pmd_imp_left_s}"; text_color="${_pmd_imp_tx_s}"
+      else
+        bg_color="${_pmd_imp_row_bg_f}"; row_left="${_pmd_imp_left_f}"; text_color="${_pmd_imp_tx_f}"
+      fi
+    fi
+    {
+      echo "<tr style=\"background:${bg_color};border-bottom:1px solid ${_pmd_row_border};border-left:4px solid ${row_left};\">"
+      echo "<td style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${link_color};\">$display</a></td>"
+      echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">${op}-(${oh})</td>"
+      echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">${cp}-(${ch})</td>"
+      echo "<td align=\"right\" style=\"padding:5px 6px;\">"; _delta_pill "$delta"; echo "</td>"
+      echo "<td style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">$author</td>"
+      echo "</tr>"
+      echo "<tr><td colspan=\"5\" style=\"border-bottom:1px solid ${_pmd_row_border};font-size:0;line-height:0;\">&nbsp;</td></tr>"
+    } >>"$HTMLLog"
+  }
 
+  if ! { [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; }; then
+    echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\"><tr><td style=\"padding:10px 2px 6px 2px;${_FONT_SECTION_HDR}color:${_status_title};\">${_STR_PMD_REVIEW}</td></tr></table>" >>"$HTMLLog"
 
-	elif [ "${Report}" == "LOCKED" ]
-        then
-		echo "<H3><tr><td bgcolor="SeaShell">${SFDC_ORG} is Locked</td></tr></H3>" >> $HTMLLog
-		echo "<H5><PRE><tr><td bgcolor="LightYellow">`grep ALREADY_IN_PROCESS ${LOG} | cut -d ":" -f 3-100`</td></tr></PRE></H5>" >> $HTMLLog		
+    # Outlook-friendly legend (bold + colored keywords)
+    {
+      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"margin:0 0 8px 0; border:1px solid ${_pmd_row_border};\">"
+      echo "<tr>"
+      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_red_bg};border:1px solid ${_leg_red_bd};margin-right:6px;\"></span><strong><span style=\"color:${_pmd_reg_left}\">Red</span></strong> = regression (Δ High &gt; 0)</td>"
+      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_green_bg};border:1px solid ${_leg_green_bd};margin-right:6px;\"></span><strong><span style=\"color:${_pmd_imp_left_s}\">Green</span></strong> = improvement (Δ High &lt; 0)</td>"
+      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_neu_bg};border:1px solid ${_leg_neu_bd};margin-right:6px;\"></span><strong><span style=\"color:#555555\">White/Grey</span></strong> = no change (Δ High = 0)</td>"
+      echo "</tr>"
+      echo "<tr><td colspan=\"3\" style=\"padding:4px 8px;${_FONT_BASE};color:#444;\"><strong>“High”</strong> = value in parentheses; count of high-severity PMD findings. &nbsp;&nbsp; <strong>Δ High</strong> = Current − Original.</td></tr>"
+      echo "</table>"
+    } >>"$HTMLLog"
 
-        elif [ "${Report}" == "EXCEEDED_MAX_SIZE_REQUEST" ]
-        then
-                echo "<H3><tr><td bgcolor="SeaShell">${SFDC_ORG} EXCEEDED_MAX_SIZE_REQUEST </td></tr></H3>" >> $HTMLLog
-                echo "<H5><PRE><tr><td bgcolor="LightYellow">`grep EXCEEDED_MAX_SIZE_REQUEST ${LOG} | cut -d ":" -f 3-100`</td></tr></PRE></H5>" >> $HTMLLog
+    if [ "$CLASS_COUNT" -gt 0 ]; then
+      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;\">" >>"$HTMLLog"
+      echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CLASS NAME</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CURRENT (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">Δ HIGH</th><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
+      row_num=0
+      for classePath in $(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null); do
+        base="$(basename "$classePath" .cls)"
+        currTxt="${base}.cls_currpmd.txt"
+        orgTxt="${base}.cls_orgpmd.txt"
+        pmd_html="/data/public/pmd_rule/$SFDC_ORG/${base}.cls_currpmd_orgpm.html"
+        [ -f "$pmd_html" ] || pmd_html="/data/public/pmd_rule/$SFDC_ORG/${base}.cls_currpmd_orgpm.html"
+        OriginalPmd=$(awk '/Original PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p')
+        CurrentPmd=$(awk  '/Current PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p')
+        OriginalPmd=${OriginalPmd:-0}; CurrentPmd=${CurrentPmd:-0}
+        CurrseverityCnt=$(grep -Eh "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/$currTxt" 2>/dev/null | wc -l | xargs)
+        OrgseverityCnt=$(grep -Eh "$pattern" "PMDReport/orgpmdoutput/src/classes/$orgTxt" 2>/dev/null | wc -l | xargs)
+        CurrseverityCnt=${CurrseverityCnt:-0}; OrgseverityCnt=${OrgseverityCnt:-0}
+        delta=$(( CurrseverityCnt - OrgseverityCnt ))
+        class_src="${classePath/changeSetDeploy\/force-app\/main\/default/src}"
+        author_name="$(git log -1 --format='%an' "$class_src" 2>/dev/null | head -n1)"
+        [ -n "$author_name" ] || author_name="N/A"
+        link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${base}.cls_currpmd_orgpm.html"
+        display="${base}.cls"
+        _emit_pmd_table_row "$display" "$link" "$author_name" "$OriginalPmd" "$OrgseverityCnt" "$CurrentPmd" "$CurrseverityCnt" "$delta" "$row_num"
+        row_num=$((row_num + 1))
+      done
+      echo "</tbody></table>" >>"$HTMLLog"
+    fi
 
+    if [ "$CLASS_COUNT" -gt 0 ] && [ "$TRIGGER_COUNT" -gt 0 ]; then
+      echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"height:6px;line-height:6px;font-size:0;\">&nbsp;</td></tr></table>" >>"$HTMLLog"
+    fi
 
-	elif [ "${Report}" == "UNKNOWN_EXCEPTION" ]
-	then
-		echo "<H3><tr><td bgcolor="SeaShell">${SFDC_ORG} UNKNOWN_EXCEPTION </td></tr></H3>" >> $HTMLLog
-                echo "<H5><PRE><tr><td bgcolor="LightYellow">`grep UNKNOWN_EXCEPTION ${LOG} | cut -d ":" -f 3-100`</td></tr></PRE></H5>" >> $HTMLLog
+    if [ "$TRIGGER_COUNT" -gt 0 ]; then
+      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_border};border-collapse:collapse;\">" >>"$HTMLLog"
+      echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">TRIGGER NAME</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CURRENT (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">Δ HIGH</th><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
+      row_num=0
+      for triggerPath in $(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null); do
+        tbase="$(basename "$triggerPath" .trigger)"
+        currTxt="${tbase}.trigger_currpmd.txt"
+        orgTxt="${tbase}.trigger_orgpmd.txt"
+        pmd_html="/data/public/pmd_rule/$SFDC_ORG/${tbase}.trigger_currpmd_orgpm.html"
+        [ -f "$pmd_html" ] || pmd_html="/data/public/pmd_rule/$SFDC_ORG/${tbase}.trigger_currpmd_orgpm.html"
+        OriginalPmd=$(awk '/Original PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p')
+        CurrentPmd=$(awk  '/Current PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p')
+        OriginalPmd=${OriginalPmd:-0}; CurrentPmd=${CurrentPmd:-0}
+        CurrseverityCnt=$(grep -Eh "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/$currTxt" 2>/dev/null | wc -l | xargs)
+        OrgseverityCnt=$(grep -Eh "$pattern" "PMDReport/orgpmdoutput/src/triggers/$orgTxt" 2>/dev/null | wc -l | xargs)
+        CurrseverityCnt=${CurrseverityCnt:-0}; OrgseverityCnt=${OrgseverityCnt:-0}
+        delta=$(( CurrseverityCnt - OrgseverityCnt ))
+        trig_src="${triggerPath/changeSetDeploy\/force-app\/main\/default/src}"
+        author_name="$(git log -1 --format='%an' "$trig_src" 2>/dev/null | head -n1)"
+        [ -n "$author_name" ] || author_name="N/A"
+        link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${tbase}.trigger_currpmd_orgpm.html"
+        display="${tbase}.trigger"
+        _emit_pmd_table_row "$display" "$link" "$author_name" "$OriginalPmd" "$OrgseverityCnt" "$CurrentPmd" "$CurrseverityCnt" "$delta" "$row_num"
+        row_num=$((row_num + 1))
+      done
+      echo "</tbody></table>" >>"$HTMLLog"
+    fi
+  fi
 
-	elif [ "${Report}" == "Failed_to_send_request" ]
-	then
-	  	 echo "<H3><tr><td bgcolor="SeaShell">${SFDC_ORG} Failed to send request </td></tr></H3>" >> $HTMLLog
-	         echo "<H5><PRE><tr><td bgcolor="LightYellow">$(grep Error ${LOG})</td></tr></PRE></H5>" >> $HTMLLog
-	fi
+  # Success / Failure sections — make file names clickable to GitHub tree
+  SAVEIFS=$IFS; IFS=$(echo -en "\n\b")
+  if [ "$Report" = "SUCCEEDED" ]; then
+    find changeSetDeploy/force-app/main/default -type f \
+      | egrep -v "customSettings|staticResourceFolders.txt" \
+      | sed 's|^changeSetDeploy/force-app/main/default|src|' | sort -u > "${DEPLOYEDFILE}"
+    changesetFile=$(find changeSetDeploy/force-app/main/default -type f | egrep -v "customSettings|staticResourceFolders.txt" | wc -l)
+    echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:8px;\"><tr><td style=\"${_FONT_SECTION_HDR}color:${_succ_title};padding:4px;\">$(_gets '.strings.sections.success_title' 'Changeset file/s ...')[$changesetFile]</td></tr></table>" >>"$HTMLLog"
+    NUM=1
+    while read -r FILE; do
+      [ "$FILE" = "src/labels/CustomLabels.labels-meta.xml" ] && FILE="src/env/${SFDC_ORG}/customLabel/CustomLabels.labels-meta.xml"
+      if echo "$FILE" | grep -q "^customSettings"; then FILE=$(echo "$FILE" | sed -e 's/^customSettings\///'); fi
+      [[ "$FILE" =~ "src/remoteSiteSettings/" ]] && FILE=$(echo "$FILE" | sed -e "s/^src/src\/env\/${SFDC_ORG}/")
+      [[ "$FILE" =~ "src/customMetadata/"    ]] && FILE=$(echo "$FILE" | sed -e "s/^src/src\/env\/${SFDC_ORG}/")
+      gh_href="$(_urlenc_spaces "${FILE}")"
+      [ -n "$_GH_ROOT" ] && gh_url="${_GH_ROOT}/tree/${_BRANCH}/${gh_href}" || gh_url=""
+      echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:5px;\">
+              <tr><td style=\"background:${_succ_file_bg};padding:5px 7px;border:1px solid ${_succ_file_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;${_FONT_BASE}\">[$((NUM++))] $( [ -n \"$gh_url\" ] && echo "<a href=\"$gh_url\" style=\"color:inherit;text-decoration:underline;\">$(_esc <<<"$FILE")</a>" || _esc <<<"$FILE")</pre></td></tr>
+              <tr><td style=\"background:${_succ_auth_bg};padding:5px 7px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;${_FONT_BASE}\">Last author... $(git log -1 "$FILE" | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')</pre></td></tr>
+            </table>" >>"$HTMLLog"
+    done < "${DEPLOYEDFILE}"
+  else
+    echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:8px;\"><tr><td style=\"${_FONT_SECTION_HDR}color:${_fail_title};padding:4px;\">$(_gets '.strings.sections.failure_title' 'All Component Failures:')</td></tr></table>" >>"$HTMLLog"
+    i=1
+    if [ -f "$LOG.filtered" ]; then
+      for failure in $(jq -c '.result.details.componentFailures[]' "$LOG.filtered"); do
+        fileName=$(echo "$failure" | jq -r '.fileName')
+        fileDisp=$(echo "$fileName" | sed 's|^changeSetDeploy/force-app/main/default/||')
+        errorMsg=$(echo "$failure" | jq -r '.problem' | tr '\n' ' ' | tr '\r' ' ' | sed -e 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+        echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:5px;\"><tr><td style=\"background:${_fail_err_bg};padding:5px 7px;border:1px solid ${_fail_err_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;${_FONT_BASE}\">$i. " >>"$HTMLLog"
+        gitFile="$(resolve_src_from_json_name "$fileName")"
+        if [ -n "$gitFile" ] && [ -n "$_GH_ROOT" ]; then
+          gh_href="$(_urlenc_spaces "${gitFile}")"; gh_url="${_GH_ROOT}/tree/${_BRANCH}/${gh_href}"
+          echo "<a href=\"$gh_url\" style=\"color:inherit;text-decoration:underline;\">$(_esc <<<"$fileDisp")</a> -- Error: $errorMsg" >>"$HTMLLog"
+        else
+          if [ -n "$_GH_ROOT" ]; then
+            gh_href="$(_urlenc_spaces "${fileDisp}")"; gh_url="${_GH_ROOT}/tree/${_BRANCH}/${gh_href}"
+            echo "<a href=\"$gh_url\" style=\"color:inherit;text-decoration:underline;\">$(_esc <<<"$fileDisp")</a> -- Error: $errorMsg" >>"$HTMLLog"
+          else
+            echo "$(_esc <<<"$fileDisp") -- Error: $errorMsg" >>"$HTMLLog"
+          fi
+        fi
+        echo "</pre></td></tr>" >>"$HTMLLog"
+        if [ -n "$gitFile" ]; then
+          LastAuthor=$(git log -1 "$gitFile" 2>/dev/null | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')
+          echo "<tr><td style=\"background:${_succ_auth_bg};padding:5px 7px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;${_FONT_BASE}\">GIT log >>> $gitFile
+$LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
+        else
+          echo "<tr><td style=\"background:${_succ_auth_bg};padding:5px 7px;border-left:1px solid ${_succ_auth_border};border-right:1px solid ${_succ_auth_border};border-bottom:1px solid ${_succ_auth_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;${_FONT_BASE}\">No Git log available for $(_esc <<<"$fileDisp")</pre></td></tr></table>" >>"$HTMLLog"
+        fi
+        i=$((i+1))
+      done
+    fi
+  fi
+  IFS=$SAVEIFS
 
-	#restore IFS
-	IFS=$SAVEIFS
-	echo "</HTML></BODY>" >> $HTMLLog
-	
-	EMAIL=${FROM} mutt -e 'set content_type=text/html' \
-	-s "---${SFDC_ORG}--- SF-CLI ChangeSet Deploy ${Report} [`TZ=IST date +%d.%b.%Y` IST - git ${gitlast}-${gitlatest} ]" "${mutt_MAIL_LIST}" < $HTMLLog
+  # Footer & close
+  cat >>"$HTMLLog" <<EOF
+    </td></tr></table>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${_CARD_WIDTH}" style="max-width:${_CARD_WIDTH}px;margin:6px auto 10px;background:${_foot_bg};">
+      <tr>
+        <td align="center" style="padding:6px 8px;text-align:center;color:${_foot_text};${_FONT_BASE_BOLD}line-height:14px;">
+          ${_foot_copy:-© 2025 Cadence Design Systems, Inc. | SFDC Deployment Report generated by the Cadence DevOps Team}
+        </td>
+      </tr>
+    </table>
+</td></tr></table>
+</body></html>
+EOF
 
+  EMAIL=${FROM} mutt -e 'set content_type=text/html' \
+    -s "---${SFDC_ORG}--- SF-CLI ChangeSet Deploy ${Report} [`TZ=IST date +%d.%b.%Y` IST - git ${gitlast}-${gitlatest} ]" "${mutt_MAIL_LIST}" < "$HTMLLog"
+
+  echo "DEBUG PMD: classCnt=${CLASS_COUNT} trigCnt=${TRIGGER_COUNT} highCls=${PMD_HIGH_CLS} highTrg=${PMD_HIGH_TRG} totalHigh=${PMD_HIGH_TOTAL}" >>"$LOG"
+
+  rm -f "$UI_COLORS_JSON_STRICT" 2>/dev/null
 }
 
 
