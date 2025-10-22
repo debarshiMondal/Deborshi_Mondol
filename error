@@ -1,15 +1,1 @@
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: 
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.chip.radius_px; using fallback [4]
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.chip.pad_y_px; using fallback [6]
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.chip.pad_x_px; using fallback [8]
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.chip.gap_px; using fallback [6]
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing color .components.chip.border_color; using #d0d7de
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.chip.border_width_px; using fallback [1]
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.table.radius_px; using fallback [4]
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.table.pad_y_px; using fallback [6]
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .components.table.pad_x_px; using fallback [8]
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing color .components.table.border_color; using #d0d7de
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing color .components.table.row_zebra_even; using #ffffff
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing color .components.table.row_zebra_odd; using #ffffff
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .quick_links.gap_px; using fallback [6]
-<13>Oct 19 16:10:50 SFDC_DEPLOY:[]: [WARN] Missing key .status_summary.corner_radius; using fallback [6]
+build/script/deploySFDC_git_sfcli_2.0.sh: line 1616: <td style="padding:6px 8px;${_FONT_BASE}"><span style="display:inline-block;width:10px;height:10px;background:${_gets '.pmd_review.legend_red_bg' '#ffefef'};border:1px solid ${_gets '.pmd_review.legend_red_border' '#f5bcbc'};margin-right:6px;"></span><strong>${_STR_LEG_RED}</strong></td>: bad substitution
