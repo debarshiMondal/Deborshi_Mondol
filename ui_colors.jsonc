@@ -1,206 +1,204 @@
 {
   // =====================================================================
   // ui_colors.jsonc
-  // Purpose: Outlook-first theme + all labels used by HTML_REPORT().
-  // NOTE: Comments are stripped to strict JSON by the script before jq.
+  // Purpose: Outlook-first theme + ALL labels read by HTML_REPORT().
+  // Notes: Comments are stripped by the script; result must be valid JSON.
   // =====================================================================
 
   "meta": {
     "version": "1.7-outlook-container",                           // Config version tag
-    "owner": "Release Eng",                                       // Who maintains this
-    "notes": "Centered bars, meters removed, optional width, colored legend words." // Human summary
+    "owner": "Release Eng",                                       // Maintainer
+    "notes": "Centered bars, header/cards container width, meters removed, colored legend words." // Summary
   },
 
   // ---------------------------------------------------------------------
   // HEADER (top banner behind the page title)
   // ---------------------------------------------------------------------
   "header": {
-    "success_bg": "#2e7d32", // Green (success header background)
-    "failure_bg": "#a94442", // Brick red (failure header background)
-    "text": "#ffffff"        // White (header title text)
+    "success_bg": "#2e7d32", // Green
+    "failure_bg": "#a94442", // Brick red
+    "text":       "#ffffff"  // White
   },
 
   // ---------------------------------------------------------------------
-  // PAGE / CARD chrome (page bg + card container)
+  // PAGE / CARD chrome (page bg + cards container)
   // ---------------------------------------------------------------------
   "plate": {
-    "page_bg": "#f6f8fa",  // Very light gray (whole page background)
+    "page_bg":    "#f6f8fa", // Very light gray (page background)
     "background": "#ffffff", // White (card background)
-    "border": "#e6e6e6",     // Light gray (card border)
-    "container_px": "980"    // Optional fixed width in px for centered cards; "" for full-width
+    "border":     "#e6e6e6", // Light gray (card border + separators)
+    "container_px": "980"    // Fixed content width in px; set "" for full-width
   },
 
   // ---------------------------------------------------------------------
-  // RUN DETAILS title bar (stateful). Your function prefers title_* when present,
-  // but still validates legacy strip_* + title_text. Keep both.
+  // RUN DETAILS title bar (stateful). Function prefers title_*; legacy kept
+  // to satisfy validation (.strip_* and .title_text).
   // ---------------------------------------------------------------------
   "run_details": {
-    "title_bg_success": "#2e7d32",   // Green (section bar when SUCCEEDED)
-    "title_bg_failure": "#a94442",   // Brick red (section bar when FAILED)
-    "title_text_success": "#ffffff", // White (bar text on success)
-    "title_text_failure": "#ffffff", // White (bar text on failure)
+    "title_bg_success":   "#2e7d32", // Green (section bars when success)
+    "title_bg_failure":   "#a94442", // Brick red (section bars when failure)
+    "title_text_success": "#ffffff", // White (bar text when success)
+    "title_text_failure": "#ffffff", // White (bar text when failure)
 
-    // Legacy keys (kept to satisfy required_keys validation)
-    "strip_success_bg": "#2e7d32",   // Green (legacy; not used for paint now)
-    "strip_failure_bg": "#a94442",   // Brick red (legacy; not used for paint now)
-    "title_text": "#ffffff"          // White (legacy fallback text color)
+    // Legacy keys (still validated by the script)
+    "strip_success_bg": "#2e7d32",   // Green (legacy)
+    "strip_failure_bg": "#a94442",   // Brick red (legacy)
+    "title_text":       "#ffffff"    // White (legacy fallback)
   },
 
   // ---------------------------------------------------------------------
-  // CHIPS (info pills in Run Details + rail/border color for bars)
+  // CHIPS (small info boxes in Run Details)
   // ---------------------------------------------------------------------
   "chips": {
-    "success_bg": "#ecfdf5",        // Mint (chip background on success)
-    "failure_bg": "#fef2f2",        // Very light red (chip background on failure)
-    "success_text": "#065f46",      // Deep teal (chip text on success)
-    "failure_text": "#7f1d1d",      // Dark maroon (chip text on failure)
-    "border": "#a7f3d0",            // Pale mint/teal (default chip/border)
-    "border_success": "#a7f3d0",    // Pale mint/teal (border when success)
-    "border_failure": "#fecaca",    // Pale red (border when failure)
-    "label_success_text": "#047857",// Teal (small uppercase label for success)
-    "label_failure_text": "#a94442" // Brick red (small uppercase label for failure)
+    "success_bg":        "#ecfdf5", // Mint (chip bg on success)
+    "failure_bg":        "#fef2f2", // Very light red (chip bg on failure)
+    "success_text":      "#065f46", // Deep teal (chip text on success)
+    "failure_text":      "#7f1d1d", // Dark maroon (chip text on failure)
+    "border":            "#a7f3d0", // Pale mint/teal (default border/rails)
+    "border_success":    "#a7f3d0", // Pale mint/teal (success rails)
+    "border_failure":    "#fecaca", // Pale red (failure rails)
+    "label_success_text":"#047857", // Teal (chip label on success)
+    "label_failure_text":"#a94442"  // Brick red (chip label on failure)
   },
 
   // ---------------------------------------------------------------------
-  // QUICK LINKS (buttons in Run Details)
+  // QUICK LINKS (buttons)
   // ---------------------------------------------------------------------
   "quick_links": {
-    "tile_1_bg": "#0D9488", // Teal (Open Logs button)
-    "tile_2_bg": "#0D9488", // Teal (Original PMD Report button)
-    "tile_3_bg": "#0D9488", // Teal (PMD Critical Warning Pattern button)
-    "tile_4_bg": "#0D9488", // Teal (ForceDeploy button)
-    "text": "#ffffff",      // White (button text)
-    "gap_px": "10"          // 10px gap between buttons (string for safe injection)
+    "tile_1_bg": "#0D9488", // Teal (Open Logs)
+    "tile_2_bg": "#0D9488", // Teal (Original PMD Report)
+    "tile_3_bg": "#0D9488", // Teal (PMD Critical Warning Pattern)
+    "tile_4_bg": "#0D9488", // Teal (ForceDeploy)
+    "text":      "#ffffff", // White (button text)
+    "gap_px":    "10"       // 10px spacing between buttons
   },
 
   // ---------------------------------------------------------------------
-  // STATUS SUMMARY tiles (Deployment / PMD — CHANGESET / DURATION)
+  // STATUS SUMMARY tiles (Deployment / PMD — CHANGESET / Duration)
   // ---------------------------------------------------------------------
   "status_summary": {
-    "deployment_success_bg": "#ecfdf5", // Mint (deployment tile on success)
-    "deployment_failure_bg": "#fef2f2", // Very light red (deployment tile on failure)
-    "pmd_bg": "#fff7ed",                // Peach (PMD tile background)
-    "time_bg": "#eff6ff",               // Very light blue (Duration tile background)
+    "deployment_success_bg": "#ecfdf5", // Mint (deployment tile bg on success)
+    "deployment_failure_bg": "#fef2f2", // Very light red (bg on failure)
+    "pmd_bg":                "#fff7ed", // Peach (PMD tile bg)
+    "time_bg":               "#eff6ff", // Very light blue (Duration tile bg)
 
-    "title_text": "#1a365d",            // Navy/dark blue (section title text)
-    "label_text": "#047857",            // Teal (generic tile label text)
-    "value_text": "#065f46",            // Deep teal (generic tile value text)
+    "title_text": "#1a365d", // Navy/dark blue (section title)
+    "label_text": "#047857", // Teal (labels inside tiles)
+    "value_text": "#065f46", // Deep teal (values inside tiles)
 
-    "deployment_label_success": "#047857", // Teal (deployment label when success)
-    "deployment_value_success": "#065f46", // Deep teal (deployment value when success)
-    "deployment_label_failure": "#a94442", // Brick red (deployment label when failure)
-    "deployment_value_failure": "#7f1d1d", // Dark maroon (deployment value when failure)
+    "deployment_label_success": "#047857", // Teal (label when success)
+    "deployment_value_success": "#065f46", // Deep teal (value when success)
+    "deployment_label_failure": "#a94442", // Brick red (label when failure)
+    "deployment_value_failure": "#7f1d1d", // Dark maroon (value when failure)
 
-    "pmd_text": "#9a3412",              // Burnt orange (PMD tile text)
-    "time_text": "#1d4ed8",             // Blue (Duration tile text)
+    "pmd_text":  "#9a3412", // Burnt orange (PMD counts text)
+    "time_text": "#1d4ed8", // Blue (duration text)
 
-    "corner_radius": "8px"              // 8px (rounded corners; Outlook-safe)
+    "corner_radius": "8px" // Rounded corners (Outlook-safe)
   },
 
   // ---------------------------------------------------------------------
-  // PMD REVIEW (legend + tables)
+  // PMD REVIEW (legend + Classes/Triggers tables)
   // ---------------------------------------------------------------------
   "pmd_review": {
-    "header_bg": "#eaf2ff",          // Very light blue (table header background)
-    "header_text": "#274690",        // Royal/indigo (table header text)
-    "row_border": "#e6eefc",         // Pale blue-gray (row separators)
+    "header_bg":   "#eaf2ff", // Very light blue (table header bg)
+    "header_text": "#274690", // Indigo/royal blue (table header text)
+    "row_border":  "#e6eefc", // Pale blue-gray (row separators)
 
-    "link_normal": "#0b5ed7",        // Blue (links on neutral/improvement rows)
-    "link_high": "#c62828",          // Red (links on regression rows)
-    "text_high": "#c62828",          // Red (text on regression rows)
-    "text_normal": "#0b5ed7",        // Blue (text on neutral/improvement rows)
+    "link_normal": "#0b5ed7", // Blue (links in neutral/improvement rows)
+    "link_high":   "#c62828", // Red (links in regression rows)
+    "text_high":   "#c62828", // Red (regression text)
+    "text_normal": "#0b5ed7", // Blue (neutral/improvement text)
 
     // Legend swatches
-    "legend_red_bg": "#ffefef",      // Very light red (regression swatch fill)
-    "legend_red_border": "#f5bcbc",  // Pale red (regression swatch border)
-    "legend_green_bg": "#fef2f2",    // Very light red (intentional “light red” for improvement)
-    "legend_green_border": "#fecaca",// Pale red (improvement swatch border)
-    "legend_neutral_bg": "#ffffff",  // White (neutral swatch fill)
-    "legend_neutral_border": "#dddddd", // Light gray (neutral swatch border)
+    "legend_red_bg":       "#ffefef", // Very light red (regression swatch fill)
+    "legend_red_border":   "#f5bcbc", // Pale red (regression swatch border)
+    "legend_green_bg":     "#fef2f2", // Very light red (intentional "light red")
+    "legend_green_border": "#fecaca", // Pale red (improvement swatch border)
+    "legend_neutral_bg":   "#ffffff", // White (neutral swatch fill)
+    "legend_neutral_border":"#dddddd",// Light gray (neutral swatch border)
 
-    // Colored words in legend phrases
-    "legend_red_text": "#b91c1c",     // Dark red (word "Red")
-    "legend_green_text": "#7f1d1d",   // Dark maroon (words "Light red")
-    "legend_neutral_text": "#6b7280", // Gray (words "White/Grey")
+    // Colored words inside legend phrases
+    "legend_red_text":     "#b91c1c", // Dark red ("Red")
+    "legend_green_text":   "#7f1d1d", // Dark maroon ("Light red")
+    "legend_neutral_text": "#6b7280", // Gray ("White/Grey")
 
-    // Zebra & Δ=0 neutral palette
-    "zebra_alt_bg": "#f7f7f7",       // Very light gray (alternating row background)
-    "neutral_left_stripe": "#dcdcdc",// Gray (left stripe for neutral rows)
-    "delta_neu_bg": "#eeeeee",       // Light gray (Δ=0 pill background)
-    "delta_neu_border": "#dddddd",   // Light gray (Δ=0 pill border)
+    // Neutral zebra + Δ=0 pill
+    "zebra_alt_bg":        "#f7f7f7", // Very light gray (alternating row bg)
+    "neutral_left_stripe": "#dcdcdc", // Gray (neutral left stripe)
+    "delta_neu_bg":        "#eeeeee", // Light gray (Δ=0 pill bg)
+    "delta_neu_border":    "#dddddd", // Light gray (Δ=0 pill border)
 
-    // Meters kept for completeness; function shows numbers only (no bars)
-    "meter_track": "#e5e7eb",        // Cool gray (unused track)
-    "meter_fill": "#9ca3af",         // Medium gray (unused fill)
+    // Kept for completeness; function renders numbers only (no bars)
+    "meter_track": "#e5e7eb", // Cool gray (unused)
+    "meter_fill":  "#9ca3af", // Medium gray (unused)
 
     // Regression (Δ > 0)
-    "regression_row_bg": "#ffefef",  // Very light red (regression row bg)
-    "regression_left_stripe": "#c62828", // Red (left stripe on regression row)
-    "delta_reg_bg": "#ffe3e3",       // Light red (Δ>0 pill bg)
-    "delta_reg_border": "#f5bcbc",   // Pale red (Δ>0 pill border)
-    "delta_reg_text": "#b71c1c",     // Dark red (Δ>0 pill text)
+    "regression_row_bg":     "#ffefef", // Very light red (row bg)
+    "regression_left_stripe":"#c62828", // Red (left stripe)
+    "delta_reg_bg":          "#ffe3e3", // Light red (pill bg)
+    "delta_reg_border":      "#f5bcbc", // Pale red (pill border)
+    "delta_reg_text":        "#b71c1c", // Dark red (pill text)
 
     // Improvement (Δ < 0) — success path
-    "improve_success_row_bg": "#fef2f2",       // Very light red (improvement row bg)
-    "improve_success_left_stripe": "#a94442",  // Brick red (left stripe)
-    "improve_success_text": "#7f1d1d",         // Dark maroon (row text)
-    "delta_imp_success_bg": "#fef2f2",         // Very light red (Δ<0 pill bg)
-    "delta_imp_success_border": "#fecaca",     // Pale red (Δ<0 pill border)
-    "delta_imp_success_text": "#7f1d1d",       // Dark maroon (Δ<0 pill text)
+    "improve_success_row_bg":     "#fef2f2", // Very light red (row bg)
+    "improve_success_left_stripe":"#a94442", // Brick red (left stripe)
+    "improve_success_text":       "#7f1d1d", // Dark maroon (text)
+    "delta_imp_success_bg":       "#fef2f2", // Very light red (pill bg)
+    "delta_imp_success_border":   "#fecaca", // Pale red (pill border)
+    "delta_imp_success_text":     "#7f1d1d", // Dark maroon (pill text)
 
-    // Improvement (Δ < 0) — failure path (same family)
-    "improve_failure_row_bg": "#fef2f2",       // Very light red (improvement row bg)
-    "improve_failure_left_stripe": "#a94442",  // Brick red (left stripe)
-    "improve_failure_text": "#7f1d1d",         // Dark maroon (row text)
-    "delta_imp_failure_bg": "#fef2f2",         // Very light red (Δ<0 pill bg)
-    "delta_imp_failure_border": "#fecaca",     // Pale red (Δ<0 pill border)
-    "delta_imp_failure_text": "#7f1d1d"        // Dark maroon (Δ<0 pill text)
+    // Improvement (Δ < 0) — failure path
+    "improve_failure_row_bg":     "#fef2f2", // Very light red (row bg)
+    "improve_failure_left_stripe":"#a94442", // Brick red (left stripe)
+    "improve_failure_text":       "#7f1d1d", // Dark maroon (text)
+    "delta_imp_failure_bg":       "#fef2f2", // Very light red (pill bg)
+    "delta_imp_failure_border":   "#fecaca", // Pale red (pill border)
+    "delta_imp_failure_text":     "#7f1d1d"  // Dark maroon (pill text)
   },
 
   // ---------------------------------------------------------------------
-  // SUCCESS / FAILURE sections (changeset list and component failures)
-  // (These keys aren’t painted directly in your current function’s rows,
-  // but the validator probes legacy fallbacks — keep them defined.)
+  // SUCCESS / FAILURE sections (kept for validator compatibility)
   // ---------------------------------------------------------------------
   "success_section": {
-    "file_row_bg": "#ecfdf5",       // Mint (file row bg)
-    "file_row_border": "#a7f3d0",   // Pale mint/teal (file row border)
-    "author_row_bg": "#e0e0e0",     // Gray (author/commit row bg)
-    "author_row_border": "#d1d1d1", // Light gray (author/commit row border)
-    "title_text": "#1a365d"         // Navy/dark blue (section bar text)
+    "file_row_bg":      "#ecfdf5", // Mint
+    "file_row_border":  "#a7f3d0", // Pale mint/teal
+    "author_row_bg":    "#e0e0e0", // Gray
+    "author_row_border":"#d1d1d1", // Light gray
+    "title_text":       "#1a365d"  // Navy/dark blue
   },
   "failure_section": {
-    "error_row_bg": "#fef2f2",      // Very light red (failure row bg)
-    "error_row_border": "#fecaca",  // Pale red (failure row border)
-    "author_row_bg": "#e0e0e0",     // Gray (author info bg)
-    "author_row_border": "#d1d1d1", // Light gray (author info border)
-    "title_text": "#1a365d"         // Navy/dark blue (section bar text)
+    "error_row_bg":      "#fef2f2", // Very light red
+    "error_row_border":  "#fecaca", // Pale red
+    "author_row_bg":     "#e0e0e0", // Gray
+    "author_row_border": "#d1d1d1", // Light gray
+    "title_text":        "#1a365d"  // Navy/dark blue
   },
 
   // ---------------------------------------------------------------------
-  // LEGACY fallbacks (do not remove) — older script keys are still probed
+  // LEGACY fallbacks (do not remove) — older keys still probed
   // ---------------------------------------------------------------------
   "changeset": {
-    "file_row_bg": "#ecfdf5",       // Mint (legacy)
-    "file_row_border": "#a7f3d0",   // Pale mint/teal (legacy)
-    "author_row_bg": "#e0e0e0",     // Gray (legacy)
-    "author_row_border": "#d1d1d1", // Light gray (legacy)
-    "title_text": "#1a365d"         // Navy/dark blue (legacy)
+    "file_row_bg":      "#ecfdf5", // Mint
+    "file_row_border":  "#a7f3d0", // Pale mint/teal
+    "author_row_bg":    "#e0e0e0", // Gray
+    "author_row_border":"#d1d1d1", // Light gray
+    "title_text":       "#1a365d"  // Navy/dark blue
   },
   "failures": {
-    "error_row_bg": "#fef2f2",      // Very light red (legacy)
-    "error_row_border": "#fecaca",  // Pale red (legacy)
-    "author_row_bg": "#e0e0e0",     // Gray (legacy)
-    "author_row_border": "#d1d1d1", // Light gray (legacy)
-    "title_text": "#1a365d"         // Navy/dark blue (legacy)
+    "error_row_bg":      "#fef2f2", // Very light red
+    "error_row_border":  "#fecaca", // Pale red
+    "author_row_bg":     "#e0e0e0", // Gray
+    "author_row_border": "#d1d1d1", // Light gray
+    "title_text":        "#1a365d"  // Navy/dark blue
   },
 
   // ---------------------------------------------------------------------
   // FOOTER (bottom slim bar)
   // ---------------------------------------------------------------------
   "footer": {
-    "bg": "#111111", // Near black (footer background)
-    "text": "#ffffff", // White (footer text)
+    "bg":   "#111111", // Near black
+    "text": "#ffffff", // White
     "copyright_text": "© 2025 Cadence Design Systems, Inc. | SFDC Deployment Report generated by the Cadence DevOps Team" // Copyright line
   },
 
@@ -208,65 +206,77 @@
   // TYPOGRAPHY (system fonts, Outlook-safe sizes)
   // ---------------------------------------------------------------------
   "typography": {
-    "font_family": "Arial,Helvetica,sans-serif", // Email-safe font stack
-    "base_px": "10",           // Base text size (px)
-    "section_hdr_px": "11",    // Section bar text size (px)
-    "main_hdr_px": "14",       // Top banner title size (px)
-    "run_hdr_px": "11"         // Kept for compatibility (px)
+    "font_family":     "Arial,Helvetica,sans-serif", // Email-safe stack
+    "base_px":         "10",  // Base text px
+    "section_hdr_px":  "11",  // Section bar text px
+    "main_hdr_px":     "14",  // Top banner title px
+    "run_hdr_px":      "11"   // Back-compat px
   },
 
   // ---------------------------------------------------------------------
-  // STRINGS (all user-visible copy that your function actually reads)
+  // STRINGS (all user-facing copy)
   // ---------------------------------------------------------------------
   "strings": {
     "header": {
-      "title_core": "Deployment", // Middle word in header title
-      "title_suffix": "Report",   // Ending word in header title
-      "success_word": "Success",  // Success keyword
-      "failure_word": "Failure"   // Failure keyword
+      "title_core":   "Deployment", // Middle word in header
+      "title_suffix": "Report",     // Ending word in header
+      "success_word": "Success",    // Success keyword
+      "failure_word": "Failure"     // Failure keyword
     },
     "run_details": { "title": "Run Details" }, // Card 1 title
-    "chips": {
-      "repo": "REPO",             // Chip label: repository URL
-      "branch": "BRANCH",         // Chip label: branch name
-      "request_id": "REQUEST ID", // Chip label: deploy/request id
-      "run_ist": "RUN (IST)",     // Chip label: run timestamp IST
-      "org_api": "ORG NAME + API",// Chip label: org + API version
-      "deploy_user": "DEPLOY USER"// Chip label: who triggered deploy
-    },
-    "quick_links": {
-      "tile_1": "Open Logs",                     // Button text 1
-      "tile_2": "Original PMD Report",           // Button text 2
-      "tile_3": "PMD Critical Warning Pattern",  // Button text 3
-      "tile_4": "ForceDeploy"                    // Button text 4
-    },
-    "sections": {
-      "status_summary": "Status Summary",        // Card 2 title
-      "pmd_review": "PMD Review",                // Card 3 title
-      "success_title": "Changeset file/s ...",   // Card 4 title (success)
-      "failure_title": "All Component Failures:",// Card 4 title (failure)
-      "deployment_tile": "DEPLOYMENT",           // Tile label
-      "pmd_tile": "PMD — CHANGESET",             // Tile label
-      "duration_tile": "DURATION",               // Tile label
-      "duration_start": "Start",                 // Duration start label
-      "duration_end": "End"                      // Duration end label
-    },
-    "legend": {
-      "red": "Red = got worse (Δ High > 0)",            // Legend phrase for regression
-      "green": "Light red = improvement (Δ High < 0)",  // Legend phrase for improvement
-      "white": "White/Grey = no change (Δ High = 0)",   // Legend phrase for neutral
 
-      // Optional explainers (function doesn’t read these yet but safe to keep)
-      "high_explainer": "“High” = value in parentheses; count of high-severity PMD matches.",
+    "chips": {
+      "repo":         "REPO",             // Repository URL label
+      "branch":       "BRANCH",           // Branch name label
+      "request_id":   "REQUEST ID",       // Deployment/request ID
+      "run_ist":      "RUN (IST)",        // Run timestamp (IST)
+      "org_api":      "ORG NAME + API",   // Org + API version
+      "deploy_user":  "DEPLOY USER"       // Who triggered deployment
+    },
+
+    "quick_links": {
+      "tile_1": "Open Logs",                    // Button 1
+      "tile_2": "Original PMD Report",          // Button 2
+      "tile_3": "PMD Critical Warning Pattern", // Button 3
+      "tile_4": "ForceDeploy"                   // Button 4
+    },
+
+    "sections": {
+      "status_summary": "Status Summary",         // Card 2 title
+      "pmd_review":     "PMD Review",             // Card 3 title
+      "success_title":  "Changeset file/s ...",   // Card 4 (success)
+      "failure_title":  "All Component Failures:",// Card 4 (failure)
+      "deployment_tile":"DEPLOYMENT",             // Tile label
+      "pmd_tile":       "PMD — CHANGESET",        // Tile label
+      "duration_tile":  "DURATION",               // Tile label
+      "duration_start": "Start",                  // Duration start
+      "duration_end":   "End"                     // Duration end
+    },
+
+    "legend": {
+      "red":   "Red = got worse (Δ High > 0)",           // Regression legend
+      "green": "Light red = improvement (Δ High < 0)",   // Improvement legend
+      "white": "White/Grey = no change (Δ High = 0)",    // Neutral legend
+
+      // Optional explainers (safe even if unused)
+      "high_explainer":  "“High” = value in parentheses; count of high-severity PMD matches.",
       "delta_explainer": "Δ High = Current High − Original High."
     },
 
-    // Optional: Column header strings for PMD table (not used by current function;
-    // included for future switch-over — won’t break anything if present)
-    "columns": {
-      "original_high": "ORIGINAL (HIGH)", // Table header for original counts
-      "current_high": "CURRENT (HIGH)",   // Table header for current counts
-      "delta_high": "Δ HIGH"              // Table header for delta
+    // Column labels + short explanations for PMD table.
+    // Your function may read either block; both are provided.
+    "pmd_columns": {
+      "original_label":  "ORIGINAL (HIGH)",                     // Left numeric column header
+      "original_explain":"Original PMD total; High in parentheses", // What it means
+      "current_label":   "CURRENT (HIGH)",                      // Middle numeric column header
+      "current_explain": "Current PMD total; High in parentheses",  // What it means
+      "delta_label":     "Δ HIGH",                              // Delta header
+      "delta_explain":   "Current High − Original High"         // What it means
+    },
+    "columns": { // Back-compat alias (ignored if pmd_columns is used)
+      "original_high": "ORIGINAL (HIGH)",
+      "current_high":  "CURRENT (HIGH)",
+      "delta_high":    "Δ HIGH"
     },
 
     "footer": {
