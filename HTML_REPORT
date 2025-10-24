@@ -78,7 +78,9 @@ HTML_REPORT() {
   # ---- read colors / strings ----
   _hdr_s=$(_getc '.header.success_bg'); _hdr_f=$(_getc '.header.failure_bg'); _hdr_txt=$(_getc '.header.text')
   _page_bg=$(_getc '.plate.page_bg'); _plate_bg=$(_getc '.plate.background'); _plate_border=$(_getc '.plate.border')
-  # New: prefer title_*; fall back to legacy strip_* keys for backward compat
+  _container_px="$(_gets '.plate.container_px' '')"
+
+  # Prefer new title_*; fallback to legacy strip_* + title_text
   _run_s=$(_gets '.run_details.title_bg_success' "$(_gets '.run_details.strip_success_bg' '#2e7d32')")
   _run_f=$(_gets '.run_details.title_bg_failure' "$(_gets '.run_details.strip_failure_bg' '#a94442')")
   _run_text_s=$(_gets '.run_details.title_text_success' "$(_gets '.run_details.title_text' '#ffffff')")
@@ -104,7 +106,7 @@ HTML_REPORT() {
   _pmd_hdr_bg=$(_getc '.pmd_review.header_bg'); _pmd_hdr_text=$(_getc '.pmd_review.header_text'); _pmd_row_border=$(_getc '.pmd_review.row_border')
   _pmd_link_normal=$(_getc '.pmd_review.link_normal'); _pmd_link_high=$(_getc '.pmd_review.link_high'); _pmd_text_high=$(_getc '.pmd_review.text_high'); _pmd_text_normal=$(_getc '.pmd_review.text_normal')
 
-  # Legend word colors (new)
+  # Legend word colors
   _leg_word_red=$(_gets '.pmd_review.legend_red_text'    "$_pmd_text_high")
   _leg_word_green=$(_gets '.pmd_review.legend_green_text' "$_pmd_text_normal")
   _leg_word_neu=$(_gets '.pmd_review.legend_neutral_text' '#6b7280')
@@ -121,7 +123,6 @@ HTML_REPORT() {
   _delta_neu_bg=$(_gets '.pmd_review.delta_neu_bg' '#eeeeee')
   _delta_neu_bd=$(_gets '.pmd_review.delta_neu_border' '#dddddd')
 
-  # Meters removed, but keep neutral colors for any future use
   _meter_track=$(_gets '.pmd_review.meter_track' '#e5e7eb')
   _meter_fill=$(_gets '.pmd_review.meter_fill' '#9ca3af')
   _meter_bd="${_pmd_row_border}"
@@ -188,8 +189,13 @@ HTML_REPORT() {
   _STR_TILE_3="$(_gets '.strings.quick_links.tile_3' 'PMD Critical Warning Pattern')"
   _STR_TILE_4="$(_gets '.strings.quick_links.tile_4' 'ForceDeploy')"
 
-  # Optional fixed content width (px) for Outlook—keeps header/footer full-width
-  _container_px="$(_gets '.plate.container_px' '')"
+  # PMD column help
+  _STR_COL_ORIG="$(_gets '.strings.pmd_columns.original_label' 'ORIGINAL (HIGH)')"
+  _STR_COL_ORIG_X="$(_gets '.strings.pmd_columns.original_explain' 'Original PMD total; High in parentheses')"
+  _STR_COL_CUR="$(_gets '.strings.pmd_columns.current_label' 'CURRENT (HIGH)')"
+  _STR_COL_CUR_X="$(_gets '.strings.pmd_columns.current_explain' 'Current PMD total; High in parentheses')"
+  _STR_COL_DEL="$(_gets '.strings.pmd_columns.delta_label' 'Δ HIGH')"
+  _STR_COL_DEL_X="$(_gets '.strings.pmd_columns.delta_explain' 'Current High − Original High')"
 
   # Fonts CSS
   _FONT_BASE="font:${_base}px ${_fontfam};"
@@ -223,7 +229,7 @@ HTML_REPORT() {
 
   PAT_FILE="build/property/pmd_high_patterns.txt"
   pattern="$(grep -Ehv '^\s*($|#)' "$PAT_FILE" 2>/dev/null | tr -d '\r' | paste -sd'|' -)"
-  [ -n "$pattern" ] || pattern="(DUMMY-NO-PATTERN)"  # allow missing file without failing
+  [ -n "$pattern" ] || pattern="(DUMMY-NO-PATTERN)"
 
   CLASS_COUNT=$(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null | wc -l | xargs)
   TRIGGER_COUNT=$(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null | wc -l | xargs)
@@ -291,7 +297,6 @@ HTML_REPORT() {
   OPEN_LOGS_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
   ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
   FORCE_DEPLOY_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/$(basename "${HTMLFDLog:-$HTMLLog}").${DATE}"
-  # Publish the patterns file if present
   PAT_PUBLIC_DIR="/data/public/pmd_patterns/${SFDC_ORG}/"; mkdir -p "$PAT_PUBLIC_DIR" 2>/dev/null
   if [ -s "$PAT_FILE" ]; then
     cp -u "$PAT_FILE" "${PAT_PUBLIC_DIR}pmd_high_patterns.txt" 2>/dev/null
@@ -363,7 +368,7 @@ HTML_REPORT() {
 </td>
 CELL
   }
-  _section_bar(){ # centered text + top/bottom thin rails
+  _section_bar(){ # centered text + rails
     local text="$1"
     cat <<BAR
 <tr>
@@ -389,7 +394,7 @@ BAR
 PILL
   }
 
-  # Outlook-safe: meters removed (plain numbers only)
+  # Outlook-safe: numbers only (no bars)
   _emit_meter_cell(){
     local num="$1" high="$2" maxh="$3" text_color="$4"
     cat <<MCELL
@@ -399,7 +404,7 @@ PILL
 MCELL
   }
 
-  _pmd_row(){ # emits a row using precomputed text and colors + (no meters)
+  _pmd_row(){ # emits a row using precomputed text and colors + divider
     local display="$1" link="$2" author="$3" op="$4" oh="$5" cp="$6" ch="$7" delta="$8" row_num="$9" maxoh="${10}" maxch="${11}"
     local bg_color="#ffffff" text_color="${_pmd_text_normal}" link_color="${_pmd_link_normal}" left="${_neu_left}"
     [ $((row_num % 2)) -eq 1 ] && bg_color="$_zebra_alt"
@@ -409,14 +414,14 @@ MCELL
       bg_color="${_imp_row_bg}"; left="${_imp_left}"; text_color="${_imp_text}"
     fi
     {
-      echo "<tr style=\"background:${bg_color};border-bottom:1px solid ${_pmd_row_border};border-left:4px solid ${left};\">"
-      echo "<td style=\"padding:5px 8px;${_FONT_BASE}word-wrap:break-word;\"><a href=\"$link\" style=\"text-decoration:underline;color:${link_color};\">$display</a></td>"
-      _emit_meter_cell "$op" "$oh" "$maxoh" "$text_color"
-      _emit_meter_cell "$cp" "$ch" "$maxch" "$text_color"
-      echo "<td align=\"right\" style=\"padding:5px 6px;\">"; _delta_pill "$delta"; echo "</td>"
-      echo "<td style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};\">$author</td>"
+      echo "<tr style=\"background:${bg_color};border-left:4px solid ${left};\">"
+      echo "<td style=\"padding:5px 8px;${_FONT_BASE}word-wrap:break-word;border-bottom:1px solid ${_pmd_row_border};\"><a href=\"$link\" style=\"text-decoration:underline;color:${link_color};\">$display</a></td>"
+      echo "<td style=\"border-bottom:1px solid ${_pmd_row_border};\">"; _emit_meter_cell "$op" "$oh" "$maxoh" "$text_color"; echo "</td>"
+      echo "<td style=\"border-bottom:1px solid ${_pmd_row_border};\">"; _emit_meter_cell "$cp" "$ch" "$maxch" "$text_color"; echo "</td>"
+      echo "<td align=\"right\" style=\"padding:5px 6px;border-bottom:1px solid ${_pmd_row_border};\">"; _delta_pill "$delta"; echo "</td>"
+      echo "<td style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};border-bottom:1px solid ${_pmd_row_border};\">$author</td>"
       echo "</tr>"
-      echo "<tr><td colspan=\"5\" style=\"border-bottom:1px solid ${_pmd_row_border};font-size:0;line-height:0;\">&nbsp;</td></tr>"
+      echo "<tr><td colspan=\"5\" style=\"height:1px;line-height:1px;font-size:0;background:${_pmd_row_border};\">&nbsp;</td></tr>"
     } >>"$HTMLLog"
   }
 
@@ -427,7 +432,7 @@ MCELL
     printf '<strong><span style="color:%s;">%s</span> = %s</strong>' "$c" "$(echo "$L"|xargs)" "$(echo "$R"|sed 's/^ //')"
   }
 
-  # compute container width attrs (cards area only)
+  # compute container width attrs (single container for header+cards+footer)
   _container_attr='width="100%"'
   _container_style='width:100%;'
   if [ -n "$_container_px" ]; then
@@ -449,94 +454,93 @@ MCELL
 <body style="margin:0;padding:0;background:${_page_bg};">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_page_bg};">
   <tr>
-    <td style="padding:0;">
-      <!-- Header (full width) -->
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin:0;">
-        <tr>
-          <td style="background:${_hdr_bg};padding:6px 10px;color:${_hdr_txt};${_FONT_MAIN_HDR}line-height:16px;border-top:2px solid ${_chip_border};border-bottom:2px solid ${_chip_border};">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                <td style="padding:0 10px 0 0;vertical-align:middle;width:40px;">
-                  <img src="${_logo_src}" alt="Logo" width="32" height="32" style="height:32px;width:32px;display:block;border:0;outline:0;">
-                </td>
-                <td align="center" style="${_FONT_MAIN_HDR}color:${_hdr_txt};vertical-align:middle;">
-                  ${SFDC_ORG} ${_STR_HDR_CORE} $([ "$Report" = "SUCCEEDED" ] && echo "${_STR_HDR_SUCCESS}" || echo "${_STR_HDR_FAILURE}") ${_STR_HDR_SUFFIX}
-                </td>
-                <td style="width:40px;">&nbsp;</td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-
-      <!-- Centered container for cards -->
+    <td align="center" style="padding:0;">
+      <!-- Centered container (BEGIN) -->
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" ${_container_attr} style="margin:0 auto;${_container_style}">
         <tr><td style="padding:0;">
+          <!-- Header INSIDE the container -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin:0;">
+            <tr>
+              <td style="background:${_hdr_bg};padding:6px 10px;color:${_hdr_txt};${_FONT_MAIN_HDR}line-height:16px;border-top:2px solid ${_chip_border};border-bottom:2px solid ${_chip_border};">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td style="padding:0 10px 0 0;vertical-align:middle;width:40px;">
+                      <img src="${_logo_src}" alt="Logo" width="32" height="32" style="height:32px;width:32px;display:block;border:0;outline:0;">
+                    </td>
+                    <td align="center" style="${_FONT_MAIN_HDR}color:${_hdr_txt};vertical-align:middle;">
+                      ${SFDC_ORG} ${_STR_HDR_CORE} $([ "$Report" = "SUCCEEDED" ] && echo "${_STR_HDR_SUCCESS}" || echo "${_STR_HDR_FAILURE}") ${_STR_HDR_SUFFIX}
+                    </td>
+                    <td style="width:40px;">&nbsp;</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
 HTML_TOP
 
   # ==== CARD 1: RUN DETAILS ====
   cat >>"$HTMLLog" <<EOF
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;background:${_plate_bg};border:1px solid ${_plate_border};margin-top:8px;">
-        $(_section_bar "${_STR_RUN_TITLE}")
-        <tr>
-          <td style="padding:8px;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                $(_chip_td "${_STR_CHIP_REPO}" "$_REPO" 10)
-                $(_chip_td "${_STR_CHIP_BRANCH}" "$_BRANCH" 10)
-                $(_chip_td "${_STR_CHIP_REQID}" "$_REQID" 0)
-              </tr>
-              <tr>
-                $(_chip_td "${_STR_CHIP_RUNIST}" "$_RUN_IST" 10)
-                $(_chip_td "${_STR_CHIP_ORGAPI}" "${SFDC_ORG} • ${_API}" 10)
-                $(_chip_td "${_STR_CHIP_DEPUSER}" "$_DEPUSER" 0)
-              </tr>
-            </table>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;background:${_plate_bg};border:1px solid ${_plate_border};margin-top:8px;">
+            $(_section_bar "${_STR_RUN_TITLE}")
+            <tr>
+              <td style="padding:8px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    $(_chip_td "${_STR_CHIP_REPO}" "$_REPO" 10)
+                    $(_chip_td "${_STR_CHIP_BRANCH}" "$_BRANCH" 10)
+                    $(_chip_td "${_STR_CHIP_REQID}" "$_REQID" 0)
+                  </tr>
+                  <tr>
+                    $(_chip_td "${_STR_CHIP_RUNIST}" "$_RUN_IST" 10)
+                    $(_chip_td "${_STR_CHIP_ORGAPI}" "${SFDC_ORG} • ${_API}" 10)
+                    $(_chip_td "${_STR_CHIP_DEPUSER}" "$_DEPUSER" 0)
+                  </tr>
+                </table>
 
-            <!-- Quick links -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 2px 0;">
-              <tr>
-                <td style="padding:0 ${_ql_gap}px 0 0;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql1};border:1px solid ${_chip_border};border-radius:3px;">
-                    <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
-                      <a class="cta" href="${OPEN_LOGS_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">${_STR_TILE_1}</a>
-                    </td></tr>
-                  </table>
-                </td>
-                <td style="padding:0 ${_ql_gap}px 0 0;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql2};border:1px solid ${_chip_border};border-radius:3px;">
-                    <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
-                      <a class="cta" href="${ORIG_PMD_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">${_STR_TILE_2}</a>
-                    </td></tr>
-                  </table>
-                </td>
-                <td style="padding:0 ${_ql_gap}px 0 0;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql3};border:1px solid ${_chip_border};border-radius:3px;">
-                    <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
-                      <a class="cta" href="${PMD_PATTERN_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">${_STR_TILE_3}</a>
-                    </td></tr>
-                  </table>
-                </td>
-                <td>
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql4};border:1px solid ${_chip_border};border-radius:3px;">
-                    <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
-                      <a class="cta" href="${FORCE_DEPLOY_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">${_STR_TILE_4}</a>
-                    </td></tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
+                <!-- Quick links -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 2px 0;">
+                  <tr>
+                    <td style="padding:0 ${_ql_gap}px 0 0;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql1};border:1px solid ${_chip_border};border-radius:3px;">
+                        <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
+                          <a class="cta" href="${OPEN_LOGS_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">${_STR_TILE_1}</a>
+                        </td></tr>
+                      </table>
+                    </td>
+                    <td style="padding:0 ${_ql_gap}px 0 0;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql2};border:1px solid ${_chip_border};border-radius:3px;">
+                        <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
+                          <a class="cta" href="${ORIG_PMD_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">${_STR_TILE_2}</a>
+                        </td></tr>
+                      </table>
+                    </td>
+                    <td style="padding:0 ${_ql_gap}px 0 0;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql3};border:1px solid ${_chip_border};border-radius:3px;">
+                        <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
+                          <a class="cta" href="${PMD_PATTERN_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">${_STR_TILE_3}</a>
+                        </td></tr>
+                      </table>
+                    </td>
+                    <td>
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql4};border:1px solid ${_chip_border};border-radius:3px;">
+                        <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
+                          <a class="cta" href="${FORCE_DEPLOY_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">${_STR_TILE_4}</a>
+                        </td></tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
 EOF
 
   # ==== CARD 2: STATUS SUMMARY ====
   _status_counts_html() {
     if [ "$Report" = "SUCCEEDED" ]; then
-      echo "Passed: ${COMP_PASS}"
+      echo "<span style=\"white-space:nowrap;\">Passed: ${COMP_PASS}</span>"
     else
-      echo "Passed: ${COMP_PASS} &nbsp; • &nbsp; Failed: ${COMP_FAIL}"
+      echo "<span style=\"white-space:nowrap;\">Passed: ${COMP_PASS} &nbsp; • &nbsp; Failed: ${COMP_FAIL}</span>"
     fi
   }
   _pmd_summary_html() {
@@ -545,49 +549,49 @@ EOF
       echo "<div style=\"${_FONT_BASE_BOLD}color:${warn_color};\">Classes: 0 &nbsp; • &nbsp; Triggers: 0</div>"
       echo "<div style=\"${_FONT_BASE_BOLD}color:${warn_color};\">PMD analysis skipped</div>"
     else
-      echo "<div style=\"${_FONT_BASE_BOLD}color:${_pmd_textcol};\">Classes: ${CLASS_COUNT} &nbsp; • &nbsp; Triggers: ${TRIGGER_COUNT}</div>"
-      echo "<div style=\"${_FONT_BASE}color:${_pmd_textcol};\">High (Classes): ${PMD_HIGH_CLS} &nbsp; • &nbsp; High (Triggers): ${PMD_HIGH_TRG}</div>"
+      echo "<div style=\"${_FONT_BASE_BOLD}color:${_pmd_textcol};white-space:nowrap;\">Classes: ${CLASS_COUNT} &nbsp; • &nbsp; Triggers: ${TRIGGER_COUNT}</div>"
+      echo "<div style=\"${_FONT_BASE}color:${_pmd_textcol};white-space:nowrap;\">High (Classes): ${PMD_HIGH_CLS} &nbsp; • &nbsp; High (Triggers): ${PMD_HIGH_TRG}</div>"
     fi
   }
 
   cat >>"$HTMLLog" <<EOF
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin-top:6px;border:1px solid ${_chip_border};background:${_plate_bg};">
-        $(_section_bar "${_STR_SECT_STATUS}")
-        <tr><td style="padding:6px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-            <tr>
-              <td width="33%" valign="top" style="padding:2px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_bg};border:1px solid ${_chip_border};border-radius:${_status_radius};">
-                  <tr><td style="padding:6px;" valign="top">
-                    <div style="${_FONT_BASE}color:${_dep_label_col};">${_STR_TILE_DEPLOY}</div>
-                    <div style="${_FONT_BASE_BOLD}color:${_dep_value_col};">$([ "$Report" = "SUCCEEDED" ] && echo "Succeeded" || echo "Failed")</div>
-                    <div style="${_FONT_BASE}color:${_dep_value_col};">$(_status_counts_html)</div>
-                  </td></tr>
-                </table>
-              </td>
-              <td width="33%" valign="top" style="padding:2px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_pmd};border:1px solid ${_chip_border};border-radius:${_status_radius};">
-                  <tr><td style="padding:6px;" valign="top">
-                    <div style="${_FONT_BASE}color:${_status_label};">${_STR_TILE_PMD}</div>
-                    $(_pmd_summary_html)
-                  </td></tr>
-                </table>
-              </td>
-              <td width="33%" valign="top" style="padding:2px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_time};border:1px solid ${_chip_border};border-radius:${_status_radius};">
-                  <tr><td style="padding:6px;" valign="top">
-                    <div style="${_FONT_BASE}color:${_status_label};">${_STR_TILE_DUR}</div>
-                    <div style="${_FONT_BASE_BOLD}color:${_time_textcol};">${TOTAL_DURATION}</div>
-                    <div style="${_FONT_BASE}color:${_time_textcol};white-space:nowrap;">
-                      ${_STR_DUR_START}: ${START_TIME_IST_ONLY:-N/A} &nbsp;•&nbsp; ${_STR_DUR_END}: ${END_TIME_IST_ONLY:-N/A}
-                    </div>
-                  </td></tr>
-                </table>
-              </td>
-            </tr>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin-top:6px;border:1px solid ${_chip_border};background:${_plate_bg};">
+            $(_section_bar "${_STR_SECT_STATUS}")
+            <tr><td style="padding:6px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td width="33%" valign="top" style="padding:2px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_bg};border:1px solid ${_chip_border};border-radius:${_status_radius};">
+                      <tr><td style="padding:6px;" valign="top">
+                        <div style="${_FONT_BASE}color:${_dep_label_col};">${_STR_TILE_DEPLOY}</div>
+                        <div style="${_FONT_BASE_BOLD}color:${_dep_value_col};">$([ "$Report" = "SUCCEEDED" ] && echo "Succeeded" || echo "Failed")</div>
+                        <div style="${_FONT_BASE}color:${_dep_value_col};">$(_status_counts_html)</div>
+                      </td></tr>
+                    </table>
+                  </td>
+                  <td width="33%" valign="top" style="padding:2px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_pmd};border:1px solid ${_chip_border};border-radius:${_status_radius};">
+                      <tr><td style="padding:6px;" valign="top">
+                        <div style="${_FONT_BASE}color:${_status_label};">${_STR_TILE_PMD}</div>
+                        $(_pmd_summary_html)
+                      </td></tr>
+                    </table>
+                  </td>
+                  <td width="33%" valign="top" style="padding:2px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_time};border:1px solid ${_chip_border};border-radius:${_status_radius};">
+                      <tr><td style="padding:6px;" valign="top">
+                        <div style="${_FONT_BASE}color:${_status_label};">${_STR_TILE_DUR}</div>
+                        <div style="${_FONT_BASE_BOLD}color:${_time_textcol};">${TOTAL_DURATION}</div>
+                        <div style="${_FONT_BASE}color:${_time_textcol};white-space:nowrap;">
+                          ${_STR_DUR_START}: ${START_TIME_IST_ONLY:-N/A} &nbsp;•&nbsp; ${_STR_DUR_END}: ${END_TIME_IST_ONLY:-N/A}
+                        </div>
+                      </td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
           </table>
-        </td></tr>
-      </table>
 EOF
 
   # ==== CARD 3: PMD REVIEW ====
@@ -605,6 +609,12 @@ EOF
       echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_neu_bg};border:1px solid ${_leg_neu_bd};margin-right:6px;\"></span>$(_colorize_legend "${_STR_LEG_WHITE}" "${_leg_word_neu}")</td>"
       echo "</tr>"
       echo "</table>"
+      # Column explanations
+      echo "<table role=\"presentation\" width=\"100%\" style=\"margin:6px 0 2px 0;\"><tr>"
+      echo "<td style=\"${_FONT_BASE};color:${_pmd_hdr_text};\"><strong>${_STR_COL_ORIG}</strong> — ${_STR_COL_ORIG_X}</td>"
+      echo "<td style=\"${_FONT_BASE};color:${_pmd_hdr_text};\" align=\"center\"><strong>${_STR_COL_CUR}</strong> — ${_STR_COL_CUR_X}</td>"
+      echo "<td style=\"${_FONT_BASE};color:${_pmd_hdr_text};\" align=\"right\"><strong>${_STR_COL_DEL}</strong> — ${_STR_COL_DEL_X}</td>"
+      echo "</tr></table>"
     } >>"$HTMLLog"
 
     # --- CLASSES ---
@@ -633,7 +643,7 @@ EOF
 
     if [ ${#class_rows[@]} -gt 0 ]; then
       echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-left:0;border-right:0;border-top:0;border-bottom:1px solid ${_pmd_row_border};\">" >>"$HTMLLog"
-      echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CLASS NAME</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CURRENT (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">Δ HIGH</th><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
+      echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CLASS NAME</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">${_STR_COL_ORIG}</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">${_STR_COL_CUR}</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">${_STR_COL_DEL}</th><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
       row_num=0
       for row in "${class_rows[@]}"; do
         IFS='|' read -r display link author op oh cp ch delta <<<"$row"
@@ -672,7 +682,7 @@ EOF
 
     if [ ${#trig_rows[@]} -gt 0 ]; then
       echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-left:0;border-right:0;border-top:0;border-bottom:1px solid ${_pmd_row_border};\">" >>"$HTMLLog"
-      echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">TRIGGER NAME</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">ORIGINAL (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CURRENT (HIGH)</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">Δ HIGH</th><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
+      echo "<thead><tr style=\"background:${_pmd_hdr_bg};\"><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">TRIGGER NAME</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">${_STR_COL_ORIG}</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">${_STR_COL_CUR}</th><th align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">${_STR_COL_DEL}</th><th align=\"left\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th></tr></thead><tbody>" >>"$HTMLLog"
       row_num=0
       for row in "${trig_rows[@]}"; do
         IFS='|' read -r display link author op oh cp ch delta <<<"$row"
@@ -778,18 +788,18 @@ $LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
   fi
   IFS=$SAVEIFS
 
-  # close cards container, then footer (full width)
+  # ---- Footer INSIDE the same container, then close all wrappers ----
   cat >>"$HTMLLog" <<EOF
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin:6px 0 10px;background:${_foot_bg};">
+            <tr>
+              <td align="center" style="padding:6px 8px;text-align:center;color:${_foot_text};${_FONT_BASE_BOLD}line-height:14px;">
+                $(_esc <<<"$_footer_line") &nbsp; | &nbsp; $(_esc <<<"$_foot_copy")
+              </td>
+            </tr>
+          </table>
         </td></tr>
       </table>
-
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin:6px 0 10px;background:${_foot_bg};">
-        <tr>
-          <td align="center" style="padding:6px 8px;text-align:center;color:${_foot_text};${_FONT_BASE_BOLD}line-height:14px;">
-            $(_esc <<<"$_footer_line") &nbsp; | &nbsp; $(_esc <<<"$_foot_copy")
-          </td>
-        </tr>
-      </table>
+      <!-- Centered container (END) -->
     </td>
   </tr>
 </table>
