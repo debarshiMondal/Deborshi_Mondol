@@ -11,40 +11,39 @@
 <body style="margin:0;padding:0;background:#f6f8fa;">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f8fa;">
   <tr>
-    <td style="padding:0;">
-      <!-- Header (full width) -->
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin:0;">
-        <tr>
-          <td style="background:#a94442;padding:6px 10px;color:#ffffff;font:bold 14px Arial,Helvetica,sans-serif;line-height:16px;border-top:2px solid #fecaca;border-bottom:2px solid #fecaca;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                <td style="padding:0 10px 0 0;vertical-align:middle;width:40px;">
-                  <img src="https://cdnsfdc.cadence.com/assets/sbx/logo.png" alt="Logo" width="32" height="32" style="height:32px;width:32px;display:block;border:0;outline:0;">
-                </td>
-                <td align="center" style="font:bold 14px Arial,Helvetica,sans-serif;color:#ffffff;vertical-align:middle;">
-                  sbx Deployment Failure Report
-                </td>
-                <td style="width:40px;">&nbsp;</td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-
-      <!-- Centered container for cards -->
+    <td align="center" style="padding:0;">
+      <!-- Centered container (BEGIN) -->
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="980" style="margin:0 auto;width:980px;">
         <tr><td style="padding:0;">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;background:#ffffff;border:1px solid #e6e6e6;margin-top:8px;">
-        <tr>
+          <!-- Header INSIDE the container -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin:0;">
+            <tr>
+              <td style="background:#a94442;padding:6px 10px;color:#ffffff;font:bold 14px Arial,Helvetica,sans-serif;line-height:16px;border-top:2px solid #fecaca;border-bottom:2px solid #fecaca;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td style="padding:0 10px 0 0;vertical-align:middle;width:40px;">
+                      <img src="https://cdnsfdc.cadence.com/assets/sbx/logo.png" alt="Logo" width="32" height="32" style="height:32px;width:32px;display:block;border:0;outline:0;">
+                    </td>
+                    <td align="center" style="font:bold 14px Arial,Helvetica,sans-serif;color:#ffffff;vertical-align:middle;">
+                      sbx Deployment Failure Report
+                    </td>
+                    <td style="width:40px;">&nbsp;</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;background:#ffffff;border:1px solid #e6e6e6;margin-top:8px;">
+            <tr>
   <td align="center" style="font:bold 11px Arial,Helvetica,sans-serif;color:#ffffff;background:#a94442;padding:6px 8px;border-top:2px solid #fecaca;border-bottom:2px solid #fecaca;">
     Run Details
   </td>
 </tr>
-        <tr>
-          <td style="padding:8px;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                <td valign="top" width="260" style="padding:0 10px 10px 0;">
+            <tr>
+              <td style="padding:8px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td valign="top" width="260" style="padding:0 10px 10px 0;">
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:#fef2f2;border:1px solid #fecaca;">
     <tr>
       <td style="padding:6px 8px;font:10px Arial,Helvetica,sans-serif;;color:#7f1d1d;line-height:12px;">
@@ -56,7 +55,7 @@
     </tr>
   </table>
 </td>
-                <td valign="top" width="260" style="padding:0 10px 10px 0;">
+                    <td valign="top" width="260" style="padding:0 10px 10px 0;">
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:#fef2f2;border:1px solid #fecaca;">
     <tr>
       <td style="padding:6px 8px;font:10px Arial,Helvetica,sans-serif;;color:#7f1d1d;line-height:12px;">
@@ -68,33 +67,33 @@
     </tr>
   </table>
 </td>
-                <td valign="top" width="260" style="padding:0 0px 10px 0;">
+                    <td valign="top" width="260" style="padding:0 0px 10px 0;">
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:#fef2f2;border:1px solid #fecaca;">
     <tr>
       <td style="padding:6px 8px;font:10px Arial,Helvetica,sans-serif;;color:#7f1d1d;line-height:12px;">
         <div style="font:700 10px Arial,Helvetica,sans-serif;color:#a94442;letter-spacing:.3px;text-transform:uppercase;">REQUEST ID</div>
         <div style="margin-top:2px;word-wrap:break-word;word-break:break-word;font:10px Arial,Helvetica,sans-serif;;color:#7f1d1d;">
-          0AfO900000dI4oHKAS
+          0AfO900000dIDZpKAO
         </div>
       </td>
     </tr>
   </table>
 </td>
-              </tr>
-              <tr>
-                <td valign="top" width="260" style="padding:0 10px 10px 0;">
+                  </tr>
+                  <tr>
+                    <td valign="top" width="260" style="padding:0 10px 10px 0;">
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:#fef2f2;border:1px solid #fecaca;">
     <tr>
       <td style="padding:6px 8px;font:10px Arial,Helvetica,sans-serif;;color:#7f1d1d;line-height:12px;">
         <div style="font:700 10px Arial,Helvetica,sans-serif;color:#a94442;letter-spacing:.3px;text-transform:uppercase;">RUN (IST)</div>
         <div style="margin-top:2px;word-wrap:break-word;word-break:break-word;font:10px Arial,Helvetica,sans-serif;;color:#7f1d1d;">
-          24.Oct.2025 12:12 IST
+          24.Oct.2025 13:25 IST
         </div>
       </td>
     </tr>
   </table>
 </td>
-                <td valign="top" width="260" style="padding:0 10px 10px 0;">
+                    <td valign="top" width="260" style="padding:0 10px 10px 0;">
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:#fef2f2;border:1px solid #fecaca;">
     <tr>
       <td style="padding:6px 8px;font:10px Arial,Helvetica,sans-serif;;color:#7f1d1d;line-height:12px;">
@@ -106,7 +105,7 @@
     </tr>
   </table>
 </td>
-                <td valign="top" width="260" style="padding:0 0px 10px 0;">
+                    <td valign="top" width="260" style="padding:0 0px 10px 0;">
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:#fef2f2;border:1px solid #fecaca;">
     <tr>
       <td style="padding:6px 8px;font:10px Arial,Helvetica,sans-serif;;color:#7f1d1d;line-height:12px;">
@@ -118,87 +117,87 @@
     </tr>
   </table>
 </td>
-              </tr>
-            </table>
+                  </tr>
+                </table>
 
-            <!-- Quick links -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 2px 0;">
-              <tr>
-                <td style="padding:0 10px 0 0;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:#0D9488;border:1px solid #fecaca;border-radius:3px;">
-                    <tr><td align="center" style="padding:6px 12px;font:bold 10px Arial,Helvetica,sans-serif;">
-                      <a class="cta" href="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/sbx.GIT_59977ac18357459cf19658e6e742cb31e74f1616-e0e6923f37b3b2795d724ff3a6acfea0d64223b0.23Oct2025_23h38m28s" style="display:inline-block;font:bold 10px Arial,Helvetica,sans-serif;color:#ffffff;">Open Logs</a>
-                    </td></tr>
-                  </table>
-                </td>
-                <td style="padding:0 10px 0 0;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:#0D9488;border:1px solid #fecaca;border-radius:3px;">
-                    <tr><td align="center" style="padding:6px 12px;font:bold 10px Arial,Helvetica,sans-serif;">
-                      <a class="cta" href="https://cdnsfdc.cadence.com/PMDOUTPUT/sbx" style="display:inline-block;font:bold 10px Arial,Helvetica,sans-serif;color:#ffffff;">Original PMD Report</a>
-                    </td></tr>
-                  </table>
-                </td>
-                <td style="padding:0 10px 0 0;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:#0D9488;border:1px solid #fecaca;border-radius:3px;">
-                    <tr><td align="center" style="padding:6px 12px;font:bold 10px Arial,Helvetica,sans-serif;">
-                      <a class="cta" href="https://cdnsfdc.cadence.com/pmd_patterns/sbx/pmd_high_patterns.txt" style="display:inline-block;font:bold 10px Arial,Helvetica,sans-serif;color:#ffffff;">PMD Critical Warning Pattern</a>
-                    </td></tr>
-                  </table>
-                </td>
-                <td>
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:#0D9488;border:1px solid #fecaca;border-radius:3px;">
-                    <tr><td align="center" style="padding:6px 12px;font:bold 10px Arial,Helvetica,sans-serif;">
-                      <a class="cta" href="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/sbx.GIT_59977ac18357459cf19658e6e742cb31e74f1616-e0e6923f37b3b2795d724ff3a6acfea0d64223b0.23Oct2025_23h38m28s/sbx.FDLog.html.23Oct2025_23h38m28s" style="display:inline-block;font:bold 10px Arial,Helvetica,sans-serif;color:#ffffff;">ForceDeploy</a>
-                    </td></tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin-top:6px;border:1px solid #fecaca;background:#ffffff;">
-        <tr>
-  <td align="center" style="font:bold 11px Arial,Helvetica,sans-serif;color:#ffffff;background:#a94442;padding:6px 8px;border-top:2px solid #fecaca;border-bottom:2px solid #fecaca;">
-    Status Summary
-  </td>
-</tr>
-        <tr><td style="padding:6px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-            <tr>
-              <td width="33%" valign="top" style="padding:2px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
-                  <tr><td style="padding:6px;" valign="top">
-                    <div style="font:10px Arial,Helvetica,sans-serif;color:#a94442;">DEPLOYMENT</div>
-                    <div style="font:bold 10px Arial,Helvetica,sans-serif;color:#7f1d1d;">Failed</div>
-                    <div style="font:10px Arial,Helvetica,sans-serif;color:#7f1d1d;">Passed: 126 &nbsp; • &nbsp; Failed: 8</div>
-                  </td></tr>
-                </table>
-              </td>
-              <td width="33%" valign="top" style="padding:2px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#fff7ed;border:1px solid #fecaca;border-radius:8px;">
-                  <tr><td style="padding:6px;" valign="top">
-                    <div style="font:10px Arial,Helvetica,sans-serif;color:#047857;">PMD — CHANGESET</div>
-                    <div style="font:bold 10px Arial,Helvetica,sans-serif;color:#9a3412;">Classes: 2 &nbsp; • &nbsp; Triggers: 0</div>
-<div style="font:10px Arial,Helvetica,sans-serif;color:#9a3412;">High (Classes): 48 &nbsp; • &nbsp; High (Triggers): 0</div>
-                  </td></tr>
-                </table>
-              </td>
-              <td width="33%" valign="top" style="padding:2px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#eff6ff;border:1px solid #fecaca;border-radius:8px;">
-                  <tr><td style="padding:6px;" valign="top">
-                    <div style="font:10px Arial,Helvetica,sans-serif;color:#047857;">DURATION</div>
-                    <div style="font:bold 10px Arial,Helvetica,sans-serif;color:#1d4ed8;">00h:01m:51s</div>
-                    <div style="font:10px Arial,Helvetica,sans-serif;color:#1d4ed8;white-space:nowrap;">
-                      Start: 12:08 PM IST &nbsp;•&nbsp; End: 12:10 PM IST
-                    </div>
-                  </td></tr>
+                <!-- Quick links -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 2px 0;">
+                  <tr>
+                    <td style="padding:0 10px 0 0;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:#0D9488;border:1px solid #fecaca;border-radius:3px;">
+                        <tr><td align="center" style="padding:6px 12px;font:bold 10px Arial,Helvetica,sans-serif;">
+                          <a class="cta" href="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/sbx.GIT_59977ac18357459cf19658e6e742cb31e74f1616-3b26dee4d670600b430d13c0f7fbe6fc2dcc85b5.24Oct2025_00h53m00s" style="display:inline-block;font:bold 10px Arial,Helvetica,sans-serif;color:#ffffff;">Open Logs</a>
+                        </td></tr>
+                      </table>
+                    </td>
+                    <td style="padding:0 10px 0 0;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:#0D9488;border:1px solid #fecaca;border-radius:3px;">
+                        <tr><td align="center" style="padding:6px 12px;font:bold 10px Arial,Helvetica,sans-serif;">
+                          <a class="cta" href="https://cdnsfdc.cadence.com/PMDOUTPUT/sbx" style="display:inline-block;font:bold 10px Arial,Helvetica,sans-serif;color:#ffffff;">Original PMD Report</a>
+                        </td></tr>
+                      </table>
+                    </td>
+                    <td style="padding:0 10px 0 0;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:#0D9488;border:1px solid #fecaca;border-radius:3px;">
+                        <tr><td align="center" style="padding:6px 12px;font:bold 10px Arial,Helvetica,sans-serif;">
+                          <a class="cta" href="https://cdnsfdc.cadence.com/pmd_patterns/sbx/pmd_high_patterns.txt" style="display:inline-block;font:bold 10px Arial,Helvetica,sans-serif;color:#ffffff;">PMD Critical Warning Pattern</a>
+                        </td></tr>
+                      </table>
+                    </td>
+                    <td>
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:#0D9488;border:1px solid #fecaca;border-radius:3px;">
+                        <tr><td align="center" style="padding:6px 12px;font:bold 10px Arial,Helvetica,sans-serif;">
+                          <a class="cta" href="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/sbx.GIT_59977ac18357459cf19658e6e742cb31e74f1616-3b26dee4d670600b430d13c0f7fbe6fc2dcc85b5.24Oct2025_00h53m00s/sbx.FDLog.html.24Oct2025_00h53m00s" style="display:inline-block;font:bold 10px Arial,Helvetica,sans-serif;color:#ffffff;">ForceDeploy</a>
+                        </td></tr>
+                      </table>
+                    </td>
+                  </tr>
                 </table>
               </td>
             </tr>
           </table>
-        </td></tr>
-      </table>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin-top:6px;border:1px solid #fecaca;background:#ffffff;">
+            <tr>
+  <td align="center" style="font:bold 11px Arial,Helvetica,sans-serif;color:#ffffff;background:#a94442;padding:6px 8px;border-top:2px solid #fecaca;border-bottom:2px solid #fecaca;">
+    Status Summary
+  </td>
+</tr>
+            <tr><td style="padding:6px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td width="33%" valign="top" style="padding:2px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
+                      <tr><td style="padding:6px;" valign="top">
+                        <div style="font:10px Arial,Helvetica,sans-serif;color:#a94442;">DEPLOYMENT</div>
+                        <div style="font:bold 10px Arial,Helvetica,sans-serif;color:#7f1d1d;">Failed</div>
+                        <div style="font:10px Arial,Helvetica,sans-serif;color:#7f1d1d;"><span style="white-space:nowrap;">Passed: 126 &nbsp; • &nbsp; Failed: 2</span></div>
+                      </td></tr>
+                    </table>
+                  </td>
+                  <td width="33%" valign="top" style="padding:2px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#fff7ed;border:1px solid #fecaca;border-radius:8px;">
+                      <tr><td style="padding:6px;" valign="top">
+                        <div style="font:10px Arial,Helvetica,sans-serif;color:#047857;">PMD — CHANGESET</div>
+                        <div style="font:bold 10px Arial,Helvetica,sans-serif;color:#9a3412;white-space:nowrap;">Classes: 1 &nbsp; • &nbsp; Triggers: 0</div>
+<div style="font:10px Arial,Helvetica,sans-serif;color:#9a3412;white-space:nowrap;">High (Classes): 3 &nbsp; • &nbsp; High (Triggers): 0</div>
+                      </td></tr>
+                    </table>
+                  </td>
+                  <td width="33%" valign="top" style="padding:2px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#eff6ff;border:1px solid #fecaca;border-radius:8px;">
+                      <tr><td style="padding:6px;" valign="top">
+                        <div style="font:10px Arial,Helvetica,sans-serif;color:#047857;">DURATION</div>
+                        <div style="font:bold 10px Arial,Helvetica,sans-serif;color:#1d4ed8;">00h:00m:54s</div>
+                        <div style="font:10px Arial,Helvetica,sans-serif;color:#1d4ed8;white-space:nowrap;">
+                          Start: 01:23 PM IST &nbsp;•&nbsp; End: 01:24 PM IST
+                        </div>
+                      </td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+          </table>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin-top:10px;border:1px solid #e6eefc;background:#ffffff;">
 <tr>
   <td align="center" style="font:bold 11px Arial,Helvetica,sans-serif;color:#ffffff;background:#a94442;padding:6px 8px;border-top:2px solid #fecaca;border-bottom:2px solid #fecaca;">
@@ -213,40 +212,33 @@
 <td style="padding:6px 8px;font:10px Arial,Helvetica,sans-serif;"><span style="display:inline-block;width:10px;height:10px;background:#ffffff;border:1px solid #dddddd;margin-right:6px;"></span><strong><span style="color:#6b7280;">White/Grey</span> = no change (Δ High = 0)</strong></td>
 </tr>
 </table>
+<table role="presentation" width="100%" style="margin:6px 0 2px 0;"><tr>
+<td style="font:10px Arial,Helvetica,sans-serif;;color:#274690;"><strong>ORIGINAL (HIGH)</strong> — Original PMD total; High in parentheses</td>
+<td style="font:10px Arial,Helvetica,sans-serif;;color:#274690;" align="center"><strong>CURRENT (HIGH)</strong> — Current PMD total; High in parentheses</td>
+<td style="font:10px Arial,Helvetica,sans-serif;;color:#274690;" align="right"><strong>Δ HIGH</strong> — Current High − Original High</td>
+</tr></table>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-left:0;border-right:0;border-top:0;border-bottom:1px solid #e6eefc;">
 <thead><tr style="background:#eaf2ff;"><th align="left" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">CLASS NAME</th><th align="right" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">ORIGINAL (HIGH)</th><th align="right" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">CURRENT (HIGH)</th><th align="right" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">Δ HIGH</th><th align="left" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;">AUTHOR</th></tr></thead><tbody>
-<tr style="background:#ffffff;border-bottom:1px solid #e6eefc;border-left:4px solid #dcdcdc;">
-<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/ContentVersionUtility.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#0b5ed7;">ContentVersionUtility.cls</a></td>
+<tr style="background:#ffffff;border-left:4px solid #dcdcdc;">
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;word-wrap:break-word;border-bottom:1px solid #e6eefc;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/ContentVersionUtility.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#0b5ed7;">ContentVersionUtility.cls</a></td>
+<td style="border-bottom:1px solid #e6eefc;">
 <td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;white-space:nowrap;">
   3 <span style="opacity:.75;">(3)</span>
 </td>
+</td>
+<td style="border-bottom:1px solid #e6eefc;">
 <td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;white-space:nowrap;">
   3 <span style="opacity:.75;">(3)</span>
 </td>
-<td align="right" style="padding:5px 6px;">
+</td>
+<td align="right" style="padding:5px 6px;border-bottom:1px solid #e6eefc;">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #dddddd;background:#eeeeee;">
   <tr><td style="font:bold 10px Arial,Helvetica,sans-serif;color:#0b5ed7;padding:1px 5px;white-space:nowrap;">0</td></tr>
 </table>
 </td>
-<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">Subhodip Sadhu</td>
+<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;border-bottom:1px solid #e6eefc;">Subhodip Sadhu</td>
 </tr>
-<tr><td colspan="5" style="border-bottom:1px solid #e6eefc;font-size:0;line-height:0;">&nbsp;</td></tr>
-<tr style="background:#f7f7f7;border-bottom:1px solid #e6eefc;border-left:4px solid #dcdcdc;">
-<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;word-wrap:break-word;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/TestDocumentViewerController.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#0b5ed7;">TestDocumentViewerController.cls</a></td>
-<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;white-space:nowrap;">
-  66 <span style="opacity:.75;">(45)</span>
-</td>
-<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;white-space:nowrap;">
-  66 <span style="opacity:.75;">(45)</span>
-</td>
-<td align="right" style="padding:5px 6px;">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #dddddd;background:#eeeeee;">
-  <tr><td style="font:bold 10px Arial,Helvetica,sans-serif;color:#0b5ed7;padding:1px 5px;white-space:nowrap;">0</td></tr>
-</table>
-</td>
-<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;color:#0b5ed7;">Patranu Chandra</td>
-</tr>
-<tr><td colspan="5" style="border-bottom:1px solid #e6eefc;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr><td colspan="5" style="height:1px;line-height:1px;font-size:0;background:#e6eefc;">&nbsp;</td></tr>
 </tbody></table>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:6px;line-height:6px;font-size:0;">&nbsp;</td></tr></table>
 </td></tr></table>
@@ -259,63 +251,27 @@
 <tr><td style="padding:6px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
 <tr><td style="background:#fef2f2;padding:5px 7px;border:1px solid #fecaca;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">1. 
-<a href="https://github.cadence.com/IT/SFDC/tree/2025-q4nov-release/src/classes/TestDocumentViewerController.cls" style="color:inherit;text-decoration:underline;">classes/TestDocumentViewerController.cls</a> -- Error: Variable does not exist: ContentFileName 
-</pre></td></tr>
-<tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #e6e6e6;border-right:1px solid #e6e6e6;border-bottom:1px solid #e6e6e6;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">GIT log >>> src/classes/TestDocumentViewerController.cls
-commit 561e93fe3f95c12f158b4c67c979ead0f79fede2 | Author: Patranu Chandra <patranu@cadence.com> | Date: Fri Oct 24 10:54:51 2025 +0530 | Comment: [COSII-12882]:(Updated test cls) |</pre></td></tr></table>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
-<tr><td style="background:#fef2f2;padding:5px 7px;border:1px solid #fecaca;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">2. 
-<a href="https://github.cadence.com/IT/SFDC/tree/2025-q4nov-release/src/classes/TestDocumentViewerController.cls" style="color:inherit;text-decoration:underline;">classes/TestDocumentViewerController.cls</a> -- Error: Variable does not exist: ContentData 
-</pre></td></tr>
-<tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #e6e6e6;border-right:1px solid #e6e6e6;border-bottom:1px solid #e6e6e6;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">GIT log >>> src/classes/TestDocumentViewerController.cls
-commit 561e93fe3f95c12f158b4c67c979ead0f79fede2 | Author: Patranu Chandra <patranu@cadence.com> | Date: Fri Oct 24 10:54:51 2025 +0530 | Comment: [COSII-12882]:(Updated test cls) |</pre></td></tr></table>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
-<tr><td style="background:#fef2f2;padding:5px 7px;border:1px solid #fecaca;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">3. 
-<a href="https://github.cadence.com/IT/SFDC/tree/2025-q4nov-release/src/classes/TestDocumentViewerController.cls" style="color:inherit;text-decoration:underline;">classes/TestDocumentViewerController.cls</a> -- Error: Variable does not exist: ContentFileName 
-</pre></td></tr>
-<tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #e6e6e6;border-right:1px solid #e6e6e6;border-bottom:1px solid #e6e6e6;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">GIT log >>> src/classes/TestDocumentViewerController.cls
-commit 561e93fe3f95c12f158b4c67c979ead0f79fede2 | Author: Patranu Chandra <patranu@cadence.com> | Date: Fri Oct 24 10:54:51 2025 +0530 | Comment: [COSII-12882]:(Updated test cls) |</pre></td></tr></table>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
-<tr><td style="background:#fef2f2;padding:5px 7px;border:1px solid #fecaca;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">4. 
-<a href="https://github.cadence.com/IT/SFDC/tree/2025-q4nov-release/src/classes/TestDocumentViewerController.cls" style="color:inherit;text-decoration:underline;">classes/TestDocumentViewerController.cls</a> -- Error: Variable does not exist: ContentData 
-</pre></td></tr>
-<tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #e6e6e6;border-right:1px solid #e6e6e6;border-bottom:1px solid #e6e6e6;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">GIT log >>> src/classes/TestDocumentViewerController.cls
-commit 561e93fe3f95c12f158b4c67c979ead0f79fede2 | Author: Patranu Chandra <patranu@cadence.com> | Date: Fri Oct 24 10:54:51 2025 +0530 | Comment: [COSII-12882]:(Updated test cls) |</pre></td></tr></table>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
-<tr><td style="background:#fef2f2;padding:5px 7px;border:1px solid #fecaca;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">5. 
-<a href="https://github.cadence.com/IT/SFDC/tree/2025-q4nov-release/src/classes/TestDocumentViewerController.cls" style="color:inherit;text-decoration:underline;">classes/TestDocumentViewerController.cls</a> -- Error: Variable does not exist: ContentFileName 
-</pre></td></tr>
-<tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #e6e6e6;border-right:1px solid #e6e6e6;border-bottom:1px solid #e6e6e6;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">GIT log >>> src/classes/TestDocumentViewerController.cls
-commit 561e93fe3f95c12f158b4c67c979ead0f79fede2 | Author: Patranu Chandra <patranu@cadence.com> | Date: Fri Oct 24 10:54:51 2025 +0530 | Comment: [COSII-12882]:(Updated test cls) |</pre></td></tr></table>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
-<tr><td style="background:#fef2f2;padding:5px 7px;border:1px solid #fecaca;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">6. 
-<a href="https://github.cadence.com/IT/SFDC/tree/2025-q4nov-release/src/classes/TestDocumentViewerController.cls" style="color:inherit;text-decoration:underline;">classes/TestDocumentViewerController.cls</a> -- Error: Variable does not exist: ContentData 
-</pre></td></tr>
-<tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #e6e6e6;border-right:1px solid #e6e6e6;border-bottom:1px solid #e6e6e6;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">GIT log >>> src/classes/TestDocumentViewerController.cls
-commit 561e93fe3f95c12f158b4c67c979ead0f79fede2 | Author: Patranu Chandra <patranu@cadence.com> | Date: Fri Oct 24 10:54:51 2025 +0530 | Comment: [COSII-12882]:(Updated test cls) |</pre></td></tr></table>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
-<tr><td style="background:#fef2f2;padding:5px 7px;border:1px solid #fecaca;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">7. 
 <a href="https://github.cadence.com/IT/SFDC/tree/2025-q4nov-release/src/layouts/APTS_Cloud_Service_Product__c-Cloud%20Service%20Product%20Layout.layout-meta.xml" style="color:inherit;text-decoration:underline;">layouts/APTS_Cloud_Service_Product__c-Cloud Service Product Layout.layout</a> -- Error: In field: QuickAction - no QuickAction named APTS_Cloud_Service_Product__c.Delete_Product found 
 </pre></td></tr>
 <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #e6e6e6;border-right:1px solid #e6e6e6;border-bottom:1px solid #e6e6e6;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">GIT log >>> src/layouts/APTS_Cloud_Service_Product__c-Cloud Service Product Layout.layout-meta.xml
 commit 2b416a505eef36b2af292c2d2f343241e74f392b | Author: Chithra Rengasamy <rchithra@cadence.com> | Date: Fri Oct 24 10:31:40 2025 +0530 | Comment: [LMA:0000]:(CPQ Lightning Missed Layout sync up) |</pre></td></tr></table>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:5px;">
-<tr><td style="background:#fef2f2;padding:5px 7px;border:1px solid #fecaca;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">8. 
+<tr><td style="background:#fef2f2;padding:5px 7px;border:1px solid #fecaca;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">2. 
 <a href="https://github.cadence.com/IT/SFDC/tree/2025-q4nov-release/src/layouts/Apttus_Config2__PriceDimension__c-Apttus_Config2__Price%20Dimension%20Layout.layout-meta.xml" style="color:inherit;text-decoration:underline;">layouts/Apttus_Config2__PriceDimension__c-Apttus_Config2__Price Dimension Layout.layout</a> -- Error: In field: customButtons - no WebLink named Apttus_Config2__PriceDimension__c.Edit found 
 </pre></td></tr>
 <tr><td style="background:#e0e0e0;padding:5px 7px;border-left:1px solid #e6e6e6;border-right:1px solid #e6e6e6;border-bottom:1px solid #e6e6e6;"><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font:10px Arial,Helvetica,sans-serif;">GIT log >>> src/layouts/Apttus_Config2__PriceDimension__c-Apttus_Config2__Price Dimension Layout.layout-meta.xml
 commit 2b416a505eef36b2af292c2d2f343241e74f392b | Author: Chithra Rengasamy <rchithra@cadence.com> | Date: Fri Oct 24 10:31:40 2025 +0530 | Comment: [LMA:0000]:(CPQ Lightning Missed Layout sync up) |</pre></td></tr></table>
 </td></tr></table>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin:6px 0 10px;background:#111111;">
+            <tr>
+              <td align="center" style="padding:6px 8px;text-align:center;color:#ffffff;font:bold 10px Arial,Helvetica,sans-serif;line-height:14px;">
+                sbx • Deployment Failure Report — generated automatically. Review the logs for root cause. &nbsp; | &nbsp; © 2025 Cadence Design Systems, Inc. | SFDC Deployment Report generated by the Cadence DevOps Team
+              </td>
+            </tr>
+          </table>
         </td></tr>
       </table>
-
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin:6px 0 10px;background:#111111;">
-        <tr>
-          <td align="center" style="padding:6px 8px;text-align:center;color:#ffffff;font:bold 10px Arial,Helvetica,sans-serif;line-height:14px;">
-            sbx • Deployment Failure Report — generated automatically. Review the logs for root cause. &nbsp; | &nbsp; © 2025 Cadence Design Systems, Inc. | SFDC Deployment Report generated by the Cadence DevOps Team
-          </td>
-        </tr>
-      </table>
+      <!-- Centered container (END) -->
     </td>
   </tr>
 </table>
