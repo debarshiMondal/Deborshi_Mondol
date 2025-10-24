@@ -1,6 +1,5 @@
 HTML_REPORT() {
   Report=$1
-
   : > "$HTMLLog"
 
   # ---- config / prerequisites ----
@@ -44,8 +43,6 @@ HTML_REPORT() {
     '.status_summary.title_text' '.status_summary.label_text' '.status_summary.value_text' '.status_summary.corner_radius'
     '.pmd_review.header_bg' '.pmd_review.header_text' '.pmd_review.row_border'
     '.pmd_review.link_normal' '.pmd_review.link_high' '.pmd_review.text_high' '.pmd_review.text_normal'
-    '.success_section.file_row_bg' '.success_section.file_row_border' '.success_section.author_row_bg' '.success_section.author_row_border' '.success_section.title_text'
-    '.failure_section.error_row_bg' '.failure_section.error_row_border' '.failure_section.author_row_bg' '.failure_section.author_row_border' '.failure_section.title_text'
     '.footer.bg' '.footer.text'
   )
   bad=0
@@ -81,13 +78,17 @@ HTML_REPORT() {
   # ---- read colors / strings ----
   _hdr_s=$(_getc '.header.success_bg'); _hdr_f=$(_getc '.header.failure_bg'); _hdr_txt=$(_getc '.header.text')
   _page_bg=$(_getc '.plate.page_bg'); _plate_bg=$(_getc '.plate.background'); _plate_border=$(_getc '.plate.border')
-  _run_s=$(_getc '.run_details.strip_success_bg'); _run_f=$(_getc '.run_details.strip_failure_bg')
+  # New: prefer title_*; fall back to legacy strip_* keys for backward compat
+  _run_s=$(_gets '.run_details.title_bg_success' "$(_gets '.run_details.strip_success_bg' '#2e7d32')")
+  _run_f=$(_gets '.run_details.title_bg_failure' "$(_gets '.run_details.strip_failure_bg' '#a94442')")
+  _run_text_s=$(_gets '.run_details.title_text_success' "$(_gets '.run_details.title_text' '#ffffff')")
+  _run_text_f=$(_gets '.run_details.title_text_failure' "$(_gets '.run_details.title_text' '#ffffff')")
 
   _chip_bg_s=$(_getc '.chips.success_bg'); _chip_bg_f=$(_getc '.chips.failure_bg')
   _chip_txt_s=$(_getc '.chips.success_text'); _chip_txt_f=$(_getc '.chips.failure_text')
   _chip_border_default=$(_getc '.chips.border')
-  _chip_border_s=$(_getc '.chips.border_success'); _chip_border_f=$(_getc '.chips.border_failure')
-  _chip_label_s=$(_getc '.chips.label_success_text'); _chip_label_f=$(_getc '.chips.label_failure_text')
+  _chip_border_s=$(_gets '.chips.border_success' "$_chip_border_default"); _chip_border_f=$(_gets '.chips.border_failure' "$_chip_border_default")
+  _chip_label_s=$(_gets '.chips.label_success_text' "$_chip_txt_s"); _chip_label_f=$(_gets '.chips.label_failure_text' "$_chip_txt_f")
 
   _ql1=$(_getc '.quick_links.tile_1_bg'); _ql2=$(_getc '.quick_links.tile_2_bg'); _ql3=$(_getc '.quick_links.tile_3_bg'); _ql4=$(_getc '.quick_links.tile_4_bg'); _ql_text=$(_getc '.quick_links.text'); _ql_gap=$(_getc '.quick_links.gap_px')
 
@@ -103,10 +104,15 @@ HTML_REPORT() {
   _pmd_hdr_bg=$(_getc '.pmd_review.header_bg'); _pmd_hdr_text=$(_getc '.pmd_review.header_text'); _pmd_row_border=$(_getc '.pmd_review.row_border')
   _pmd_link_normal=$(_getc '.pmd_review.link_normal'); _pmd_link_high=$(_getc '.pmd_review.link_high'); _pmd_text_high=$(_getc '.pmd_review.text_high'); _pmd_text_normal=$(_getc '.pmd_review.text_normal')
 
+  # Legend word colors (new)
+  _leg_word_red=$(_gets '.pmd_review.legend_red_text'    "$_pmd_text_high")
+  _leg_word_green=$(_gets '.pmd_review.legend_green_text' "$_pmd_text_normal")
+  _leg_word_neu=$(_gets '.pmd_review.legend_neutral_text' '#6b7280')
+
   _leg_red_bg=$(_gets '.pmd_review.legend_red_bg' '#ffefef')
   _leg_red_bd=$(_gets '.pmd_review.legend_red_border' '#f5bcbc')
-  _leg_green_bg=$(_gets '.pmd_review.legend_green_bg' '#ecfdf5')
-  _leg_green_bd=$(_gets '.pmd_review.legend_green_border' '#a7f3d0')
+  _leg_green_bg=$(_gets '.pmd_review.legend_green_bg' '#fef2f2')
+  _leg_green_bd=$(_gets '.pmd_review.legend_green_border' '#fecaca')
   _leg_neu_bg=$(_gets '.pmd_review.legend_neutral_bg' '#ffffff')
   _leg_neu_bd=$(_gets '.pmd_review.legend_neutral_border' '#dddddd')
 
@@ -115,6 +121,7 @@ HTML_REPORT() {
   _delta_neu_bg=$(_gets '.pmd_review.delta_neu_bg' '#eeeeee')
   _delta_neu_bd=$(_gets '.pmd_review.delta_neu_border' '#dddddd')
 
+  # Meters removed, but keep neutral colors for any future use
   _meter_track=$(_gets '.pmd_review.meter_track' '#e5e7eb')
   _meter_fill=$(_gets '.pmd_review.meter_fill' '#9ca3af')
   _meter_bd="${_pmd_row_border}"
@@ -125,12 +132,12 @@ HTML_REPORT() {
   _delta_reg_bd=$(_gets '.pmd_review.delta_reg_border' '#f5bcbc')
   _delta_reg_tx=$(_gets '.pmd_review.delta_reg_text' '#b71c1c')
 
-  _pmd_imp_row_bg_s=$(_gets '.pmd_review.improve_success_row_bg' '#ecfdf5')
-  _pmd_imp_left_s=$(_gets '.pmd_review.improve_success_left_stripe' '#2e7d32')
-  _pmd_imp_tx_s=$(_gets '.pmd_review.improve_success_text' '#065f46')
-  _delta_imp_bg_s=$(_gets '.pmd_review.delta_imp_success_bg' '#ecfdf5')
-  _delta_imp_bd_s=$(_gets '.pmd_review.delta_imp_success_border' '#a7f3d0')
-  _delta_imp_tx_s=$(_gets '.pmd_review.delta_imp_success_text' '#065f46')
+  _pmd_imp_row_bg_s=$(_gets '.pmd_review.improve_success_row_bg' '#fef2f2')
+  _pmd_imp_left_s=$(_gets '.pmd_review.improve_success_left_stripe' '#a94442')
+  _pmd_imp_tx_s=$(_gets '.pmd_review.improve_success_text' '#7f1d1d')
+  _delta_imp_bg_s=$(_gets '.pmd_review.delta_imp_success_bg' '#fef2f2')
+  _delta_imp_bd_s=$(_gets '.pmd_review.delta_imp_success_border' '#fecaca')
+  _delta_imp_tx_s=$(_gets '.pmd_review.delta_imp_success_text' '#7f1d1d')
 
   _pmd_imp_row_bg_f=$(_gets '.pmd_review.improve_failure_row_bg' '#fef2f2')
   _pmd_imp_left_f=$(_gets '.pmd_review.improve_failure_left_stripe' '#a94442')
@@ -175,6 +182,15 @@ HTML_REPORT() {
   _STR_LEG_GREEN="$(_gets '.strings.legend.green' 'Light red = improvement (Δ High < 0)')"
   _STR_LEG_WHITE="$(_gets '.strings.legend.white' 'White/Grey = no change (Δ High = 0)')"
 
+  # Quick link button texts
+  _STR_TILE_1="$(_gets '.strings.quick_links.tile_1' 'Open Logs')"
+  _STR_TILE_2="$(_gets '.strings.quick_links.tile_2' 'Original PMD Report')"
+  _STR_TILE_3="$(_gets '.strings.quick_links.tile_3' 'PMD Critical Warning Pattern')"
+  _STR_TILE_4="$(_gets '.strings.quick_links.tile_4' 'ForceDeploy')"
+
+  # Optional fixed content width (px) for Outlook—keeps header/footer full-width
+  _container_px="$(_gets '.plate.container_px' '')"
+
   # Fonts CSS
   _FONT_BASE="font:${_base}px ${_fontfam};"
   _FONT_BASE_BOLD="font:bold ${_base}px ${_fontfam};"
@@ -206,8 +222,8 @@ HTML_REPORT() {
   fi
 
   PAT_FILE="build/property/pmd_high_patterns.txt"
-  pattern="$(grep -Ehv '^\s*($|#)' "$PAT_FILE" | tr -d '\r' | paste -sd'|' -)"
-  [ -n "$pattern" ] || _fatal "PMD patterns file is empty: $PAT_FILE"
+  pattern="$(grep -Ehv '^\s*($|#)' "$PAT_FILE" 2>/dev/null | tr -d '\r' | paste -sd'|' -)"
+  [ -n "$pattern" ] || pattern="(DUMMY-NO-PATTERN)"  # allow missing file without failing
 
   CLASS_COUNT=$(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null | wc -l | xargs)
   TRIGGER_COUNT=$(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null | wc -l | xargs)
@@ -224,10 +240,7 @@ HTML_REPORT() {
   }
   PMD_HIGH_CLS=$(_sum_grep_matches "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes")
   PMD_HIGH_TRG=$(_sum_grep_matches "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers")
-
-  if [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; then
-    PMD_HIGH_CLS=0; PMD_HIGH_TRG=0
-  fi
+  if [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; then PMD_HIGH_CLS=0; PMD_HIGH_TRG=0; fi
 
   if [ -z "$START_TIME_IST" ] && [ -f "$deployLogFile" ]; then
     START_TIME_IST="$(tac "$deployLogFile" | grep -m1 'Build Start Time - ' | sed 's/.* - //')"
@@ -261,37 +274,42 @@ HTML_REPORT() {
   if [ "$Report" != "SUCCEEDED" ] && [ -f "$LOG.filtered" ] && { [ -z "$START_TIME_IST" ] || [ -z "$END_TIME_IST" ]; }; then
     JSON_CREATED="$(jq -r '.result.createdDate // empty' "$LOG.filtered" 2>/dev/null)"
     JSON_COMPLETED="$(jq -r '.result.completedDate // empty' "$LOG.filtered" 2>/dev/null)"
-    if [ -n "$JSON_CREATED" ]; then
-        START_TIME_IST="$(TZ=Asia/Kolkata date -d "$JSON_CREATED" +'%m/%d/%Y %I:%M:%S %p IST')"
-    fi
-    if [ -n "$JSON_COMPLETED" ]; then
-        END_TIME_IST="$(TZ=Asia/Kolkata date -d "$JSON_COMPLETED"  +'%m/%d/%Y %I:%M:%S %p IST')"
-    fi
+    [ -n "$JSON_CREATED" ] && START_TIME_IST="$(TZ=Asia/Kolkata date -d "$JSON_CREATED" +'%m/%d/%Y %I:%M:%S %p IST')"
+    [ -n "$JSON_COMPLETED" ] && END_TIME_IST="$(TZ=Asia/Kolkata date -d "$JSON_COMPLETED"  +'%m/%d/%Y %I:%M:%S %p IST')"
     START_TIME_IST_ONLY="$(_time_only "$START_TIME_IST")"
     END_TIME_IST_ONLY="$(_time_only "$END_TIME_IST")"
     _start_sec=$(TZ=Asia/Kolkata date -d "$START_TIME_IST" +%s 2>/dev/null || echo "")
     _end_sec=$(TZ=Asia/Kolkata date -d "$END_TIME_IST" +%s 2>/dev/null || echo "")
     if [ -n "$_start_sec" ] && [ -n "$_end_sec" ]; then
-        _dur=$(( _end_sec - _start_sec ))
-        _h=$((_dur/3600)); _m=$(((_dur%3600)/60)); _s=$((_dur%60))
-        TOTAL_DURATION=$(printf "%02dh:%02dm:%02ds" "$_h" "$_m" "$_s")
+      _dur=$(( _end_sec - _start_sec ))
+      _h=$((_dur/3600)); _m=$(((_dur%3600)/60)); _s=$((_dur%60))
+      TOTAL_DURATION=$(printf "%02dh:%02dm:%02ds" "$_h" "$_m" "$_s")
     fi
   fi
 
+  # ---- public links ----
   OPEN_LOGS_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
   ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
   FORCE_DEPLOY_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/$(basename "${HTMLFDLog:-$HTMLLog}").${DATE}"
+  # Publish the patterns file if present
+  PAT_PUBLIC_DIR="/data/public/pmd_patterns/${SFDC_ORG}/"; mkdir -p "$PAT_PUBLIC_DIR" 2>/dev/null
+  if [ -s "$PAT_FILE" ]; then
+    cp -u "$PAT_FILE" "${PAT_PUBLIC_DIR}pmd_high_patterns.txt" 2>/dev/null
+    PMD_PATTERN_URL="https://cdnsfdc.cadence.com/pmd_patterns/${SFDC_ORG}/pmd_high_patterns.txt"
+  else
+    PMD_PATTERN_URL="$ORIG_PMD_URL"
+  fi
 
   # ---- state palette for this run ----
   if [ "$Report" = "SUCCEEDED" ]; then
     _hdr_bg="$_hdr_s"; _status_bg="$_status_s"; _chip_bg="$_chip_bg_s"; _chip_txt="$_chip_txt_s"; _chip_border="${_chip_border_s:-$_chip_border_default}"
-    _run_hdr_bg="${_run_s}"; _run_hdr_txt="#ffffff"; _chip_label="${_chip_label_s}"
+    _run_hdr_bg="${_run_s}"; _run_hdr_txt="${_run_text_s}"; _chip_label="${_chip_label_s}"
     _dep_label_col="$_dep_label_s"; _dep_value_col="$_dep_value_s"
     _imp_row_bg="$_pmd_imp_row_bg_s"; _imp_left="$_pmd_imp_left_s"; _imp_text="$_pmd_imp_tx_s"; _delta_imp_bg="$_delta_imp_bg_s"; _delta_imp_bd="$_delta_imp_bd_s"; _delta_imp_tx="$_delta_imp_tx_s"
     _footer_line="$(echo "$_foot_success" | sed "s/{ORG}/${SFDC_ORG}/")"
   else
     _hdr_bg="$_hdr_f"; _status_bg="$_status_f"; _chip_bg="$_chip_bg_f"; _chip_txt="$_chip_txt_f"; _chip_border="${_chip_border_f:-$_chip_border_default}"
-    _run_hdr_bg="${_run_f}"; _run_hdr_txt="#ffffff"; _chip_label="${_chip_label_f}"
+    _run_hdr_bg="${_run_f}"; _run_hdr_txt="${_run_text_f}"; _chip_label="${_chip_label_f}"
     _dep_label_col="$_dep_label_f"; _dep_value_col="$_dep_value_f"
     _imp_row_bg="$_pmd_imp_row_bg_f"; _imp_left="$_pmd_imp_left_f"; _imp_text="$_pmd_imp_tx_f"; _delta_imp_bg="$_delta_imp_bg_f"; _delta_imp_bd="$_delta_imp_bd_f"; _delta_imp_tx="$_delta_imp_tx_f"
     _footer_line="$(echo "$_foot_failure" | sed "s/{ORG}/${SFDC_ORG}/")"
@@ -327,7 +345,7 @@ HTML_REPORT() {
   _urlenc_spaces(){ echo "$1" | sed -e 's/%/%25/g' -e 's/ /%20/g' -e 's/#/%23/g' -e 's/+/%2B/g'; }
   _GH_ROOT="$(_repo_http_root "$_REPO")"
 
-  # --- helpers (chips, bars, pills, meters) ---
+  # --- helpers (chips, bars, pills) ---
   _chip_td(){
     local label="$1" value="$2" pr="$3"
     cat <<CELL
@@ -370,25 +388,18 @@ BAR
 </table>
 PILL
   }
-  _emit_meter_cell(){ # Outlook-safe: 2-cell table bar + number text
+
+  # Outlook-safe: meters removed (plain numbers only)
+  _emit_meter_cell(){
     local num="$1" high="$2" maxh="$3" text_color="$4"
-    local p=0 q=100
-    if [ "${maxh:-0}" -gt 0 ] && [ "${high:-0}" -gt 0 ]; then
-      p=$(( (high * 100) / maxh )); [ $p -gt 100 ] && p=100; q=$(( 100 - p ))
-    fi
     cat <<MCELL
-<td align="right" style="padding:5px 8px;${_FONT_BASE}color:${text_color};">
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid ${_meter_bd};background:${_meter_track};">
-    <tr>
-      <td style="width:${p}%;background:${_meter_fill};height:8px;font-size:0;line-height:0;">&nbsp;</td>
-      <td style="width:${q}%;height:8px;font-size:0;line-height:0;">&nbsp;</td>
-    </tr>
-  </table>
-  <div style="margin-top:2px;">${num}-(${high})</div>
+<td align="right" style="padding:5px 8px;${_FONT_BASE}color:${text_color};white-space:nowrap;">
+  ${num} <span style="opacity:.75;">(${high})</span>
 </td>
 MCELL
   }
-  _pmd_row(){ # emits a row using precomputed text and colors + meters
+
+  _pmd_row(){ # emits a row using precomputed text and colors + (no meters)
     local display="$1" link="$2" author="$3" op="$4" oh="$5" cp="$6" ch="$7" delta="$8" row_num="$9" maxoh="${10}" maxch="${11}"
     local bg_color="#ffffff" text_color="${_pmd_text_normal}" link_color="${_pmd_link_normal}" left="${_neu_left}"
     [ $((row_num % 2)) -eq 1 ] && bg_color="$_zebra_alt"
@@ -409,7 +420,22 @@ MCELL
     } >>"$HTMLLog"
   }
 
-  # ---- HTML (Outlook-first tables; now truly full-width) ----
+  # legend helper: colorize the left word while keeping phrase
+  _colorize_legend(){
+    local t="$1" c="$2" L R
+    L="${t%%=*}"; R="${t#*=}"
+    printf '<strong><span style="color:%s;">%s</span> = %s</strong>' "$c" "$(echo "$L"|xargs)" "$(echo "$R"|sed 's/^ //')"
+  }
+
+  # compute container width attrs (cards area only)
+  _container_attr='width="100%"'
+  _container_style='width:100%;'
+  if [ -n "$_container_px" ]; then
+    _container_attr="width=\"${_container_px}\""
+    _container_style="width:${_container_px}px;"
+  fi
+
+  # ---- HTML (Outlook-first) ----
   cat >>"$HTMLLog" <<HTML_TOP
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -421,11 +447,10 @@ MCELL
 </style>
 </head>
 <body style="margin:0;padding:0;background:${_page_bg};">
-<!-- outlook-simple-bars full-width -->
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_page_bg};">
   <tr>
     <td style="padding:0;">
-      <!-- Header: logo left, title centered, full-width rails -->
+      <!-- Header (full width) -->
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin:0;">
         <tr>
           <td style="background:${_hdr_bg};padding:6px 10px;color:${_hdr_txt};${_FONT_MAIN_HDR}line-height:16px;border-top:2px solid ${_chip_border};border-bottom:2px solid ${_chip_border};">
@@ -443,11 +468,15 @@ MCELL
           </td>
         </tr>
       </table>
+
+      <!-- Centered container for cards -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" ${_container_attr} style="margin:0 auto;${_container_style}">
+        <tr><td style="padding:0;">
 HTML_TOP
 
-  # ==== CARD 1: RUN DETAILS (full width) ====
+  # ==== CARD 1: RUN DETAILS ====
   cat >>"$HTMLLog" <<EOF
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;background:${_plate_bg};border:1px solid ${_plate_border};">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;background:${_plate_bg};border:1px solid ${_plate_border};margin-top:8px;">
         $(_section_bar "${_STR_RUN_TITLE}")
         <tr>
           <td style="padding:8px;">
@@ -470,21 +499,28 @@ HTML_TOP
                 <td style="padding:0 ${_ql_gap}px 0 0;">
                   <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql1};border:1px solid ${_chip_border};border-radius:3px;">
                     <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
-                      <a class="cta" href="${OPEN_LOGS_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">Open Logs</a>
+                      <a class="cta" href="${OPEN_LOGS_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">${_STR_TILE_1}</a>
                     </td></tr>
                   </table>
                 </td>
                 <td style="padding:0 ${_ql_gap}px 0 0;">
                   <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql2};border:1px solid ${_chip_border};border-radius:3px;">
                     <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
-                      <a class="cta" href="${ORIG_PMD_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">Original PMD Report</a>
+                      <a class="cta" href="${ORIG_PMD_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">${_STR_TILE_2}</a>
+                    </td></tr>
+                  </table>
+                </td>
+                <td style="padding:0 ${_ql_gap}px 0 0;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql3};border:1px solid ${_chip_border};border-radius:3px;">
+                    <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
+                      <a class="cta" href="${PMD_PATTERN_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">${_STR_TILE_3}</a>
                     </td></tr>
                   </table>
                 </td>
                 <td>
                   <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${_ql4};border:1px solid ${_chip_border};border-radius:3px;">
                     <tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}">
-                      <a class="cta" href="${FORCE_DEPLOY_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">ForceDeploy</a>
+                      <a class="cta" href="${FORCE_DEPLOY_URL}" style="display:inline-block;${_FONT_BASE_BOLD}color:${_ql_text};">${_STR_TILE_4}</a>
                     </td></tr>
                   </table>
                 </td>
@@ -560,13 +596,13 @@ EOF
     echo "$(_section_bar "${_STR_PMD_REVIEW}")" >>"$HTMLLog"
     echo "<tr><td style=\"padding:6px;\">" >>"$HTMLLog"
 
-    # Legend
+    # Legend (colored words + swatches)
     {
       echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-bottom:1px solid ${_pmd_row_border};\">"
       echo "<tr>"
-      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_red_bg};border:1px solid ${_leg_red_bd};margin-right:6px;\"></span><strong>${_STR_LEG_RED}</strong></td>"
-      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_green_bg};border:1px solid ${_leg_green_bd};margin-right:6px;\"></span><strong>${_STR_LEG_GREEN}</strong></td>"
-      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_neu_bg};border:1px solid ${_leg_neu_bd};margin-right:6px;\"></span><strong>${_STR_LEG_WHITE}</strong></td>"
+      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_red_bg};border:1px solid ${_leg_red_bd};margin-right:6px;\"></span>$(_colorize_legend "${_STR_LEG_RED}" "${_leg_word_red}")</td>"
+      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_green_bg};border:1px solid ${_leg_green_bd};margin-right:6px;\"></span>$(_colorize_legend "${_STR_LEG_GREEN}" "${_leg_word_green}")</td>"
+      echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_neu_bg};border:1px solid ${_leg_neu_bd};margin-right:6px;\"></span>$(_colorize_legend "${_STR_LEG_WHITE}" "${_leg_word_neu}")</td>"
       echo "</tr>"
       echo "</table>"
     } >>"$HTMLLog"
@@ -646,10 +682,10 @@ EOF
       echo "</tbody></table>" >>"$HTMLLog"
     fi
 
-    echo "</td></tr></table>" >>"$HTMLLog"  # close PMD Review card (with body wrapper)
+    echo "</td></tr></table>" >>"$HTMLLog"  # close PMD Review card
   fi
 
-  # ==== CARD 4: CHANGESET / FAILURES (full width, wrapped body) ====
+  # ==== CARD 4: CHANGESET / FAILURES ====
   SAVEIFS=$IFS; IFS=$(echo -en "\n\b")
   if [ "$Report" = "SUCCEEDED" ]; then
     find changeSetDeploy/force-app/main/default -type f \
@@ -673,7 +709,7 @@ EOF
       echo "<tr><td style=\"background:#e0e0e0;padding:5px 7px;border-left:1px solid ${_plate_border};border-right:1px solid ${_plate_border};border-bottom:1px solid ${_plate_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;${_FONT_BASE}\">Last author... $(git log -1 "$FILE" | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')</pre></td></tr>" >>"$HTMLLog"
       echo "</table>" >>"$HTMLLog"
     done < "${DEPLOYEDFILE}"
-    echo "</td></tr></table>" >>"$HTMLLog"  # close changeset card
+    echo "</td></tr></table>" >>"$HTMLLog"
   else
     echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:100%;margin-top:8px;border:1px solid ${_chip_border};background:${_plate_bg};\">" >>"$HTMLLog"
     echo "$(_section_bar "$(_esc <<<"$(_gets '.strings.sections.failure_title' 'All Component Failures:')")")" >>"$HTMLLog"
@@ -738,12 +774,15 @@ $LastAuthor</pre></td></tr></table>" >>"$HTMLLog"
         i=$((i+1))
       done
     fi
-    echo "</td></tr></table>" >>"$HTMLLog"  # close failures card
+    echo "</td></tr></table>" >>"$HTMLLog"
   fi
   IFS=$SAVEIFS
 
-  # ==== FOOTER (full width) ====
+  # close cards container, then footer (full width)
   cat >>"$HTMLLog" <<EOF
+        </td></tr>
+      </table>
+
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin:6px 0 10px;background:${_foot_bg};">
         <tr>
           <td align="center" style="padding:6px 8px;text-align:center;color:${_foot_text};${_FONT_BASE_BOLD}line-height:14px;">
