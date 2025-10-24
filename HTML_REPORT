@@ -189,7 +189,7 @@ HTML_REPORT() {
   _STR_TILE_3="$(_gets '.strings.quick_links.tile_3' 'PMD Critical Warning Pattern')"
   _STR_TILE_4="$(_gets '.strings.quick_links.tile_4' 'ForceDeploy')"
 
-  # PMD column help (already in your JSONC)
+  # PMD column help
   _STR_COL_ORIG="$(_gets '.strings.pmd_columns.original_label' 'ORIGINAL (HIGH)')"
   _STR_COL_ORIG_X="$(_gets '.strings.pmd_columns.original_explain' 'Original PMD total; High in parentheses')"
   _STR_COL_CUR="$(_gets '.strings.pmd_columns.current_label' 'CURRENT (HIGH)')"
@@ -353,6 +353,9 @@ HTML_REPORT() {
   # === Column widths for PMD tables (to stop wrapping/stacking) ===
   _COL_NAME_W="40%"; _COL_ORIG_W="15%"; _COL_CUR_W="15%"; _COL_DELTA_W="10%"; _COL_AUTHOR_W="20%"
 
+  # === Shared separator color for PMD card box + PMD row lines (stronger) ===
+  _sep="$_plate_border"
+
   # --- helpers (chips, bars, pills) ---
   _chip_td(){
     local label="$1" value="$2" pr="$3"
@@ -405,7 +408,7 @@ PILL
 MCELL
   }
 
-  # PMD data row (no left stripe; solid bottom borders; no spacer row)
+  # PMD data row (paint cell backgrounds; draw bottom border on each cell)
   _pmd_row(){
     local display="$1" link="$2" author="$3" op="$4" oh="$5" cp="$6" ch="$7" delta="$8" row_num="$9" maxoh="${10}" maxch="${11}"
     local bg_color="#ffffff" text_color="${_pmd_text_normal}" link_color="${_pmd_link_normal}"
@@ -416,12 +419,12 @@ MCELL
       bg_color="${_imp_row_bg}"; text_color="${_imp_text}"
     fi
     {
-      echo "<tr style=\"background:${bg_color};\">"
-      echo "<td width=\"${_COL_NAME_W}\" style=\"padding:5px 8px;${_FONT_BASE}word-wrap:break-word;border-bottom:1px solid ${_pmd_row_border};\"><a href=\"$link\" style=\"text-decoration:underline;color:${link_color};\">$display</a></td>"
-      echo "<td width=\"${_COL_ORIG_W}\" align=\"right\" style=\"border-bottom:1px solid ${_pmd_row_border};white-space:nowrap;\">"; _emit_meter_cell "$op" "$oh" "$maxoh" "$text_color"; echo "</td>"
-      echo "<td width=\"${_COL_CUR_W}\" align=\"right\" style=\"border-bottom:1px solid ${_pmd_row_border};white-space:nowrap;\">"; _emit_meter_cell "$cp" "$ch" "$maxch" "$text_color"; echo "</td>"
-      echo "<td width=\"${_COL_DELTA_W}\" align=\"right\" style=\"padding:5px 6px;border-bottom:1px solid ${_pmd_row_border};white-space:nowrap;\">"; _delta_pill "$delta"; echo "</td>"
-      echo "<td width=\"${_COL_AUTHOR_W}\" style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};border-bottom:1px solid ${_pmd_row_border};white-space:nowrap;\">$author</td>"
+      echo "<tr>"
+      echo "<td width=\"${_COL_NAME_W}\" style=\"padding:5px 8px;${_FONT_BASE}word-wrap:break-word;border-bottom:1px solid ${_sep};background:${bg_color};\"><a href=\"$link\" style=\"text-decoration:underline;color:${link_color};\">$display</a></td>"
+      echo "<td width=\"${_COL_ORIG_W}\" align=\"right\" style=\"border-bottom:1px solid ${_sep};background:${bg_color};white-space:nowrap;\">"; _emit_meter_cell "$op" "$oh" "$maxoh" "$text_color"; echo "</td>"
+      echo "<td width=\"${_COL_CUR_W}\"  align=\"right\" style=\"border-bottom:1px solid ${_sep};background:${bg_color};white-space:nowrap;\">"; _emit_meter_cell "$cp" "$ch" "$maxch" "$text_color"; echo "</td>"
+      echo "<td width=\"${_COL_DELTA_W}\" align=\"right\" style=\"padding:5px 6px;border-bottom:1px solid ${_sep};background:${bg_color};white-space:nowrap;\">"; _delta_pill "$delta"; echo "</td>"
+      echo "<td width=\"${_COL_AUTHOR_W}\" style=\"padding:5px 8px;${_FONT_BASE}color:${text_color};border-bottom:1px solid ${_sep};background:${bg_color};white-space:nowrap;\">$author</td>"
       echo "</tr>"
     } >>"$HTMLLog"
   }
@@ -597,13 +600,13 @@ EOF
 
   # ==== CARD 3: PMD REVIEW ====
   if ! { [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; }; then
-    echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"width:100%;margin-top:10px;border:1px solid ${_pmd_row_border};background:${_plate_bg};border-collapse:separate;border-spacing:0;mso-table-lspace:0pt;mso-table-rspace:0pt;\">" >>"$HTMLLog"
+    echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"width:100%;margin-top:10px;border:1px solid ${_sep};background:${_plate_bg};border-collapse:separate;border-spacing:0;mso-table-lspace:0pt;mso-table-rspace:0pt;\">" >>"$HTMLLog"
     echo "$(_section_bar "${_STR_PMD_REVIEW}")" >>"$HTMLLog"
     echo "<tr><td style=\"padding:6px;\">" >>"$HTMLLog"
 
     # Legend + Column explanations
     {
-      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-bottom:1px solid ${_pmd_row_border};border-collapse:separate;border-spacing:0;\">"
+      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-bottom:1px solid ${_sep};border-collapse:separate;border-spacing:0;\">"
       echo "<tr>"
       echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_red_bg};border:1px solid ${_leg_red_bd};margin-right:6px;\"></span>$(_colorize_legend "${_STR_LEG_RED}" "${_leg_word_red}")</td>"
       echo "<td style=\"padding:6px 8px;${_FONT_BASE}\"><span style=\"display:inline-block;width:10px;height:10px;background:${_leg_green_bg};border:1px solid ${_leg_green_bd};margin-right:6px;\"></span>$(_colorize_legend "${_STR_LEG_GREEN}" "${_leg_word_green}")</td>"
@@ -642,13 +645,13 @@ EOF
     done
 
     if [ ${#class_rows[@]} -gt 0 ]; then
-      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-left:0;border-right:0;border-top:0;border-bottom:1px solid ${_pmd_row_border};border-collapse:separate;border-spacing:0;\">" >>"$HTMLLog"
+      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-left:0;border-right:0;border-top:0;border-bottom:1px solid ${_sep};border-collapse:separate;border-spacing:0;\">" >>"$HTMLLog"
       echo "<thead><tr style=\"background:${_pmd_hdr_bg};\">" >>"$HTMLLog"
-      echo "<th width=\"${_COL_NAME_W}\" align=\"left\"  style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};white-space:nowrap;\">CLASS NAME</th>" >>"$HTMLLog"
-      echo "<th width=\"${_COL_ORIG_W}\" align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};white-space:nowrap;\">${_STR_COL_ORIG}</th>" >>"$HTMLLog"
-      echo "<th width=\"${_COL_CUR_W}\"  align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};white-space:nowrap;\">${_STR_COL_CUR}</th>" >>"$HTMLLog"
-      echo "<th width=\"${_COL_DELTA_W}\" align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};white-space:nowrap;\">${_STR_COL_DEL}</th>" >>"$HTMLLog"
-      echo "<th width=\"${_COL_AUTHOR_W}\" align=\"left\"  style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};white-space:nowrap;\">AUTHOR</th>" >>"$HTMLLog"
+      echo "<th width=\"${_COL_NAME_W}\" align=\"left\"  style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_sep};white-space:nowrap;\">CLASS NAME</th>" >>"$HTMLLog"
+      echo "<th width=\"${_COL_ORIG_W}\" align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_sep};white-space:nowrap;\">${_STR_COL_ORIG}</th>" >>"$HTMLLog"
+      echo "<th width=\"${_COL_CUR_W}\"  align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_sep};white-space:nowrap;\">${_STR_COL_CUR}</th>" >>"$HTMLLog"
+      echo "<th width=\"${_COL_DELTA_W}\" align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_sep};white-space:nowrap;\">${_STR_COL_DEL}</th>" >>"$HTMLLog"
+      echo "<th width=\"${_COL_AUTHOR_W}\" align=\"left\"  style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_sep};white-space:nowrap;\">AUTHOR</th>" >>"$HTMLLog"
       echo "</tr></thead><tbody>" >>"$HTMLLog"
       row_num=0
       for row in "${class_rows[@]}"; do
@@ -687,13 +690,13 @@ EOF
     done
 
     if [ ${#trig_rows[@]} -gt 0 ]; then
-      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-left:0;border-right:0;border-top:0;border-bottom:1px solid ${_pmd_row_border};border-collapse:separate;border-spacing:0;\">" >>"$HTMLLog"
+      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border-left:0;border-right:0;border-top:0;border-bottom:1px solid ${_sep};border-collapse:separate;border-spacing:0;\">" >>"$HTMLLog"
       echo "<thead><tr style=\"background:${_pmd_hdr_bg};\">" >>"$HTMLLog"
-      echo "<th width=\"${_COL_NAME_W}\" align=\"left\"  style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};white-space:nowrap;\">TRIGGER NAME</th>" >>"$HTMLLog"
-      echo "<th width=\"${_COL_ORIG_W}\" align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};white-space:nowrap;\">${_STR_COL_ORIG}</th>" >>"$HTMLLog"
-      echo "<th width=\"${_COL_CUR_W}\"  align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};white-space:nowrap;\">${_STR_COL_CUR}</th>" >>"$HTMLLog"
-      echo "<th width=\"${_COL_DELTA_W}\" align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};white-space:nowrap;\">${_STR_COL_DEL}</th>" >>"$HTMLLog"
-      echo "<th width=\"${_COL_AUTHOR_W}\" align=\"left\"  style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};white-space:nowrap;\">AUTHOR</th>" >>"$HTMLLog"
+      echo "<th width=\"${_COL_NAME_W}\" align=\"left\"  style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_sep};white-space:nowrap;\">TRIGGER NAME</th>" >>"$HTMLLog"
+      echo "<th width=\"${_COL_ORIG_W}\" align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_sep};white-space:nowrap;\">${_STR_COL_ORIG}</th>" >>"$HTMLLog"
+      echo "<th width=\"${_COL_CUR_W}\"  align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_sep};white-space:nowrap;\">${_STR_COL_CUR}</th>" >>"$HTMLLog"
+      echo "<th width=\"${_COL_DELTA_W}\" align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_sep};white-space:nowrap;\">${_STR_COL_DEL}</th>" >>"$HTMLLog"
+      echo "<th width=\"${_COL_AUTHOR_W}\" align=\"left\"  style=\"padding:6px 8px;${_FONT_BASE_BOLD}color:${_pmd_hdr_text};border-bottom:1px solid ${_sep};white-space:nowrap;\">AUTHOR</th>" >>"$HTMLLog"
       echo "</tr></thead><tbody>" >>"$HTMLLog"
       row_num=0
       for row in "${trig_rows[@]}"; do
