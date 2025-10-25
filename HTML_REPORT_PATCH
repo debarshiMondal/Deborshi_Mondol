@@ -1,12 +1,23 @@
-# If failed and times still missing, take them from deploy JSON
-if [ "$Report" != "SUCCEEDED" ] && [ -f "$LOG.filtered" ] && { [ -z "$START_TIME_IST" ] || [ -z "$END_TIME_IST" ]; }; then
-  JSON_CREATED="$(jq -r '.result.createdDate // empty' "$LOG.filtered" 2>/dev/null)"
-  JSON_COMPLETED="$(jq -r '.result.completedDate // empty' "$LOG.filtered" 2>/dev/null)"
-  [ -n "$JSON_CREATED" ]  && START_TIME_IST="$(TZ=Asia/Kolkata date -d "$JSON_CREATED" +'%m/%d/%Y %I:%M:%S %p IST')"
-  [ -n "$JSON_COMPLETED" ] && END_TIME_IST="$(TZ=Asia/Kolkata date -d "$JSON_COMPLETED"  +'%m/%d/%Y %I:%M:%S %p IST')"
-  START_TIME_IST_ONLY="$(_time_only "$START_TIME_IST")"
-  END_TIME_IST_ONLY="$(_time_only "$END_TIME_IST")"
-  _start_sec=$(TZ=Asia/Kolkata date -d "$START_TIME_IST" +%s 2>/dev/null || echo "")
-  _end_sec=$(TZ=Asia/Kolkata date -d "$END_TIME_IST" +%s 2>/dev/null || echo "")
-  [ -n "$_start_sec" ] && [ -n "$_end_sec" ] && TOTAL_DURATION=$(printf "%02dh:%02dm:%02ds" $(((_end_sec-_start_sec)/3600)) $((((_end_sec-_start_sec)%3600)/60)) $(((_end_sec-_start_sec)%60)))
-fi
+_emit_meter_cell(){
+  local num="$1"       # e.g. 86
+  local high="$2"      # e.g. 21
+  local text_color="$3"
+  local bg="$4"
+
+  cat <<MCELL
+<div style="width:100%;background-color:${bg};display:block;text-align:right;padding:6px 8px;${_FONT_BASE}color:${text_color};white-space:nowrap;mso-line-height-rule:exactly;">
+  ${num} <span style="opacity:.75;">(${high})</span>
+</div>
+MCELL
+}
+
+
+
+
+# ORIGINAL column
+echo "<td width=\"${_COL_ORIG_W}\" align=\"right\" style=\"background:${bg_color};white-space:nowrap;\">"; \
+  _emit_meter_cell "$op" "$oh" "$text_color" "$bg_color"; echo "</td>"
+
+# CURRENT column
+echo "<td width=\"${_COL_CUR_W}\"  align=\"right\" style=\"background:${bg_color};white-space:nowrap;\">"; \
+  _emit_meter_cell "$cp" "$ch" "$text_color" "$bg_color"; echo "</td>"
