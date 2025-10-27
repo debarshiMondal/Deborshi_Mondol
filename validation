@@ -1,0 +1,437 @@
+#!/bin/bash
+#set -xv
+#jbakshi@cadence.com Jan'2018
+
+#          Description
+# -------------------------------------------------------------------#
+#JIRA - https://jira.cadence.com/browse/SFDC-6974
+#VERSION=0.1.0
+#SUBJECT=This script validate changeset against SFDC ORG
+USAGE=">>>>>  Usage: validation_git_sfcli.sh env (replace env with Sandbox or Production alias)   GitHash1 GitHash2 <<<<<<"
+# -------------------------------------------------------------------#
+
+main()
+{
+
+    Check_Lock      #check Lock & dependency
+    Trap            #handle Ctrl-C
+    Mail_Setup      #email setup
+    Prepare_RunTest
+    Validation
+    Unlock
+}
+
+
+if [ $# == 0 ] || ([ $1 != prprdnov25 ] && [ $1 != prod ]&& [ $1 != dev2 ] && [ $1 != tst ] && [ $1 != sandbox ])
+then
+    echo -e "\n" $USAGE  "\n"
+    exit 1;
+fi
+
+DATE=$(date +%d_%m_%Y_%Hh%Mm%Ss)
+SFDC_ORG=$1
+bin=build/script
+property=build/property
+buildProperty=${property}/build_${SFDC_ORG}.properties
+serverProperty=${property}/${SFDC_ORG}.conf
+
+gitlast=$2
+gitlatest=$3
+
+Logpath=build/log
+LOCK=${Logpath}/${SFDC_ORG}.VALIDATION.LOCK
+LOG=${Logpath}/${SFDC_ORG}.${DATE}.VALIDATION.LOG
+FAILEDTC=${Logpath}/${SFDC_ORG}.${DATE}.FAILED_TC
+GITLOG=${Logpath}/${SFDC_ORG}.${DATE}.GIT.VALIDATION.LOG
+TCtxt=${Logpath}/${SFDC_ORG}.${DATE}.VALIDATION.txt
+TCNAME=${Logpath}/${SFDC_ORG}.${DATE}.VALIDATION.List
+GIT_LOG=${Logpath}/${SFDC_ORG}.${DATE}.SFDC_GIT.log
+CHANGESETLOG=/tmp/$SFDC_ORG.Changeset.log
+
+DEPLOYEDFILE=/tmp/${SFDC_ORG}.Deploy.file
+
+API=$(grep APIver $serverProperty | cut -d'=' -f2)
+
+REPORT_JSON=${Logpath}/${SFDC_ORG}.${DATE}.report.json
+HTMLLog=/tmp/$SFDC_ORG.Validation.log.html
+HTMLFDLog=${Logpath}/${SFDC_ORG}.forceDeploy.${DATE}.html
+
+Check_Lock()
+{
+    ##check Lock ##
+    if [ -f $LOCK ]
+    then
+        echo "Another Validation process is present for $SFDC_ORG ...exit"
+        mail -s "Another Validation process is present for $SFDC_ORG"  ${MAIL_LIST} < /dev/null
+        exit
+    else
+        touch $LOCK
+    fi
+}
+
+Prepare_RunTest()
+{
+    rm -f $TCNAME
+    rm -f ${TCtxt}
+
+    dos2unix -n build/testClasses.txt ${TCtxt}
+
+    cat $TCtxt | grep -v "#" | grep -v '^\s*$' | sort -u > $TCNAME
+
+    for i in `cat $TCNAME`
+    do
+        cp src/classes/$i.* changeSetDeploy/src/classes/
+    done
+
+    mapfile -t TEST_CLASSES < "$TCNAME"
+    TEST_FLAGS=()
+    for cls in "${TEST_CLASSES[@]}"; do
+        cls="${cls//$'\r'/}"
+        cls="${cls##*( )}"
+        cls="${cls%%*( )}"
+        [[ -z "$cls" ]] && continue
+        TEST_FLAGS+=(--tests "$cls")
+    done
+}
+
+Mail_Setup()
+{
+    MAIL_TO=debarshi@cadence.com
+    CC=$(grep email_cc ${serverProperty} | cut -d "=" -f2)
+    TO=$(grep email_to ${serverProperty} | cut -d "=" -f2)
+    FROM=$(grep email_from ${serverProperty} | cut -d "=" -f2)
+    MAIL_LIST="-r $FROM -c $CC $TO"
+    mutt_MAIL_LIST="$TO -c $CC"
+    MAIL=$(grep send_email ${serverProperty} | cut -d "=" -f2)
+    case ${MAIL} in
+    0) MAIL_LIST=${MAIL_TO}
+       mutt_MAIL_LIST=${MAIL_TO}
+    ;;
+    *)
+    ;;
+    esac
+}
+
+Validation()
+{
+    sf project deploy validate \
+        --source-dir changeSetDeploy \
+        --test-level RunSpecifiedTests \
+        "${TEST_FLAGS[@]}" \
+        --target-org "$SFDC_ORG" \
+        --wait 60 \
+        --json > "${LOG}.initial.json" 2> "${LOG}.err"
+        cat "${LOG}.err" > "$LOG"
+        cat "${LOG}.initial.json" >> "$LOG"
+
+    INITIAL_STATUS=$(jq -r '.status' "${LOG}.initial.json")
+    if [ "$INITIAL_STATUS" == "0" ]; then
+        cp "${LOG}.initial.json" "$REPORT_JSON"
+        antReturnCode="DEPLOYMENT SUCCEEDED"
+    else
+        ERROR_NAME=$(jq -r '.name' "${LOG}.initial.json")
+        if [ "$ERROR_NAME" == "FailedValidationError" ]; then
+            DEPLOY_ID=$(jq -r '.data.deployId' "${LOG}.initial.json")
+            if [ -z "$DEPLOY_ID" ]; then
+                echo "[ERROR] No deploy ID found in initial output" | tee -a "$LOG"
+                antReturnCode="Request Status: Failed"
+            else
+                # Fetch full report
+                sf project deploy report --job-id "$DEPLOY_ID" --target-org "$SFDC_ORG" --json > "$REPORT_JSON" 2> "${LOG}.err"
+                cat "${LOG}.err" > "$LOG"
+                    cat "${LOG}.initial.json" >> "$LOG"
+                
+                # Optional: Poll if InProgress (add max loops, e.g., 120 for ~60min)
+                MAX_POLLS=120
+                POLL_COUNT=0
+                while [ "$POLL_COUNT" -lt "$MAX_POLLS" ]; do
+                    RESULT_STATUS=$(jq -r '.result.status' "$REPORT_JSON")
+                    if [ "$RESULT_STATUS" != "InProgress" ]; then
+                        break
+                    fi
+                    sleep 30
+                    ((POLL_COUNT++))
+                    sf project deploy report --job-id "$DEPLOY_ID" --target-org "$SFDC_ORG" --json > "$REPORT_JSON" 2> "${LOG}.err"
+                    cat "${LOG}.err" > "$LOG"
+                        cat "${LOG}.initial.json" >> "$LOG"
+                done
+                
+                if [ "$RESULT_STATUS" == "InProgress" ]; then
+                    antReturnCode="Failed to obtain result from server within specified time"
+                elif [ "$RESULT_STATUS" == "Failed" ]; then
+                    antReturnCode="Request Status: Failed"
+                elif [ "$RESULT_STATUS" == "Succeeded" ]; then
+                    antReturnCode="DEPLOYMENT SUCCEEDED"
+                else
+                    antReturnCode="Request Status: Failed"
+                fi
+            fi
+        elif jq -r '.message' "${LOG}.initial.json" | grep -iq "locked"; then
+            antReturnCode="ALREADY_IN_PROCESS"
+        else
+            antReturnCode="Failed to obtain result from server within specified time"
+        fi
+    fi
+
+    # Prepare filtered log (use $REPORT_JSON if available, else fallback)
+    if [ -f "$REPORT_JSON" ]; then
+        jq -r '.result.details | {componentFailures, runTestResult: {failures, codeCoverageWarnings}}' "$REPORT_JSON" > "${LOG}.filtered.json"
+        jq -r 'to_entries | map("\(.key): \(.value)") | join("\n")' "${LOG}.filtered.json" > "${LOG}.filtered"
+    else
+        # Fallback for cases without full report
+        jq -r '.message' "${LOG}.initial.json" > "${LOG}.filtered"
+    fi
+
+    # Prepare filtered log
+    jq -r '.result.details | {componentFailures, runTestResult: {failures, codeCoverageWarnings}}' "$REPORT_JSON" > "${LOG}.filtered.json"
+    jq -r 'to_entries | map("\(.key): \(.value)") | join("\n")' "${LOG}.filtered.json" > "${LOG}.filtered"
+
+    case $antReturnCode in
+    "DEPLOYMENT SUCCEEDED") HTML_Report SUCCEEDED
+                PublishLOG changeset
+            ;;
+
+    "ALREADY_IN_PROCESS") HTML_Report LOCKED
+                  PublishLOG changeset
+            ;;
+
+    "Request Status: Failed")     
+        HTML_Report FAILED
+        PublishLOG changeset
+
+            ;;
+
+
+    "Failed to obtain result from server within specified time")
+        HTML_Report FAILED
+        PublishLOG changeset
+    ;;
+
+    esac
+}
+
+HTML_Report()
+{
+
+Report=$1
+
+SAVEIFS=$IFS
+IFS=$(echo -en "\n\b")
+
+echo "<HTML>" > $HTMLLog
+echo "<BODY>" >> $HTMLLog
+echo "<table width=100%>" >> $HTMLLog
+
+if [ "${Report}" == "SUCCEEDED" ]
+then
+    echo "<H3><tr><td bgcolor=\"SeaShell\">${SFDC_ORG} Validation suceeded report</td></tr></H3>" >> $HTMLLog
+    echo "<H5><PRE><tr><td bgcolor=\"LightGreen\">$(jq -r '.result | "Deploy ID: \(.id)\nStatus: \(.status)\nSuccess: \(.success)"' "$REPORT_JSON")</td></tr></PRE></H5>" >> $HTMLLog
+    echo "<tr><td bgcolor=\"LightBlue\"></tr></td>" >> $HTMLLog
+    echo "<tr><td bgcolor=\"Yellow\"></tr></td>" >> $HTMLLog
+    echo "<a href=\"https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}\">Log and changeset</a>" >> $HTMLLog
+    echo "&nbsp" >> $HTMLLog
+    echo "<a href=\"https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/${SFDC_ORG}.changesetList.${DATE}.html\">Changeset List</a>" >> $HTMLLog
+    echo "&nbsp" >> $HTMLLog
+    echo "<a href=\"https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/${HTMLFDLog##*/}\">ForceDeploy</a>" >> $HTMLLog
+    echo "<br/>API used: ${API}" >> $HTMLLog
+
+Changeset_List
+#CHNGSETLIST
+
+elif [ "${Report}" == "FAILED" ]
+then
+    echo "<H3><tr><td bgcolor=\"SeaShell\">${SFDC_ORG} Validation failure report</td></tr></H3>" >> $HTMLLog
+    echo "<H5><tr><td bgcolor=\"Khaki\">Request ID: $(jq -r '.result.id' "$REPORT_JSON")</td></tr></H5>" >> $HTMLLog
+    echo "<tr><td bgcolor=\"LightBlue\"></tr></td>" >> $HTMLLog
+    echo "<tr><td bgcolor=\"Yellow\"></tr></td>" >> $HTMLLog
+    echo "<a href=\"https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}\">Log and changeset</a>" >> $HTMLLog
+    echo "&nbsp" >> $HTMLLog
+    echo "<a href=\"https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/${SFDC_ORG}.changesetList.${DATE}.html\">Changeset List</a>" >> $HTMLLog
+    echo "&nbsp" >> $HTMLLog
+    echo "<a href=\"https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/${HTMLFDLog##*/}\">ForceDeploy</a>" >> $HTMLLog
+    echo "<br/>API used: ${API}" >> $HTMLLog
+
+
+    # Process component failures
+    jq -r '.result.details.componentFailures[] | [.fileName, .problem] | join(" -- ")' "$REPORT_JSON" > "${LOG}.component_failures"
+
+    for FILE in `awk -F ' -- ' '{print $1}' "${LOG}.component_failures" | uniq`
+    do
+        echo "<tr><td bgcolor=\"LightSalmon\"><PRE>" >> $HTMLLog
+        grep "${FILE}" "${LOG}.component_failures" >> $HTMLLog
+        echo "</PRE></td></tr>" >> $HTMLLog
+
+        if [ "${FILE}" == "labels/CustomLabels.labels-meta.xml" ]; then
+            FILE="env/${SFDC_ORG}/customLabel/CustomLabels.labels-meta.xml"
+        elif [[ "${FILE}" =~ remoteSiteSettings/ ]]; then
+            FILE=$(echo "${FILE}" | sed -e "s/^env\/${SFDC_ORG}//g")
+        elif [[ "${FILE}" =~ src/customMetadata/ ]]; then
+            FILE=$(echo "${FILE}" | sed -e "s/^env\/${SFDC_ORG}//g")
+        fi
+
+
+
+        echo "<tr><td bgcolor=\"Gainsboro\"><PRE>" >> $HTMLLog
+        echo "Last 2 Author >>> src/${FILE}" >> $HTMLLog
+        git log -2 src/${FILE} | sed -e 's/$/\ |/g'  | xargs | sed -e 's/| |/|\ Comment:/g' >> $HTMLLog
+        echo "</PRE></td></tr>" >> $HTMLLog
+    done
+
+    # Test failures
+    echo "<tr><td bgcolor=\"Yellow\"><H4>${SFDC_ORG} Test Class </H4></td></tr>" >> $HTMLLog
+
+    jq -r '.result.details.runTestResult.failures[] | [.name, .methodName, .message, .stackTrace] | join("\t")' "$REPORT_JSON" > "${LOG}.test_failures"
+
+    ErrorNo=$(wc -l < "${LOG}.test_failures")
+
+    idx=1
+    while IFS=$'\t' read -r CLASS METHOD MSG STACK; do
+        echo "<tr><td bgcolor=\"LightYellow\"><PRE><FONT SIZE=2>" >> ${HTMLLog}
+        echo "${idx}. ${CLASS}.${METHOD}() -- Error: ${MSG}" >> ${HTMLLog}
+        echo "StackTrace: ${STACK}" >> ${HTMLLog}
+        echo "</FONT></PRE></td></tr>" >> ${HTMLLog}
+
+        ClassTriggerName="src/classes/${CLASS}.cls"
+
+        echo "<tr><td bgcolor=\"Gainsboro\"><PRE><FONT SIZE=2>" >> ${HTMLLog}
+        echo "Latest 2 GIT log >>> ${ClassTriggerName}" >> ${HTMLLog}
+        git log -2 "${ClassTriggerName}" | sed -e 's/$/\ |/g'  | xargs | sed -e 's/| |/|\ Comment:/g' >> ${HTMLLog}
+        echo "</FONT></PRE></td></tr>" >> ${HTMLLog}
+
+        ((idx++))
+    done < "${LOG}.test_failures"
+
+    # Code Coverage Warnings
+    echo "<tr><td bgcolor=\"Yellow\"><H4>${SFDC_ORG} Code Coverage</H4></td></tr>" >> $HTMLLog
+
+    jq -r '.result.details.runTestResult.codeCoverageWarnings[] | [.name, .message] | join("\t")' "$REPORT_JSON" > "${LOG}.code_coverage_warnings"
+
+    CoverageNo=$(wc -l < "${LOG}.code_coverage_warnings")
+
+    cov_idx=1
+    while IFS=$'\t' read -r NAME MESSAGE; do
+        echo "<tr><td bgcolor=\"LightSalmon\"><PRE><FONT SIZE=2>" >> ${HTMLLog}
+        echo "${cov_idx}. ${NAME} -- Warning: ${MESSAGE}" >> ${HTMLLog}
+        echo "</FONT></PRE></td></tr>" >> ${HTMLLog}
+
+        Class="src/classes/${NAME}.cls"
+
+        echo "<tr><td bgcolor=\"Gainsboro\"><PRE><FONT SIZE=2>" >> ${HTMLLog}
+        echo "Latest 2 GIT log >>> ${Class}" >> ${HTMLLog}
+        git log -2 "${Class}" | sed -e 's/$/\ |/g'  | xargs | sed -e 's/| |/|\ Comment:/g' >> ${HTMLLog}
+        echo "</FONT></PRE></td></tr>" >> ${HTMLLog}
+
+        ((cov_idx++))
+    done < "${LOG}.code_coverage_warnings"
+
+Changeset_List
+#CHNGSETLIST
+
+elif [ "${Report}" == "LOCKED" ]
+then
+      echo "<H3><tr><td bgcolor=\"SeaShell\">${SFDC_ORG} is Locked</td></tr></H3>" >> $HTMLLog
+      echo "<H5><PRE><tr><td bgcolor=\"LightYellow\">$(jq -r '.result.details' "$REPORT_JSON" | grep -i locked)</td></tr></PRE></H5>" >> $HTMLLog
+
+fi
+
+echo "</table>" >> $HTMLLog
+echo "</HTML></BODY>" >> $HTMLLog
+
+
+    EMAIL=${FROM} mutt -e 'set content_type=text/html' \
+    -s "---${SFDC_ORG}---ChangeSet Validation ${Report} [$(date +%d.%b.%Y) PST - git ${gitlast}-${gitlatest} ]" \
+    ${mutt_MAIL_LIST}  -a $LOG.filtered  < $HTMLLog
+
+IFS=$SAVEIFS
+
+}
+
+Changeset_List()
+{
+    #changeset file list
+    find changeSetDeploy -type f | egrep -v "package.xml|staticResourceFolders.txt" | \
+    cut -d "/" -f  1,2 --complement | sort -u > ${DEPLOYEDFILE}
+
+    changesetFile=$(find changeSetDeploy -type f | egrep -v "package.xml|staticResourceFolders.txt" | wc -l)
+    echo "<tr><td bgcolor=\"SeaShell\">Changeset file/s ... [${changesetFile}]</td></tr>" >> $HTMLLog
+
+    NUM=1
+    for FILE in `cat ${DEPLOYEDFILE}`
+    do
+    if [ "${FILE}" == "labels/CustomLabels.labels-meta.xml" ]; then
+            FILE="env/${SFDC_ORG}/customLabel/CustomLabels.labels-meta.xml"
+    elif [[ "${FILE}" =~ remoteSiteSettings/ ]]; then
+            FILE=$(echo "${FILE}" | sed -e "s/^env\/${SFDC_ORG}//g")
+    elif [[ "${FILE}" =~ src/customMetadata/ ]]; then
+            FILE=$(echo "${FILE}" | sed -e "s/^env\/${SFDC_ORG}//g")
+    fi
+
+    echo "<tr><td bgcolor=\"Ivory\"><PRE>" >> $HTMLLog
+    echo " [$((NUM++))] ${FILE}" >> ${HTMLLog}
+    echo "</PRE></td></tr>" >> $HTMLLog
+    LastAuthor=`git log -1 "src/${FILE}" | sed -e 's/$/\ |/g'  | xargs | sed -e 's/| |/|\ Comment:/g'`
+
+    echo "<tr><td bgcolor=\"Gainsboro\"><PRE>" >> $HTMLLog
+    echo "Last author... ${LastAuthor}" >> $HTMLLog
+    echo "</PRE></td></tr>" >> $HTMLLog
+    done
+
+    echo "</table>" >> $HTMLLog
+
+}
+
+CHNGSETLIST ()
+{
+ORGchngSet=${SFDC_ORG}.${DATE}.changeSetDeploy
+ORGchngSetFILE=${Logpath}/${SFDC_ORG}.changesetList.${DATE}
+cp -r changeSetDeploy  ${ORGchngSet}
+if [ -d ${ORGchngSet}/src/staticresources ]
+    then
+    cd ${ORGchngSet}
+    bash ${bin}/staticresource_decompress.sh
+fi
+cd -
+find ${ORGchngSet}/customSettings/src/env/ ${ORGchngSet}/src/ -type f |\
+egrep -v  "package.xml|staticResourceFolders.txt" |\
+cut -d "/" -f3-20 | sort > ${ORGchngSetFILE}.csv
+sed -e "s/$/<br><br>/ ;1 i<HTML>\n<BODY>" ${ORGchngSetFILE}.csv >  ${ORGchngSetFILE}.html
+sed -i "\$a</BODY>\n</HTML>" ${ORGchngSetFILE}.html
+}
+
+PublishLOG()
+{
+
+        LogStorePath="/data/public/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
+        mkdir -p ${LogStorePath}
+
+        if [ "$1" == "changeset" ]
+        then
+                cp ${CHANGESETLOG} ${LogStorePath}/$SFDC_ORG.Changeset.log.${DATE}
+                cp ${LOG} ${LogStorePath}/$SFDC_ORG.Deploy.log.${DATE}
+                cp ${HTMLLog} ${LogStorePath}/${SFDC_ORG}.Deploy.log.${DATE}.html
+
+        cp -r changeSetDeploy ${LogStorePath}/${SFDC_ORG}.changeSetDeploy.${DATE}
+        cp ${ORGchngSetFILE}.html  ${ORGchngSetFILE}.csv ${LogStorePath}/
+        cp $REPORT_JSON ${LogStorePath}/
+        fi
+}
+
+Unlock()
+{
+    rm $LOCK
+}
+
+Trap()
+{
+        # trap keyboard interrupt (control-c)
+        trap Unlock  SIGINT
+}
+
+FAIL_EXIT()
+{
+        ## process before exit #
+        rm -f $LOCK
+        exit
+}
+
+main "$@"
