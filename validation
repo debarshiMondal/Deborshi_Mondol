@@ -21,7 +21,6 @@ main()
     Unlock
 }
 
-
 if [ $# == 0 ] || ([ $1 != prprdnov25 ] && [ $1 != prod ]&& [ $1 != dev2 ] && [ $1 != tst ] && [ $1 != sandbox ])
 then
     echo -e "\n" $USAGE  "\n"
@@ -39,6 +38,7 @@ gitlast=$2
 gitlatest=$3
 
 Logpath=build/log
+mkdir -p "$Logpath"
 LOCK=${Logpath}/${SFDC_ORG}.VALIDATION.LOCK
 LOG=${Logpath}/${SFDC_ORG}.${DATE}.VALIDATION.LOG
 FAILEDTC=${Logpath}/${SFDC_ORG}.${DATE}.FAILED_TC
@@ -183,7 +183,9 @@ _gitlog_for_component(){
   for f in "${resolved[@]}"; do
     echo "Latest 2 GIT log >>> ${f}"
     if [ -f "$f" ]; then
-      git log -2 -- "$f" | sed -e 's/$/ |/g' | xargs | sed -e 's/| |/|\ Comment:/g'
+      # quote-safe, single line per commit
+      git --no-pager log -2 --date=short --pretty='format:%h %ad %an %s' -- "$f" \
+        | sed 's/$/ |/' | paste -sd' ' -
     else
       echo "(exists-in-index? Could not read path: $f)"
     fi
@@ -203,41 +205,36 @@ Validation()
         --target-org "$SFDC_ORG" \
         --wait 60 \
         --json > "${LOG}.initial.json" 2> "${LOG}.err"
-        cat "${LOG}.err" > "$LOG"
-        cat "${LOG}.initial.json" >> "$LOG"
+    cat "${LOG}.err" > "$LOG"
+    cat "${LOG}.initial.json" >> "$LOG"
 
     INITIAL_STATUS=$(jq -r '.status' "${LOG}.initial.json")
     if [ "$INITIAL_STATUS" == "0" ]; then
         cp "${LOG}.initial.json" "$REPORT_JSON"
         antReturnCode="DEPLOYMENT SUCCEEDED"
     else
-        ERROR_NAME=$(jq -r '.name' "${LOG}.initial.json"])
+        ERROR_NAME=$(jq -r '.name' "${LOG}.initial.json")
         if [ "$ERROR_NAME" == "FailedValidationError" ]; then
             DEPLOY_ID=$(jq -r '.data.deployId' "${LOG}.initial.json")
             if [ -z "$DEPLOY_ID" ]; then
                 echo "[ERROR] No deploy ID found in initial output" | tee -a "$LOG"
                 antReturnCode="Request Status: Failed"
             else
-                # Fetch full report
+                # Fetch full report and poll if needed
                 sf project deploy report --job-id "$DEPLOY_ID" --target-org "$SFDC_ORG" --json > "$REPORT_JSON" 2> "${LOG}.err"
-                cat "${LOG}.err" > "$LOG"
-                cat "${LOG}.initial.json" >> "$LOG"
-                
-                # Optional: Poll if InProgress (add max loops, e.g., 120 for ~60min)
+                cat "${LOG}.err" >> "$LOG"
+
                 MAX_POLLS=120
                 POLL_COUNT=0
                 while [ "$POLL_COUNT" -lt "$MAX_POLLS" ]; do
-                    RESULT_STATUS=$(jq -r '.result.status' "$REPORT_JSON")
-                    if [ "$RESULT_STATUS" != "InProgress" ]; then
-                        break
-                    fi
+                    RESULT_STATUS=$(jq -r '.result.status' "$REPORT_JSON" 2>/dev/null)
+                    [ "$RESULT_STATUS" != "InProgress" ] && break
                     sleep 30
                     ((POLL_COUNT++))
-                    sf project deploy report --job-id "$DEPLOY_ID" --target-org "$SFDC_ORG" --json > "$REPORT_JSON" 2> "${LOG}.err"}
-                    cat "${LOG}.err" > "$LOG"
-                    cat "${LOG}.initial.json" >> "$LOG"
+                    sf project deploy report --job-id "$DEPLOY_ID" --target-org "$SFDC_ORG" --json > "$REPORT_JSON" 2> "${LOG}.err"
+                    cat "${LOG}.err" >> "$LOG"
                 done
-                
+
                 if [ "$RESULT_STATUS" == "InProgress" ]; then
                     antReturnCode="Failed to obtain result from server within specified time"
                 elif [ "$RESULT_STATUS" == "Failed" ]; then
@@ -256,43 +253,35 @@ Validation()
     fi
 
     # Prepare filtered log (use $REPORT_JSON if available, else fallback)
-    if [ -f "$REPORT_JSON" ]; then
-        jq -r '.result.details | {componentFailures, runTestResult: {failures, codeCoverageWarnings}}' "$REPORT_JSON" > "${LOG}.filtered.json"
-        jq -r 'to_entries | map("\(.key): \(.value)") | join("\n")' "${LOG}.filtered.json" > "${LOG}.filtered"
+    if [ -s "$REPORT_JSON" ]; then
+        jq -r '.result.details | {componentFailures, runTestResult: {failures, codeCoverageWarnings}}' "$REPORT_JSON" > "${LOG}.filtered.json" || true
+        jq -r 'to_entries | map("\(.key): \(.value)") | join("\n")' "${LOG}.filtered.json" > "${LOG}.filtered" || true
     else
-        jq -r '.message' "${LOG}.initial.json" > "${LOG}.filtered"
+        jq -r '.message // "No report.json available; see error log."' "${LOG}.initial.json" > "${LOG}.filtered" 2>/dev/null || echo "No JSON output captured." > "${LOG}.filtered"
     fi
 
-    # (kept original duplicate generation for compatibility)
-    jq -r '.result.details | {componentFailures, runTestResult: {failures, codeCoverageWarnings}}' "$REPORT_JSON" > "${LOG}.filtered.json"
-    jq -r 'to_entries | map("\(.key): \(.value)") | join("\n")' "${LOG}.filtered.json" > "${LOG}.filtered"
-
     case $antReturnCode in
-    "DEPLOYMENT SUCCEEDED") HTML_Report SUCCEEDED
-                PublishLOG changeset
-            ;;
-
-    "ALREADY_IN_PROCESS") HTML_Report LOCKED
-                  PublishLOG changeset
-            ;;
-
-    "Request Status: Failed")     
+    "DEPLOYMENT SUCCEEDED")
+        HTML_Report SUCCEEDED
+        PublishLOG changeset
+        ;;
+    "ALREADY_IN_PROCESS")
+        HTML_Report LOCKED
+        PublishLOG changeset
+        ;;
+    "Request Status: Failed")
         HTML_Report FAILED
         PublishLOG changeset
-
-            ;;
-
+        ;;
     "Failed to obtain result from server within specified time")
         HTML_Report FAILED
         PublishLOG changeset
-    ;;
-
+        ;;
     esac
 }
 
 HTML_Report()
 {
-
 Report=$1
 
 SAVEIFS=$IFS
@@ -305,7 +294,7 @@ echo "<table width=100%>" >> $HTMLLog
 if [ "${Report}" == "SUCCEEDED" ]
 then
     echo "<H3><tr><td bgcolor=\"SeaShell\">${SFDC_ORG} Validation suceeded report</td></tr></H3>" >> $HTMLLog
-    echo "<H5><PRE><tr><td bgcolor=\"LightGreen\">$(jq -r '.result | "Deploy ID: \(.id)\nStatus: \(.status)\nSuccess: \(.success)"' "$REPORT_JSON" | _esc)</td></tr></PRE></H5>" >> $HTMLLog
+    echo "<H5><PRE><tr><td bgcolor=\"LightGreen\">$(jq -r '.result | "Deploy ID: \(.id)\nStatus: \(.status)\nSuccess: \(.success)"' "$REPORT_JSON" 2>/dev/null | _esc)</td></tr></PRE></H5>" >> $HTMLLog
     echo "<tr><td bgcolor=\"LightBlue\"></tr></td>" >> $HTMLLog
     echo "<tr><td bgcolor=\"Yellow\"></tr></td>" >> $HTMLLog
     echo "<a href=\"https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}\">Log and changeset</a>" >> $HTMLLog
@@ -320,8 +309,9 @@ Changeset_List
 
 elif [ "${Report}" == "FAILED" ]
 then
+    REQ_ID=$(jq -r '.result.id // "N/A"' "$REPORT_JSON" 2>/dev/null || echo "N/A")
     echo "<H3><tr><td bgcolor=\"SeaShell\">${SFDC_ORG} Validation failure report</td></tr></H3>" >> $HTMLLog
-    echo "<H5><tr><td bgcolor=\"Khaki\">Request ID: $(jq -r '.result.id' "$REPORT_JSON" | _esc)</td></tr></H5>" >> $HTMLLog
+    echo "<H5><tr><td bgcolor=\"Khaki\">Request ID: ${REQ_ID}</td></tr></H5>" >> $HTMLLog
     echo "<tr><td bgcolor=\"LightBlue\"></tr></td>" >> $HTMLLog
     echo "<tr><td bgcolor=\"Yellow\"></tr></td>" >> $HTMLLog
     echo "<a href=\"https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}\">Log and changeset</a>" >> $HTMLLog
@@ -332,7 +322,11 @@ then
     echo "<br/>API used: ${API}" >> $HTMLLog
 
     # Process component failures
-    jq -r '.result.details.componentFailures[] | [.fileName, .problem] | join(" -- ")' "$REPORT_JSON" > "${LOG}.component_failures"
+    if [ -s "$REPORT_JSON" ]; then
+      jq -r '.result.details.componentFailures[] | [.fileName, .problem] | join(" -- ")' "$REPORT_JSON" > "${LOG}.component_failures" 2>/dev/null || true
+    else
+      : > "${LOG}.component_failures"
+    fi
 
     for FILE in `awk -F ' -- ' '{print $1}' "${LOG}.component_failures" | uniq`
     do
@@ -356,9 +350,13 @@ then
     # Test failures
     echo "<tr><td bgcolor=\"Yellow\"><H4>${SFDC_ORG} Test Class </H4></td></tr>" >> $HTMLLog
 
-    jq -r '.result.details.runTestResult.failures[] | [.name, .methodName, .message, .stackTrace] | join("\t")' "$REPORT_JSON" > "${LOG}.test_failures"
+    if [ -s "$REPORT_JSON" ]; then
+      jq -r '.result.details.runTestResult.failures[] | [.name, .methodName, .message, .stackTrace] | join("\t")' "$REPORT_JSON" > "${LOG}.test_failures" 2>/dev/null || : > "${LOG}.test_failures"
+    else
+      : > "${LOG}.test_failures"
+    fi
 
-    ErrorNo=$(wc -l < "${LOG}.test_failures")
+    ErrorNo=$(wc -l < "${LOG}.test_failures" 2>/dev/null || echo 0)
 
     idx=1
     while IFS=$'\t' read -r CLASS METHOD MSG STACK; do
@@ -377,9 +375,13 @@ then
     # Code Coverage Warnings
     echo "<tr><td bgcolor=\"Yellow\"><H4>${SFDC_ORG} Code Coverage</H4></td></tr>" >> $HTMLLog
 
-    jq -r '.result.details.runTestResult.codeCoverageWarnings[] | [.name, .message] | join("\t")' "$REPORT_JSON" > "${LOG}.code_coverage_warnings"
+    if [ -s "$REPORT_JSON" ]; then
+      jq -r '.result.details.runTestResult.codeCoverageWarnings[] | [.name, .message] | join("\t")' "$REPORT_JSON" > "${LOG}.code_coverage_warnings" 2>/dev/null || : > "${LOG}.code_coverage_warnings"
+    else
+      : > "${LOG}.code_coverage_warnings"
+    fi
 
-    CoverageNo=$(wc -l < "${LOG}.code_coverage_warnings")
+    CoverageNo=$(wc -l < "${LOG}.code_coverage_warnings" 2>/dev/null || echo 0)
 
     cov_idx=1
     while IFS=$'\t' read -r NAME MESSAGE; do
@@ -400,7 +402,7 @@ Changeset_List
 elif [ "${Report}" == "LOCKED" ]
 then
       echo "<H3><tr><td bgcolor=\"SeaShell\">${SFDC_ORG} is Locked</td></tr></H3>" >> $HTMLLog
-      echo "<H5><PRE><tr><td bgcolor=\"LightYellow\">$(jq -r '.result.details' "$REPORT_JSON" | grep -i locked | _esc)</td></tr></PRE></H5>" >> $HTMLLog
+      echo "<H5><PRE><tr><td bgcolor=\"LightYellow\">$(jq -r '.result.details' "$REPORT_JSON" 2>/dev/null | grep -i locked | _esc)</td></tr></PRE></H5>" >> $HTMLLog
 
 fi
 
@@ -442,7 +444,7 @@ Changeset_List()
       LastAuthor="$(
         _resolve_files "${FILE}" | head -n1 | while read -r p; do
           if [ -f "$p" ]; then
-            git log -1 -- "$p" | sed -e 's/$/ |/g' | xargs | sed -e 's/| |/|\ Comment:/g'
+            git --no-pager log -1 --date=short --pretty='format:%h %ad %an %s' -- "$p"
           fi
           break
         done
@@ -476,7 +478,6 @@ sed -i "\$a</BODY>\n</HTML>" ${ORGchngSetFILE}.html
 
 PublishLOG()
 {
-
         LogStorePath="/data/public/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
         mkdir -p ${LogStorePath}
 
@@ -486,15 +487,15 @@ PublishLOG()
                 cp ${LOG} ${LogStorePath}/$SFDC_ORG.Deploy.log.${DATE}
                 cp ${HTMLLog} ${LogStorePath}/${SFDC_ORG}.Deploy.log.${DATE}.html
 
-        cp -r changeSetDeploy ${LogStorePath}/${SFDC_ORG}.changeSetDeploy.${DATE}
-        cp ${ORGchngSetFILE}.html  ${ORGchngSetFILE}.csv ${LogStorePath}/
-        cp $REPORT_JSON ${LogStorePath}/
+                cp -r changeSetDeploy ${LogStorePath}/${SFDC_ORG}.changeSetDeploy.${DATE}
+                cp ${ORGchngSetFILE}.html  ${ORGchngSetFILE}.csv ${LogStorePath}/ 2>/dev/null || true
+                cp $REPORT_JSON ${LogStorePath}/ 2>/dev/null || true
         fi
 }
 
 Unlock()
 {
-    rm $LOCK
+    rm -f $LOCK
 }
 
 Trap()
