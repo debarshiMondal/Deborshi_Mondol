@@ -1,40 +1,10 @@
-Suppose you got below file as faulure components,
-
-src/objects/Opportunity.object
-src/applications/Cadence_IT_Administration.app
-src/flows/PO_PQ_Comparison_Result_After_Create_Update_Event.flow
-src/workflows/Account.workflow
-src/flows/PO_PQ_Comparison_Result_After_Create_Update_Event.flow
-src/workflows/Account.workflow
-src/permissionsets/TWR_PS.permissionset
-src/applications/Cadence_Customer_Master_Lightning.app
-src/flexipages/TSMC_Detail_Lightning_Admin.flexipage
-src/ Class ContentDocumentTriggerHandler_AC 
-src/classes/Cadence_custom.cls
-
-What you should do, you need seperate the file names from it like,
-
-ContentDocumentTriggerHandler_AC, Cadence_custom.cls, TSMC_Detail_Lightning_Admin.flexipage, TWR_PS.permissionset etc.
-And then  you should find files in src.
-You will get actual path of the file and actual name of the file.
-For example, TSMC_Detail_Lightning_Admin.flexipage will be TSMC_Detail_Lightning_Admin.flexipage-meta.xml
-
-Then you collect the gog and provide.
-
-Can you do it? Is it making sence? Do you see any problem is it?
-
-
-TSMC_Detail_Lightning_Admin.flexipage
-src/ Class ContentDocumentTriggerHandler_AC 
-
-If you see these file in jsons run below commands in src
-
-rc]$ find . -name TSMC_Detail_Lightning_Admin.flexipage*
-./flexipages/TSMC_Detail_Lightning_Admin.flexipage-meta.xml
-
-[codedev@vlsj-deploybox src]$ find . -name ContentDocumentTriggerHandler_AC*
-./classes/ContentDocumentTriggerHandler_AC.cls
-./classes/ContentDocumentTriggerHandler_AC.cls-meta.xml
-
-Identify which file our file, then find out the git log report and provide. Can yu do it?
-
+bash build/script/validation_git.sh prprdnov25 65dc11c2d44342b0176ad8e0dc3c57f0acc1d9db 392ee36b62ce02b0e1d7bb047441842d938398e4
+dos2unix: converting file build/testClasses.txt to file build/log/prprdnov25.27_10_2025_11h31m39s.VALIDATION.txt in Unix format...
+jq: error: Could not open file build/log/prprdnov25.27_10_2025_11h31m39s.VALIDATION.LOG.initial.json]: No such file or directory
+jq: error: Could not open file build/log/prprdnov25.27_10_2025_11h31m39s.report.json: No such file or directory
+jq: error: Could not open file build/log/prprdnov25.27_10_2025_11h31m39s.report.json: No such file or directory
+jq: error: Could not open file build/log/prprdnov25.27_10_2025_11h31m39s.report.json: No such file or directory
+jq: error: Could not open file build/log/prprdnov25.27_10_2025_11h31m39s.report.json: No such file or directory
+jq: error: Could not open file build/log/prprdnov25.27_10_2025_11h31m39s.report.json: No such file or directory
+xargs: unmatched single quote; by default quotes are special to xargs unless you use the -0 option
+xargs: unmatched single quote; by default quotes are special to xargs unless you use the -0 option
