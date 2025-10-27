@@ -1,3 +1,58 @@
--rw-r--r-- 1 codedev apache    34 Oct 22 01:16 sbx_SFCliMetaXML.list
--rw-r--r-- 1 codedev apache    25 Oct 22 01:16 sbx_SFCliMetaMetaHasFolder.list
--rw-r--r-- 1 codedev apache   543 Oct 22 01:16 sbx_SFCli.list
+[codedev@vlsj-deploybox property]$ cat sbx_SFCliMetaXML.list
+pages
+classes
+triggers
+components
+[codedev@vlsj-deploybox property]$ cat sbx_SFCliMetaMetaHasFolder.list
+reports
+email
+dashboards
+[codedev@vlsj-deploybox property]$ cat sbx_SFCli.list
+applications
+approvalProcesses
+assignmentRules
+audience
+aura
+classes
+components
+customMetadata
+duplicateRules
+email
+experiences
+flexipages
+flowDefinitions
+flows
+globalValueSets
+groups
+homePageLayouts
+labels
+layouts
+lwc
+matchingRules
+navigationMenus
+networks
+objects
+pages
+permissionsets
+portals
+profiles
+queues
+quickActions
+remoteSiteSettings
+reportTypes
+roles
+settings
+sharingRules
+sharingSets
+sites
+standardValueSets
+staticresources
+tabs
+translations
+triggers
+workflows
+LeadConvertSettings
+reports
+dashboards
+PathAssistant
+customPermissions
