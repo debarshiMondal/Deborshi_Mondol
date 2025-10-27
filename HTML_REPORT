@@ -357,6 +357,26 @@ HTML_REPORT() {
   _sep="$_plate_border"
 
   # --- helpers (chips, bars, pills) ---
+
+  # FIX #1: flush, edge-to-edge section bar (no double borders, no hairline)
+  _section_bar(){ # flush-to-border, edge-to-edge color
+    local text="$1"
+    cat <<BAR
+<tr>
+  <td style="padding:0;mso-line-height-rule:exactly;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+           style="border-collapse:separate;border-spacing:0;background:${_run_hdr_bg};mso-table-lspace:0pt;mso-table-rspace:0pt;">
+      <tr>
+        <td align="center" style="${_FONT_SECTION_HDR}color:${_run_hdr_txt};padding:6px 8px;">
+          ${text}
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+BAR
+  }
+
   _chip_td(){
     local label="$1" value="$2" pr="$3"
     cat <<CELL
@@ -374,16 +394,7 @@ HTML_REPORT() {
 </td>
 CELL
   }
-  _section_bar(){ # centered text + rails
-    local text="$1"
-    cat <<BAR
-<tr>
-  <td align="center" style="${_FONT_SECTION_HDR}color:${_run_hdr_txt};background:${_run_hdr_bg};padding:6px 8px;border-top:1px solid ${_plate_border};border-bottom:1px solid ${_plate_border};">
-    $text
-  </td>
-</tr>
-BAR
-  }
+
   _delta_pill(){
     local d="$1" bg bd col
     if [ "$d" -gt 0 ]; then
@@ -415,7 +426,7 @@ MCELL
     echo "<tr><td colspan=\"5\" style=\"height:1px;line-height:1px;font-size:0;background:${_sep};mso-line-height-rule:exactly;\">&nbsp;</td></tr>" >>"$HTMLLog"
   }
 
-  # PMD data row (paint cell backgrounds; explicit separators come via _pmd_hr)
+  # FIX #2: PMD row paints own link background; removes “halo” gap
   _pmd_row(){
     local display="$1" link="$2" author="$3" op="$4" oh="$5" cp="$6" ch="$7" delta="$8" row_num="$9" maxoh="${10}" maxch="${11}"
     local bg_color="#ffffff" text_color="${_pmd_text_normal}" link_color="${_pmd_link_normal}"
@@ -427,7 +438,7 @@ MCELL
     fi
     {
       echo "<tr>"
-      echo "<td width=\"${_COL_NAME_W}\" style=\"padding:5px 8px;${_FONT_BASE}word-wrap:break-word;background:${bg_color};\"><a href=\"$link\" style=\"text-decoration:underline;color:${link_color};\">$display</a></td>"
+      echo "<td width=\"${_COL_NAME_W}\" style=\"padding:5px 8px;${_FONT_BASE}word-wrap:break-word;background:${bg_color};\"><a href=\"$link\" style=\"text-decoration:underline;color:${link_color};background:${bg_color};display:inline-block;\">$display</a></td>"
       echo "<td width=\"${_COL_ORIG_W}\" align=\"right\" style=\"background:${bg_color};white-space:nowrap;\">"; _emit_meter_cell "$op" "$oh" "$maxoh" "$text_color"; echo "</td>"
       echo "<td width=\"${_COL_CUR_W}\"  align=\"right\" style=\"background:${bg_color};white-space:nowrap;\">"; _emit_meter_cell "$cp" "$ch" "$maxch" "$text_color"; echo "</td>"
       echo "<td width=\"${_COL_DELTA_W}\" align=\"right\" style=\"padding:5px 6px;background:${bg_color};white-space:nowrap;\">"; _delta_pill "$delta"; echo "</td>"
@@ -495,7 +506,7 @@ HTML_TOP
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;background:${_plate_bg};border:1px solid ${_plate_border};margin-top:8px;border-collapse:separate;border-spacing:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
             $(_section_bar "${_STR_RUN_TITLE}")
             <tr>
-              <td style="padding:8px;">
+              <td style="padding:8px;background:${_plate_bg};">
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                   <tr>
                     $(_chip_td "${_STR_CHIP_REPO}" "$_REPO" 10)
@@ -569,7 +580,7 @@ EOF
   cat >>"$HTMLLog" <<EOF
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin-top:6px;border:1px solid ${_chip_border};background:${_plate_bg};border-collapse:separate;border-spacing:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">
             $(_section_bar "${_STR_SECT_STATUS}")
-            <tr><td style="padding:6px;">
+            <tr><td style="padding:6px;background:${_plate_bg};">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td width="33%" valign="top" style="padding:2px;">
@@ -582,7 +593,7 @@ EOF
                     </table>
                   </td>
                   <td width="33%" valign="top" style="padding:2px;">
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_pmd};border:1px solid ${_chip_border};border-radius:${_status_radius};border-collapse:separate;border-spacing:0;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_pmd};border:1px solid ${_chip_border};border-radius:${_status_radius};border-collapse:separate;border-spacing:0%;">
                       <tr><td style="padding:6px;" valign="top">
                         <div style="${_FONT_BASE}color:${_status_label};">${_STR_TILE_PMD}</div>
                         $(_pmd_summary_html)
@@ -590,7 +601,7 @@ EOF
                     </table>
                   </td>
                   <td width="33%" valign="top" style="padding:2px;">
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_time};border:1px solid ${_chip_border};border-radius:${_status_radius};border-collapse:separate;border-spacing:0;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_time};border:1px solid ${_chip_border};border-radius:${_status_radius};border-collapse:separate;border-spacing:0%;">
                       <tr><td style="padding:6px;" valign="top">
                         <div style="${_FONT_BASE}color:${_status_label};">${_STR_TILE_DUR}</div>
                         <div style="${_FONT_BASE_BOLD}color:${_time_textcol};">${TOTAL_DURATION}</div>
@@ -610,7 +621,7 @@ EOF
   if ! { [ "$CLASS_COUNT" -eq 0 ] && [ "$TRIGGER_COUNT" -eq 0 ]; }; then
     echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"width:100%;margin-top:10px;border:1px solid ${_sep};background:${_plate_bg};border-collapse:separate;border-spacing:0;mso-table-lspace:0pt;mso-table-rspace:0pt;\">" >>"$HTMLLog"
     echo "$(_section_bar "${_STR_PMD_REVIEW}")" >>"$HTMLLog"
-    echo "<tr><td style=\"padding:6px;\">" >>"$HTMLLog"
+    echo "<tr><td style=\"padding:6px;background:${_plate_bg};\">" >>"$HTMLLog"
 
     # Legend + Column explanations
     {
@@ -727,7 +738,7 @@ EOF
     changesetFile=$(find changeSetDeploy/force-app/main/default -type f | egrep -v "customSettings|staticResourceFolders.txt" | wc -l)
     echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:100%;margin-top:8px;border:1px solid ${_chip_border};background:${_plate_bg};border-collapse:separate;border-spacing:0;mso-table-lspace:0pt;mso-table-rspace:0pt;\">" >>"$HTMLLog"
     echo "$(_section_bar "$(_esc <<<"$(_gets '.strings.sections.success_title' 'Changeset file/s ...')")[$changesetFile]")" >>"$HTMLLog"
-    echo "<tr><td style=\"padding:6px;\">" >>"$HTMLLog"
+    echo "<tr><td style=\"padding:6px;background:${_plate_bg};\">" >>"$HTMLLog"
     NUM=1
     while read -r FILE; do
       [ "$FILE" = "src/labels/CustomLabels.labels-meta.xml" ] && FILE="src/env/${SFDC_ORG}/customLabel/CustomLabels.labels-meta.xml"
@@ -738,7 +749,7 @@ EOF
       [ -n "$_GH_ROOT" ] && gh_url="${_GH_ROOT}/tree/${_BRANCH}/${gh_href}" || gh_url=""
 
       echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:5px;border-collapse:separate;border-spacing:0;\">" >>"$HTMLLog"
-      echo "<tr><td style=\"background:${_chip_bg};padding:5px 7px;border:1px solid ${_chip_border};\"><div style=\"margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${_FONT_BASE}\">[$((NUM++))] $( [ -n \"$gh_url\" ] && echo "<a href=\"$gh_url\" style=\"color:inherit;text-decoration:underline;white-space:nowrap;\">$(_esc <<<"$FILE")</a>" || _esc <<<"$FILE")</div></td></tr>" >>"$HTMLLog"
+      echo "<tr><td style=\"background:${_chip_bg};padding:5px 7px;border:1px solid ${_chip_border};\"><div style=\"margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${_FONT_BASE}\">[$((NUM++))] $( [ -n \"$gh_url\" ] && echo "<a href=\"$gh_url\" style=\"color:inherit;text-decoration:underline;white-space:nowrap;background:inherit;\">$(_esc <<<"$FILE")</a>" || _esc <<<"$FILE")</div></td></tr>" >>"$HTMLLog"
       echo "<tr><td style=\"background:#e0e0e0;padding:5px 7px;border-left:1px solid ${_plate_border};border-right:1px solid ${_plate_border};border-bottom:1px solid ${_plate_border};\"><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;${_FONT_BASE}\">Last author... $(git log -1 "$FILE" | sed -e 's/$/\ |/g' | xargs | sed -e 's/| |/|\ Comment:/g')</pre></td></tr>" >>"$HTMLLog"
       echo "</table>" >>"$HTMLLog"
     done < "${DEPLOYEDFILE}"
@@ -746,7 +757,7 @@ EOF
   else
     echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:100%;margin-top:8px;border:1px solid ${_chip_border};background:${_plate_bg};border-collapse:separate;border-spacing:0;mso-table-lspace:0pt;mso-table-rspace:0pt;\">" >>"$HTMLLog"
     echo "$(_section_bar "$(_esc <<<"$(_gets '.strings.sections.failure_title' 'All Component Failures:')")")" >>"$HTMLLog"
-    echo "<tr><td style=\"padding:6px;\">" >>"$HTMLLog"
+    echo "<tr><td style=\"padding:6px;background:${_plate_bg};\">" >>"$HTMLLog"
     i=1
     if [ -f "$LOG.filtered" ]; then
       for failure in $(jq -c '.result.details.componentFailures[]' "$LOG.filtered"); do
@@ -786,11 +797,11 @@ EOF
         gitFile="$(resolve_src_from_json_name "$fileName")"
         if [ -n "$gitFile" ] && [ -n "$_GH_ROOT" ]; then
           gh_href="$(_urlenc_spaces "${gitFile}")"; gh_url="${_GH_ROOT}/tree/${_BRANCH}/${gh_href}"
-          echo "<a href=\"$gh_url\" style=\"color:inherit;text-decoration:underline;white-space:nowrap;\">$(_esc <<<"$fileDisp")</a> -- Error: $errorMsg</div></td></tr>" >>"$HTMLLog"
+          echo "<a href=\"$gh_url\" style=\"color:inherit;text-decoration:underline;white-space:nowrap;background:inherit;\">$(_esc <<<"$fileDisp")</a> -- Error: $errorMsg</div></td></tr>" >>"$HTMLLog"
         else
           if [ -n "$_GH_ROOT" ]; then
             gh_href="$(_urlenc_spaces "${fileDisp}")"; gh_url="${_GH_ROOT}/tree/${_BRANCH}/${gh_href}"
-            echo "<a href=\"$gh_url\" style=\"color:inherit;text-decoration:underline;white-space:nowrap;\">$(_esc <<<"$fileDisp")</a> -- Error: $errorMsg</div></td></tr>" >>"$HTMLLog"
+            echo "<a href=\"$gh_url\" style=\"color:inherit;text-decoration:underline;white-space:nowrap;background:inherit;\">$(_esc <<<"$fileDisp")</a> -- Error: $errorMsg</div></td></tr>" >>"$HTMLLog"
           else
             echo "$(_esc <<<"$fileDisp") -- Error: $errorMsg</div></td></tr>" >>"$HTMLLog"
           fi
@@ -832,7 +843,7 @@ EOF
   EMAIL=${FROM} mutt -e 'set content_type=text/html' \
     -s "---${SFDC_ORG}--- SF-CLI ChangeSet Deploy ${Report} [`TZ=Asia/Kolkata date +%d.%b.%Y` IST - git ${gitlast}-${gitlatest} ]" "${mutt_MAIL_LIST}" < "$HTMLLog"
 
-  echo "DEBUG PMD: classCnt=${CLASS_COUNT} trigCnt=${TRIGGER_COUNT} highCls=${PMD_HIGH_CLS} highTrg=${PMD_HIGH_TRG}" >>"$LOG"
+  echo "DEBUG PMD: classCnt=${CLASS_COUNT} trigCnt=${PMD_HIGH_TRG} highCls=${PMD_HIGH_CLS} highTrg=${PMD_HIGH_TRG}" >>"$LOG"
 
   rm -f "$UI_COLORS_JSON_STRICT" 2>/dev/null
 }
