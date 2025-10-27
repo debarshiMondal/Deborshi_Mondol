@@ -1,10 +1,37 @@
-bash build/script/validation_git.sh prprdnov25 65dc11c2d44342b0176ad8e0dc3c57f0acc1d9db 392ee36b62ce02b0e1d7bb047441842d938398e4
-dos2unix: converting file build/testClasses.txt to file build/log/prprdnov25.27_10_2025_11h31m39s.VALIDATION.txt in Unix format...
-jq: error: Could not open file build/log/prprdnov25.27_10_2025_11h31m39s.VALIDATION.LOG.initial.json]: No such file or directory
-jq: error: Could not open file build/log/prprdnov25.27_10_2025_11h31m39s.report.json: No such file or directory
-jq: error: Could not open file build/log/prprdnov25.27_10_2025_11h31m39s.report.json: No such file or directory
-jq: error: Could not open file build/log/prprdnov25.27_10_2025_11h31m39s.report.json: No such file or directory
-jq: error: Could not open file build/log/prprdnov25.27_10_2025_11h31m39s.report.json: No such file or directory
-jq: error: Could not open file build/log/prprdnov25.27_10_2025_11h31m39s.report.json: No such file or directory
-xargs: unmatched single quote; by default quotes are special to xargs unless you use the -0 option
-xargs: unmatched single quote; by default quotes are special to xargs unless you use the -0 option
+ Class Apttus_Agreement_File_AC : External string does not exist: CLLA
+it says 
+
+Latest 2 GIT log >>> (not found):  Class Apttus_Agreement_File_AC : External string does not exist: CLLA
+Hint: file may be generated/renamed or in a subfolder; searched by prefix and common metadata suffixes.
+
+But Apttus_Agreement_File_AC is there in src
+[codedev@vlsj-deploybox src]$ find . -name Apttus_Agreement_File_AC*
+./classes/Apttus_Agreement_File_AC.cls
+./classes/Apttus_Agreement_File_AC.cls-meta.xml
+[codedev@vlsj-deploybox src]$ 
+[codedev@vlsj-deploybox src]$ git log ./classes/Apttus_Agreement_File_AC.cls
+commit c6c339a37bdf4a6f90becd51397c09437148b781
+Author: Subhodip Sadhu <ssadhu@cadence.com>
+Date:   Wed Oct 1 11:29:11 2025 +0530
+
+    [LMA-383]:(Agreement activation)
+
+commit f31d6e5572889c0342ac620fac0d7a8a71f0fff3
+Author: Ravi Chandra <cravi@cadence.com>
+Date:   Fri Sep 19 11:01:01 2025 +0530
+
+    [LMA-000]:(Lightning code fix merge)
+    
+    [LMA-000]:(Lightning code fix merge)
+
+commit 464a1e89a74938cd22a2df5f4bb49ef475ddb447
+Author: Anjali Kumari <kumarian@cadence.com>
+Date:   Thu Sep 11 13:22:49 2025 +0530
+
+    [LMA-0000]:(recheckin class)
+[codedev@vlsj-deploybox src]$ git log ./classes/Apttus_Agreement_File_AC.cls-meta.xml
+commit 464a1e89a74938cd22a2df5f4bb49ef475ddb447
+Author: Anjali Kumari <kumarian@cadence.com>
+Date:   Thu Sep 11 13:22:49 2025 +0530
+
+    [LMA-0000]:(recheckin class)
