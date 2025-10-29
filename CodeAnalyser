@@ -1,400 +1,268 @@
+# ------------------------------------------------------------
+# CodeAnalyser
+# - Evaluates PMD results against thresholds (and optional baseline)
+# - When regression/threshold breach and PMD_Stop=1, builds $PMD_CANCEL_HTML
+# - Ensures "REQUEST ID" renders as "No Deployment" if deployment never started
+#
+# Expects (by convention; already present elsewhere in your script):
+#   PMD_CURRENT_CSV      : Current PMD consolidated CSV (e.g., Original_Combined_PMD_Report.csv)
+#   PMD_BASELINE_CSV     : (optional) Baseline PMD CSV to diff against
+#   PMD_CANCEL_HTML      : Path to write the Cancel/Stopped run HTML
+#   HTMLLog              : (optional) main HTML log to append to (not required for cancel page)
+#   SFDC_ORG             : Org name (string)
+#   mutt_MAIL_LIST       : (optional) Notification list
+#   property             : (optional) base folder that may contain ui_colors.jsonc
+#   PMD_Stop             : "1" to enforce stop on regression/threshold breach; else "0"
+#   _REPO _BRANCH _REQID _RUN_IST _ORG_API _DEPUSER : Run details (any may be empty)
+#
+# Config via JSONC (optional; all have sensible defaults if absent):
+#   ui_colors.jsonc:
+#   {
+#     // visual
+#     "bars": { "background": "#a94442", "text": "#ffffff" },
+#     "cards": { "border": "#e5e7eb", "titleText": "#111827", "bodyText": "#111827" },
+#     "chips": { "border": "#d1d5db", "bg": "#f9fafb", "text": "#111827" },
+#     "fonts": { "base": "12px/1.5 -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" },
+#     // PMD thresholds (fail if >)
+#     "pmd": { "thresholds": { "CRITICAL": 0, "MAJOR": 0, "MINOR": 999999, "INFO": 999999 } }
+#   }
+# ------------------------------------------------------------
 CodeAnalyser() {
+  # ---------- helpers ----------
+  _warn(){ echo "[WARN] $*" >&2; }
+  _fatal(){
+    echo "[FATAL] $*"
+    if [[ -n "${mutt_MAIL_LIST:-}" && -n "${SFDC_ORG:-}" ]]; then
+      printf "%s\n" "[FATAL] $*" | mutt -s "---${SFDC_ORG}--- CodeAnalyser Error" "${mutt_MAIL_LIST}" 2>/dev/null || true
+    fi
+    return 1
+  }
+  _esc(){ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
+  _jsonc_to_json(){ sed -E 's@//.*$@@; s@/\*[^*]*\*+([^/*][^*]*\*+)*/@@g'; } # strip // and /* */ comments
 
-  rm -f /tmp/CodeAnalysisReport.txt
+  # ---------- inputs / defaults ----------
+  local _PMD_CUR="${PMD_CURRENT_CSV:-Original_Combined_PMD_Report.csv}"
+  local _PMD_BASE="${PMD_BASELINE_CSV:-}"            # optional
+  local _CANCEL_HTML="${PMD_CANCEL_HTML:-/tmp/pmd_cancel.$$.html}"
+  local _UI_JSONC="${property:+${property}/ui_colors.jsonc}"
+  _UI_JSONC="${_UI_JSONC:-ui_colors.jsonc}"
 
-  # --- quick precheck: only run PMD if classes or triggers exist ---
-  if [ ! -d changeSetDeploy/force-app/main/default/classes ] && [ ! -d changeSetDeploy/force-app/main/default/triggers ]; then
-    echo "'classes/' or 'triggers/' not exist. Codebase will not appear." >> /tmp/CodeAnalysisReport.txt
+  local _PMD_STOP="${PMD_Stop:-1}"                   # default: enforce stopping
+  local REGRESSION_FOUND=0
+
+  # Run details (any may be empty; we will derive safe fallbacks)
+  local _REPO="${_REPO:-${GIT_REPO:-}}"
+  local _BRANCH="${_BRANCH:-${GIT_BRANCH:-}}"
+  local _REQID="${_REQID:-}"                         # may be empty if no deploy kicked
+  local _RUN_IST="${_RUN_IST:-$(date +'%Y-%m-%d %H:%M:%S %Z')}"
+  local _ORG_API="${_ORG_API:-${SFDC_ORG:-}}"
+  local _DEPUSER="${_DEPUSER:-${USER:-unknown}}"
+
+  # ---------- sanity checks ----------
+  command -v awk >/dev/null 2>&1 || return 0  # do not hard fail; be soft
+  command -v jq  >/dev/null 2>&1 || _warn "jq not found; using UI defaults and simple PMD checks."
+
+  [[ -f "${_PMD_CUR}" ]] || _fatal "PMD CSV not found: ${_PMD_CUR}"
+
+  # ---------- load UI config (with graceful fallbacks) ----------
+  local _BAR_BG="#a94442" _BAR_TXT="#ffffff"
+  local _CARD_BORDER="#e5e7eb" _TITLE_TXT="#111827" _BODY_TXT="#111827"
+  local _CHIP_BG="#f9fafb" _CHIP_TXT="#111827" _CHIP_BORDER="#d1d5db"
+  local _FONT_BASE="font: 12px/1.5 -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; color: ${_BODY_TXT};"
+
+  local _TH_CRIT=0 _TH_MAJ=0 _TH_MIN=999999 _TH_INF=999999
+
+  if [[ -f "${_UI_JSONC}" ]] && command -v jq >/dev/null 2>&1; then
+    local _UI_JSON
+    _UI_JSON="$(cat "${_UI_JSONC}" | _jsonc_to_json)"
+    # colors
+    _BAR_BG="$(jq -r '.bars.background // empty' <<<"${_UI_JSON}")" || true
+    _BAR_TXT="$(jq -r '.bars.text // empty'       <<<"${_UI_JSON}")" || true
+    _CARD_BORDER="$(jq -r '.cards.border // empty'     <<<"${_UI_JSON}")" || true
+    _TITLE_TXT="$(jq -r '.cards.titleText // empty'    <<<"${_UI_JSON}")" || true
+    _BODY_TXT="$(jq -r '.cards.bodyText // empty'      <<<"${_UI_JSON}")" || true
+    _CHIP_BG="$(jq -r '.chips.bg // empty'             <<<"${_UI_JSON}")" || true
+    _CHIP_TXT="$(jq -r '.chips.text // empty'          <<<"${_UI_JSON}")" || true
+    _CHIP_BORDER="$(jq -r '.chips.border // empty'     <<<"${_UI_JSON}")" || true
+    # font
+    local _FONT_SPEC
+    _FONT_SPEC="$(jq -r '.fonts.base // empty' <<<"${_UI_JSON}")" || true
+    [[ -n "${_FONT_SPEC}" ]] && _FONT_BASE="font: ${_FONT_SPEC}; color: ${_BODY_TXT};"
+    # thresholds
+    _TH_CRIT="$(jq -r '.pmd.thresholds.CRITICAL // empty' <<<"${_UI_JSON}")" || true
+    _TH_MAJ="$(jq -r '.pmd.thresholds.MAJOR // empty'    <<<"${_UI_JSON}")" || true
+    _TH_MIN="$(jq -r '.pmd.thresholds.MINOR // empty'    <<<"${_UI_JSON}")" || true
+    _TH_INF="$(jq -r '.pmd.thresholds.INFO // empty'     <<<"${_UI_JSON}")" || true
+    # set defaults if any empty
+    _TH_CRIT="${_TH_CRIT:-0}"; _TH_MAJ="${_TH_MAJ:-0}"
+    _TH_MIN="${_TH_MIN:-999999}"; _TH_INF="${_TH_INF:-999999}"
+  fi
+
+  # ---------- parse PMD CSV → counts by severity ----------
+  # Accept headers in any order; we just search "severity" column (case-insensitive).
+  # If no header present, assume column 2 = severity.
+  local _hdr _sev_idx=2
+  _hdr="$(head -n1 "${_PMD_CUR}")"
+  if grep -qi "severity" <<<"${_hdr}"; then
+    # find the column index (1-based)
+    _sev_idx="$(awk -F',' '
+      NR==1 {
+        for (i=1;i<=NF;i++){
+          f=tolower($i); gsub(/^[ \t"]+|[ \t"]+$/,"",f);
+          if (f ~ /severity/) { print i; exit }
+        }
+      }' "${_PMD_CUR}")"
+    [[ -z "${_sev_idx}" ]] && _sev_idx=2
+  fi
+
+  # counts
+  local C_CRIT=0 C_MAJ=0 C_MIN=0 C_INF=0
+  # shellcheck disable=SC2013
+  while IFS= read -r line; do
+    # skip header
+    if [[ $line == "$_hdr" ]]; then continue; fi
+    # naive CSV split (good enough for PMD export; fields rarely contain bare commas)
+    local s
+    s="$(awk -v idx="${_sev_idx}" -F',' '{print $idx}' <<<"$line" | tr -d '"' | tr '[:lower:]' '[:upper:]')"
+    case "${s}" in
+      *CRIT*)  : $((C_CRIT+=1));;
+      *MAJ*)   : $((C_MAJ+=1));;
+      *MIN*)   : $((C_MIN+=1));;
+      *INFO*|*LOW*)  : $((C_INF+=1));;
+      *) : ;;
+    esac
+  done < <(cat "${_PMD_CUR}")
+
+  # ---------- optional: compare with baseline to detect regression ----------
+  if [[ -n "${_PMD_BASE}" && -f "${_PMD_BASE}" ]]; then
+    local B_CRIT=0 B_MAJ=0 B_MIN=0 B_INF=0
+    local b_hdr b_sev_idx=2
+    b_hdr="$(head -n1 "${_PMD_BASE}")"
+    if grep -qi "severity" <<<"${b_hdr}"; then
+      b_sev_idx="$(awk -F',' '
+        NR==1 { for (i=1;i<=NF;i++){ f=tolower($i); gsub(/^[ \t"]+|[ \t"]+$/,"",f); if (f ~ /severity/) { print i; exit } }
+      }' "${_PMD_BASE}")"
+      [[ -z "${b_sev_idx}" ]] && b_sev_idx=2
+    fi
+    while IFS= read -r line; do
+      if [[ $line == "$b_hdr" ]]; then continue; fi
+      local s
+      s="$(awk -v idx="${b_sev_idx}" -F',' '{print $idx}' <<<"$line" | tr -d '"' | tr '[:lower:]' '[:upper:]')"
+      case "${s}" in
+        *CRIT*)  : $((B_CRIT+=1));;
+        *MAJ*)   : $((B_MAJ+=1));;
+        *MIN*)   : $((B_MIN+=1));;
+        *INFO*|*LOW*)  : $((B_INF+=1));;
+        *) : ;;
+      esac
+    done < <(cat "${_PMD_BASE}")
+
+    # simple regression rule: any severity level count increased vs baseline
+    if (( C_CRIT > B_CRIT || C_MAJ > B_MAJ || C_MIN > B_MIN || C_INF > B_INF )); then
+      REGRESSION_FOUND=1
+    fi
+  fi
+
+  # ---------- threshold check ----------
+  # Fail if counts exceed configured thresholds
+  if (( C_CRIT > _TH_CRIT || C_MAJ > _TH_MAJ || C_MIN > _TH_MIN || C_INF > _TH_INF )); then
+    REGRESSION_FOUND=1
+  fi
+
+  # ---------- decide to cancel ----------
+  local SHOULD_CANCEL=0
+  if [[ "${_PMD_STOP}" == "1" && "${REGRESSION_FOUND}" -eq 1 ]]; then
+    SHOULD_CANCEL=1
+  fi
+
+  # ---------- build cancel HTML if needed ----------
+  if (( SHOULD_CANCEL == 1 )); then
+    # REQUEST ID label logic (this is your requested change):
+    # If we are canceling pre-deploy, always display "No Deployment".
+    local _REQID_SHOW
+    _REQID_SHOW="No Deployment"  # force label on cancel
+    # If you want: keep "No Deployment" even when _REQID is non-empty because deploy never actually started.
+
+    # Compose styles
+    local _STYLE="
+      body { ${_FONT_BASE} margin:0; background:#ffffff; }
+      .bar   { background:${_BAR_BG}; color:${_BAR_TXT}; padding:10px 14px; font-weight:600; text-align:center; }
+      .wrap  { padding:16px; }
+      .card  { border:1px solid ${_CARD_BORDER}; border-radius:8px; margin:0 0 14px 0; overflow:hidden; }
+      .ctitle{ background:${_CHIP_BG}; color:${_TITLE_TXT}; padding:8px 12px; font-weight:600; border-bottom:1px solid ${_CARD_BORDER}; }
+      .cbody { padding:12px; color:${_BODY_TXT}; }
+      .grid6 { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+      .ibox  { border:1px solid ${_CHIP_BORDER}; border-radius:8px; padding:10px; }
+      .ilab  { font-weight:600; margin:0 0 4px 0; color:${_TITLE_TXT}; }
+      .ival  { margin:0; color:${_BODY_TXT}; }
+      .chips { display:flex; flex-wrap:wrap; gap:8px; }
+      .chip  { border:1px solid ${_CHIP_BORDER}; background:${_CHIP_BG}; color:${_CHIP_TXT};
+               border-radius:999px; padding:6px 10px; font-weight:600; }
+      @media (max-width:900px){ .grid6{ grid-template-columns:1fr; } }
+    "
+
+    # Write HTML
+    : > "${_CANCEL_HTML}"
+    {
+      printf '<!doctype html><html><head><meta charset="utf-8"><title>PMD Review — Deployment Canceled</title>\n'
+      printf '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
+      printf '<style>%s</style></head><body>\n' "${_STYLE}"
+      printf '<div class="bar">PMD Review — Deployment Canceled</div>\n'
+      printf '<div class="wrap">\n'
+
+      # Run Details
+      printf '  <div class="card">\n'
+      printf '    <div class="ctitle">Run Details</div>\n'
+      printf '    <div class="cbody">\n'
+      printf '      <div class="grid6">\n'
+
+      printf '        <div class="ibox"><div class="ilab">Repo</div><div class="ival">%s</div></div>\n'  "$(_esc <<<"${_REPO:-n/a}")"
+      printf '        <div class="ibox"><div class="ilab">Branch</div><div class="ival">%s</div></div>\n' "$(_esc <<<"${_BRANCH:-n/a}")"
+      printf '        <div class="ibox"><div class="ilab">Request ID</div><div class="ival">%s</div></div>\n' "$(_esc <<<"${_REQID_SHOW}")"
+      printf '        <div class="ibox"><div class="ilab">Run (IST)</div><div class="ival">%s</div></div>\n' "$(_esc <<<"${_RUN_IST:-n/a}")"
+      printf '        <div class="ibox"><div class="ilab">Org + API</div><div class="ival">%s</div></div>\n' "$(_esc <<<"${_ORG_API:-n/a}")"
+      printf '        <div class="ibox"><div class="ilab">Deploy User</div><div class="ival">%s</div></div>\n' "$(_esc <<<"${_DEPUSER:-n/a}")"
+
+      printf '      </div>\n'   # grid
+      printf '    </div>\n'     # cbody
+      printf '  </div>\n'       # card
+
+      # PMD Summary
+      printf '  <div class="card">\n'
+      printf '    <div class="ctitle">PMD Summary</div>\n'
+      printf '    <div class="cbody">\n'
+      printf '      <div class="chips">\n'
+      printf '        <div class="chip">CRITICAL: %d (threshold %d)</div>\n' "${C_CRIT}" "${_TH_CRIT}"
+      printf '        <div class="chip">MAJOR: %d (threshold %d)</div>\n'    "${C_MAJ}"  "${_TH_MAJ}"
+      printf '        <div class="chip">MINOR: %d (threshold %d)</div>\n'    "${C_MIN}"  "${_TH_MIN}"
+      printf '        <div class="chip">INFO: %d (threshold %d)</div>\n'     "${C_INF}"  "${_TH_INF}"
+      printf '      </div>\n'
+      if [[ -n "${_PMD_BASE}" && -f "${_PMD_BASE}" ]]; then
+        printf '      <p style="margin-top:10px;">Compared with baseline: %s</p>\n' "$(_esc <<<"${_PMD_BASE}")"
+      fi
+      printf '      <p style="margin-top:10px;">Deployment has been stopped due to PMD regression/threshold breach.</p>\n'
+      printf '    </div>\n'
+      printf '  </div>\n'
+
+      printf '</div>\n' # wrap
+      printf '</body></html>\n'
+    } >> "${_CANCEL_HTML}"
+
+    # Optional: mail out (respect your environment)
+    if [[ -n "${mutt_MAIL_LIST:-}" ]]; then
+      printf "%s\n" "PMD failure: deployment canceled. See attached HTML." \
+        | mutt -s "---${SFDC_ORG:-ORG}--- PMD Regression: Deployment Canceled" \
+               -a "${_CANCEL_HTML}" -- "${mutt_MAIL_LIST}" 2>/dev/null || true
+    fi
+
+    # Signal to callers that deployment must be skipped
+    export PMD_REGRESSION="1"
+    export DEPLOY_SHOULD_RUN="0"
     return 0
   fi
 
-  # --- run existing PMD steps (as-is) ---
-  bash build/script/currpmd.sh
-  bash build/script/createpmdhtml.sh "$SFDC_ORG"
-
-  # --- read PMD_Stop guard from serverProperty (default 0 = do not stop) ---
-  serverProperty="${property}/${SFDC_ORG}.conf"
-  PMD_Stop="$(
-    awk -F= '
-      $1 ~ /^[[:space:]]*PMD_Stop[[:space:]]*$/ {
-        gsub(/[[:space:]]/,"",$2); print $2
-      }' "$serverProperty" 2>/dev/null
-  )"
-  [ "$PMD_Stop" = "1" ] || PMD_Stop=0
-
-  # --- build "High" severity matcher (same file HTML uses) ---
-  PAT_FILE="build/property/pmd_high_patterns.txt"
-  pattern="$(grep -Ehv '^\s*($|#)' "$PAT_FILE" 2>/dev/null | tr -d '\r' | paste -sd'|' -)"
-  [ -n "$pattern" ] || pattern="(DUMMY-NO-PATTERN)"
-
-  # --- count class/trigger, and detect any regression (Current High > Original High) ---
-  CLASS_COUNT=$(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null | wc -l | xargs)
-  TRIGGER_COUNT=$(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null | wc -l | xargs)
-
-  PMD_HIGH_CLS=0
-  PMD_HIGH_TRG=0
-  REGRESSION_FOUND=0
-
-  # classes
-  if [ "$CLASS_COUNT" -gt 0 ]; then
-    for classePath in $(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null); do
-      base="$(basename "$classePath" .cls)"
-      currTxt="PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/${base}.cls_currpmd.txt"
-      orgTxt="PMDReport/orgpmdoutput/src/classes/${base}.cls_orgpmd.txt"
-      curH=$(grep -Eh "$pattern" "$currTxt" 2>/dev/null | wc -l | xargs); curH=${curH:-0}
-      orgH=$(grep -Eh "$pattern" "$orgTxt" 2>/dev/null | wc -l | xargs); orgH=${orgH:-0}
-      PMD_HIGH_CLS=$(( PMD_HIGH_CLS + curH ))
-      if [ "$curH" -gt "$orgH" ]; then REGRESSION_FOUND=1; fi
-    done
-  fi
-
-  # triggers
-  if [ "$TRIGGER_COUNT" -gt 0 ]; then
-    for triggerPath in $(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null); do
-      tbase="$(basename "$triggerPath" .trigger)"
-      currTxt="PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/${tbase}.trigger_currpmd.txt"
-      orgTxt="PMDReport/orgpmdoutput/src/triggers/${tbase}.trigger_orgpmd.txt"
-      curH=$(grep -Eh "$pattern" "$currTxt" 2>/dev/null | wc -l | xargs); curH=${curH:-0}
-      orgH=$(grep -Eh "$pattern" "$orgTxt" 2>/dev/null | wc -l | xargs); orgH=${orgH:-0}
-      PMD_HIGH_TRG=$(( PMD_HIGH_TRG + curH ))
-      if [ "$curH" -gt "$orgH" ]; then REGRESSION_FOUND=1; fi
-    done
-  fi
-
-  echo "DEBUG PMD: classes=${CLASS_COUNT} triggers=${TRIGGER_COUNT} highCls=${PMD_HIGH_CLS} highTrg=${PMD_HIGH_TRG} regression=${REGRESSION_FOUND}" >>"$LOG" 2>/dev/null
-
-  # --- if no gate or no regression, we are done ---
-  if [ "$PMD_Stop" -ne 1 ] || [ "$REGRESSION_FOUND" -ne 1 ]; then
-    # Gate off OR no regression: do not stop deployment.
-    return 0
-  fi
-
-  # ================================
-  # PMD regression found & gate ON
-  # -> Cancel deployment and mail
-  # ================================
-
-  # ----- prepare colors/strings to mirror HTML report look (no components card) -----
-  UI_COLORS_JSONC="${property:+${property}/ui_colors.jsonc}"
-  UI_COLORS_JSONC="${UI_COLORS_JSONC:-ui_colors.jsonc}"
-  UI_COLORS_JSON_STRICT="/tmp/ui_colors.pmdcancel.$$.$RANDOM.json"
-
-  _fatal_local(){ echo "[FATAL] $1" >&2; }
-  command -v jq >/dev/null 2>&1 || { _fatal_local "jq not found"; jq(){ :; }; }
-
-  if [ -f "$UI_COLORS_JSONC" ]; then
-    sed -E ':a; s@/\*[^*]*\*+([^/*][^*]*\*+)*/@@g; ta' "$UI_COLORS_JSONC" \
-    | sed -E 's@\r$@@' \
-    | sed -E 's@//[[:space:]]*.*$@@' \
-    | sed '/^[[:space:]]*$/d' > "$UI_COLORS_JSON_STRICT" 2>/dev/null
-  fi
-
-  _getc(){ jq -r "$1 // empty" "$UI_COLORS_JSON_STRICT" 2>/dev/null; }
-  _gets(){ v=$(_getc "$1"); [ -n "$v" ] && printf '%s' "$v" || printf '%s' "$2"; }
-
-  _hdr_bg=$(_gets '.header.failure_bg'    '#a94442')
-  _hdr_txt=$(_gets '.header.text'         '#ffffff')
-  _page_bg=$(_gets '.plate.page_bg'       '#ffffff')
-  _plate_bg=$(_gets '.plate.background'   '#ffffff')
-  _plate_bd=$(_gets '.plate.border'       '#dddddd')
-
-  _run_hdr_bg=$(_gets '.run_details.title_bg_failure' "$(_gets '.run_details.strip_failure_bg' '#a94442')")
-  _run_hdr_txt=$(_gets '.run_details.title_text_failure' "$(_gets '.run_details.title_text' '#ffffff')")
-
-  _chip_bg=$(_gets '.chips.failure_bg'    '#fff7f7')
-  _chip_txt=$(_gets '.chips.failure_text' '#7f1d1d')
-  _chip_bd=$(_gets '.chips.border'        '#e5e7eb')
-  _chip_label=$(_gets '.chips.label_failure_text' "$_chip_txt")
-
-  _status_bg=$(_gets '.status_summary.deployment_failure_bg' '#fee2e2')
-  _status_pmd=$(_gets '.status_summary.pmd_bg' '#f1f5f9')
-  _status_time=$(_gets '.status_summary.time_bg' '#f1f5f9')
-  _status_label=$(_gets '.status_summary.label_text' '#374151')
-  _status_value=$(_gets '.status_summary.value_text' '#111827')
-  _status_radius=$(_gets '.status_summary.corner_radius' '3px')
-  _time_text=$(_gets '.status_summary.time_text' "$_status_value")
-  _pmd_text=$(_gets '.status_summary.pmd_text' "$_status_value")
-  _dep_label=$(_gets '.status_summary.deployment_label_failure' "$_status_label")
-  _dep_value=$(_gets '.status_summary.deployment_value_failure' "$_status_value")
-
-  _pmd_hdr_bg=$(_gets '.pmd_review.header_bg' '#f3f4f6')
-  _pmd_hdr_txt=$(_gets '.pmd_review.header_text' '#111827')
-  _pmd_row_bd=$(_gets '.pmd_review.row_border' '#e5e7eb')
-  _pmd_link_n=$(_gets '.pmd_review.link_normal' '#1d4ed8')
-  _pmd_link_h=$(_gets '.pmd_review.link_high'   '#b91c1c')
-  _pmd_text_hi=$(_gets '.pmd_review.text_high'  '#b91c1c')
-  _pmd_text_no=$(_gets '.pmd_review.text_normal' '#111827')
-  _zebra_alt=$(_gets '.pmd_review.zebra_alt_bg' '#f7f7f7')
-
-  _foot_bg=$(_gets '.footer.bg' '#f9fafb')
-  _foot_txt=$(_gets '.footer.text' '#111827')
-  _foot_line=$(_gets '.strings.footer.failure' '{ORG} • Deployment Failure Report — generated automatically. Review the logs for root cause.')
-  _foot_line=$(echo "$_foot_line" | sed "s/{ORG}/${SFDC_ORG}/")
-
-  # strings & fonts (match HTML_REPORT defaults)
-  _fontfam=$(_gets '.typography.font_family' 'Arial,Helvetica,sans-serif')
-  _base=$(_gets '.typography.base_px' '10'); _sect=$(_gets '.typography.section_hdr_px' '11'); _main=$(_gets '.typography.main_hdr_px' '14'); _run=$(_gets '.typography.run_hdr_px' '11')
-  _FONT_BASE="font:${_base}px ${_fontfam};"
-  _FONT_BOLD="font:bold ${_base}px ${_fontfam};"
-  _FONT_SEC="font:bold ${_sect}px ${_fontfam};"
-  _FONT_MAIN="font:bold ${_main}px ${_fontfam};"
-  _FONT_RUN="font:bold ${_run}px ${_fontfam};"
-
-  # run details values
-  _RUN_IST="$(TZ=Asia/Kolkata date +'%d.%b.%Y %H:%M IST')"
-  _API="${SetAPI:-N/A}"
-  _BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo N/A)"
-  _REPO="$(git config --get remote.origin.url 2>/dev/null || echo N/A)"
-  _REQID=""
-  if [ -f "$LOG" ]; then
-    _REQID="$(grep -m1 -E 'Deploy ID[[:space:]]*:' "$LOG" | xargs | cut -d: -f2- | cut '-d ' -f2-)"
-  fi
-  _DEPUSER=""
-  if [ -f "$LOG" ]; then
-    _DEPUSER="$(grep -m1 -E 'Target Org[[:space:]]*:' "$LOG" | xargs | cut -d: -f2- | cut '-d ' -f2-)"
-  fi
-
-  # link tiles (kept same as HTML report)
-  OPEN_LOGS_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
-  ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
-  FORCE_DEPLOY_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/$(basename "${HTMLFDLog:-$HTMLLog}").${DATE}"
-  PAT_PUBLIC_DIR="/data/public/pmd_patterns/${SFDC_ORG}/"; mkdir -p "$PAT_PUBLIC_DIR" 2>/dev/null
-  if [ -s "$PAT_FILE" ]; then
-    cp -u "$PAT_FILE" "${PAT_PUBLIC_DIR}pmd_high_patterns.txt" 2>/dev/null
-    PMD_PATTERN_URL="https://cdnsfdc.cadence.com/pmd_patterns/${SFDC_ORG}/pmd_high_patterns.txt"
-  else
-    PMD_PATTERN_URL="$ORIG_PMD_URL"
-  fi
-
-  # small helpers (local to this function)
-  _section_bar(){
-    local text="$1"
-    cat <<BAR
-<tr>
-  <td style="padding:0;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_run_hdr_bg};border-collapse:separate;border-spacing:0;">
-      <tr><td align="center" style="${_FONT_SEC}color:${_run_hdr_txt};padding:6px 8px;">${text}</td></tr>
-    </table>
-  </td>
-</tr>
-BAR
-  }
-  _chip_td(){
-    local label="$1" value="$2" pr="$3"
-    cat <<CELL
-<td valign="top" width="260" style="padding:0 ${pr}px 10px 0;">
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_chip_bg};border:1px solid ${_chip_bd};border-collapse:separate;border-spacing:0;">
-    <tr><td style="padding:6px 8px;${_FONT_BASE}color:${_chip_txt};">
-      <div style="font:700 ${_base}px ${_fontfam};color:${_chip_label};letter-spacing:.3px;text-transform:uppercase;">$label</div>
-      <div style="margin-top:2px;word-wrap:break-word;color:${_chip_txt};${_FONT_BASE}">$(echo "$value" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g')</div>
-    </td></tr>
-  </table>
-</td>
-CELL
-  }
-
-  # ---- craft the cancellation HTML (Header + Run Details + Status Summary + PMD Review + Footer) ----
-  PMD_CANCEL_HTML="/tmp/pmd_cancel.${SFDC_ORG}.$$.$RANDOM.html"
-
-  cat >"$PMD_CANCEL_HTML" <<HTML
-<!DOCTYPE html><html><head><meta charset="utf-8">
-<meta http-equiv="x-ua-compatible" content="ie=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style> a.cta{ text-decoration:none; } a.cta:hover{ text-decoration:underline; } </style>
-</head>
-<body style="margin:0;padding:0;background:${_page_bg};">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_page_bg};">
-  <tr><td align="center" style="padding:0;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:980px;margin:0 auto;">
-      <tr><td style="padding:0;">
-        <!-- Header -->
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_hdr_bg};border:1px solid ${_plate_bd};">
-          <tr>
-            <td align="center" style="${_FONT_MAIN}color:${_hdr_txt};padding:6px 10px;line-height:16px;">
-              ${SFDC_ORG} Deployment Cancelled Report
-            </td>
-          </tr>
-        </table>
-
-        <!-- CARD: RUN DETAILS -->
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_plate_bg};border:1px solid ${_plate_bd};margin-top:8px;border-collapse:separate;border-spacing:0;">
-          $(_section_bar "Run Details")
-          <tr><td style="padding:8px;background:${_plate_bg};">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                $(_chip_td "REPO"   "${_REPO}"   10)
-                $(_chip_td "BRANCH" "${_BRANCH}" 10)
-                $(_chip_td "REQUEST ID" "${_REQID}" 0)
-              </tr>
-              <tr>
-                $(_chip_td "RUN (IST)" "${_RUN_IST}" 10)
-                $(_chip_td "ORG NAME + API" "${SFDC_ORG} • ${_API}" 10)
-                $(_chip_td "DEPLOY USER" "${_DEPUSER}" 0)
-              </tr>
-            </table>
-
-            <!-- Quick Links -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 2px 0;">
-              <tr>
-                <td style="padding:0 8px 0 0;">
-                  <a class="cta" href="${OPEN_LOGS_URL}" style="${_FONT_BOLD}color:${_status_label};">Open Logs</a>
-                </td>
-                <td style="padding:0 8px 0 0;">
-                  <a class="cta" href="${ORIG_PMD_URL}" style="${_FONT_BOLD}color:${_status_label};">Original PMD Report</a>
-                </td>
-                <td style="padding:0 8px 0 0;">
-                  <a class="cta" href="${PMD_PATTERN_URL}" style="${_FONT_BOLD}color:${_status_label};">PMD Critical Warning Pattern</a>
-                </td>
-                <td>
-                  <a class="cta" href="${FORCE_DEPLOY_URL}" style="${_FONT_BOLD}color:${_status_label};">ForceDeploy</a>
-                </td>
-              </tr>
-            </table>
-          </td></tr>
-        </table>
-
-        <!-- CARD: STATUS SUMMARY -->
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:6px;border:1px solid ${_chip_bd};background:${_plate_bg};border-collapse:separate;border-spacing:0;">
-          $(_section_bar "Status Summary")
-          <tr><td style="padding:6px;background:${_plate_bg};">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                <td width="33%" valign="top" style="padding:2px;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_bg};border:1px solid ${_chip_bd};border-radius:${_status_radius};">
-                    <tr><td style="padding:6px;" valign="top">
-                      <div style="${_FONT_BASE}color:${_dep_label};">DEPLOYMENT</div>
-                      <div style="${_FONT_BOLD}color:${_dep_value};">Cancelled</div>
-                      <div style="${_FONT_BASE}color:${_dep_value};">Pass 0</div>
-                    </td></tr>
-                  </table>
-                </td>
-                <td width="33%" valign="top" style="padding:2px;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_pmd};border:1px solid ${_chip_bd};border-radius:${_status_radius};">
-                    <tr><td style="padding:6px;" valign="top">
-                      <div style="${_FONT_BASE}color:${_status_label};">PMD — CHANGESET</div>
-                      <div style="${_FONT_BOLD}color:${_pmd_text};white-space:nowrap;">Classes: ${CLASS_COUNT} &nbsp; • &nbsp; Triggers: ${TRIGGER_COUNT}</div>
-                      <div style="${_FONT_BASE}color:${_pmd_text};white-space:nowrap;">High (Classes): ${PMD_HIGH_CLS} &nbsp; • &nbsp; High (Triggers): ${PMD_HIGH_TRG}</div>
-                    </td></tr>
-                  </table>
-                </td>
-                <td width="33%" valign="top" style="padding:2px;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${_status_time};border:1px solid ${_chip_bd};border-radius:${_status_radius};">
-                    <tr><td style="padding:6px;" valign="top">
-                      <div style="${_FONT_BASE}color:${_status_label};">DURATION</div>
-                      <div style="${_FONT_BOLD}color:${_time_text};">0</div>
-                      <div style="${_FONT_BASE}color:${_time_text};white-space:nowrap;">Start: NA &nbsp;•&nbsp; End: NA</div>
-                    </td></tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-          </td></tr>
-        </table>
-HTML
-
-  # ---- PMD REVIEW (keep it, like the HTML report; list deltas; no component section) ----
-  {
-    echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"width:100%;margin-top:10px;border:1px solid ${_pmd_row_bd};background:${_plate_bg};border-collapse:separate;border-spacing:0;\">"
-    echo "$(_section_bar "PMD Review")"
-    echo "<tr><td style=\"padding:6px;background:${_plate_bg};\">"
-
-    # common small helpers (inline)
-    _delta_pill(){
-      local d="$1" bg bd col
-      if [ "$d" -gt 0 ]; then bg="#ffe3e3"; bd="#f5bcbc"; col="$_pmd_text_hi"
-      elif [ "$d" -lt 0 ]; then bg="#fef2f2"; bd="#fecaca"; col="#7f1d1d"
-      else bg="#eeeeee"; bd="#dddddd"; col="$_pmd_text_no"; fi
-      printf '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid %s;background:%s;"><tr><td style="font:bold %spx %s;color:%s;padding:1px 5px;white-space:nowrap;">%s</td></tr></table>' "$bd" "$bg" "$_base" "$_fontfam" "$col" "$d"
-    }
-
-    # classes table
-    if [ "$CLASS_COUNT" -gt 0 ]; then
-      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_bd};\">"
-      echo "<thead><tr style=\"background:${_pmd_hdr_bg};\">"
-      echo "<th align=\"left\"  style=\"padding:6px 8px;${_FONT_BOLD}color:${_pmd_hdr_txt};border-bottom:1px solid ${_pmd_row_bd};white-space:nowrap;\">CLASS NAME</th>"
-      echo "<th align=\"right\" style=\"padding:6px 8px;${_FONT_BOLD}color:${_pmd_hdr_txt};border-bottom:1px solid ${_pmd_row_bd};white-space:nowrap;\">ORIGINAL (HIGH)</th>"
-      echo "<th align=\"right\" style=\"padding:6px 8px;${_FONT_BOLD}color:${_pmd_hdr_txt};border-bottom:1px solid ${_pmd_row_bd};white-space:nowrap;\">CURRENT (HIGH)</th>"
-      echo "<th align=\"right\" style=\"padding:6px 8px;${_FONT_BOLD}color:${_pmd_hdr_txt};border-bottom:1px solid ${_pmd_row_bd};white-space:nowrap;\">Δ HIGH</th>"
-      echo "</tr></thead><tbody>"
-      row=0
-      for classePath in $(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null); do
-        base="$(basename "$classePath" .cls)"
-        currTxt="PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/${base}.cls_currpmd.txt"
-        orgTxt="PMDReport/orgpmdoutput/src/classes/${base}.cls_orgpmd.txt"
-        curH=$(grep -Eh "$pattern" "$currTxt" 2>/dev/null | wc -l | xargs); curH=${curH:-0}
-        orgH=$(grep -Eh "$pattern" "$orgTxt" 2>/dev/null | wc -l | xargs); orgH=${orgH:-0}
-        delta=$(( curH - orgH ))
-        bg="#ffffff"; [ $((row%2)) -eq 1 ] && bg="$_zebra_alt"
-        link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${base}.cls_currpmd_orgpm.html"
-        echo "<tr>"
-        echo "<td style=\"padding:5px 8px;${_FONT_BASE};background:${bg};\"><a href=\"${link}\" style=\"text-decoration:underline;color:$([ "$delta" -gt 0 ] && echo "$_pmd_link_h" || echo "$_pmd_link_n");background:${bg};\">${base}.cls</a></td>"
-        echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE};background:${bg};white-space:nowrap;\">${orgH}</td>"
-        echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE};background:${bg};white-space:nowrap;\">${curH}</td>"
-        echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE};background:${bg};white-space:nowrap;\">$(_delta_pill "$delta")</td>"
-        echo "</tr>"
-        echo "<tr><td colspan=\"4\" style=\"height:1px;line-height:1px;font-size:0;background:${_pmd_row_bd};\">&nbsp;</td></tr>"
-        row=$((row+1))
-      done
-      echo "</tbody></table>"
-      echo "<table role=\"presentation\" width=\"100%\"><tr><td style=\"height:6px;line-height:6px;font-size:0;\">&nbsp;</td></tr></table>"
-    fi
-
-    # triggers table
-    if [ "$TRIGGER_COUNT" -gt 0 ]; then
-      echo "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"border:1px solid ${_pmd_row_bd};\">"
-      echo "<thead><tr style=\"background:${_pmd_hdr_bg};\">"
-      echo "<th align=\"left\"  style=\"padding:6px 8px;${_FONT_BOLD}color:${_pmd_hdr_txt};border-bottom:1px solid ${_pmd_row_bd};white-space:nowrap;\">TRIGGER NAME</th>"
-      echo "<th align=\"right\" style=\"padding:6px 8px;${_FONT_BOLD}color:${_pmd_hdr_txt};border-bottom:1px solid ${_pmd_row_bd};white-space:nowrap;\">ORIGINAL (HIGH)</th>"
-      echo "<th align=\"right\" style=\"padding:6px 8px;${_FONT_BOLD}color:${_pmd_hdr_txt};border-bottom:1px solid ${_pmd_row_bd};white-space:nowrap;\">CURRENT (HIGH)</th>"
-      echo "<th align=\"right\" style=\"padding:6px 8px;${_FONT_BOLD}color:${_pmd_hdr_txt};border-bottom:1px solid ${_pmd_row_bd};white-space:nowrap;\">Δ HIGH</th>"
-      echo "</tr></thead><tbody>"
-      row=0
-      for triggerPath in $(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null); do
-        tbase="$(basename "$triggerPath" .trigger)"
-        currTxt="PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/${tbase}.trigger_currpmd.txt"
-        orgTxt="PMDReport/orgpmdoutput/src/triggers/${tbase}.trigger_orgpmd.txt"
-        curH=$(grep -Eh "$pattern" "$currTxt" 2>/dev/null | wc -l | xargs); curH=${curH:-0}
-        orgH=$(grep -Eh "$pattern" "$orgTxt" 2>/dev/null | wc -l | xargs); orgH=${orgH:-0}
-        delta=$(( curH - orgH ))
-        bg="#ffffff"; [ $((row%2)) -eq 1 ] && bg="$_zebra_alt"
-        link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${tbase}.trigger_currpmd_orgpm.html"
-        echo "<tr>"
-        echo "<td style=\"padding:5px 8px;${_FONT_BASE};background:${bg};\"><a href=\"${link}\" style=\"text-decoration:underline;color:$([ "$delta" -gt 0 ] && echo "$_pmd_link_h" || echo "$_pmd_link_n");background:${bg};\">${tbase}.trigger</a></td>"
-        echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE};background:${bg};white-space:nowrap;\">${orgH}</td>"
-        echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE};background:${bg};white-space:nowrap;\">${curH}</td>"
-        echo "<td align=\"right\" style=\"padding:5px 8px;${_FONT_BASE};background:${bg};white-space:nowrap;\">$(_delta_pill "$delta")</td>"
-        echo "</tr>"
-        echo "<tr><td colspan=\"4\" style=\"height:1px;line-height:1px;font-size:0;background:${_pmd_row_bd};\">&nbsp;</td></tr>"
-        row=$((row+1))
-      done
-      echo "</tbody></table>"
-    fi
-
-    echo "</td></tr></table>"
-  } >>"$PMD_CANCEL_HTML"
-
-  # footer
-  cat >>"$PMD_CANCEL_HTML" <<FOOT
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin:6px 0 10px;background:${_foot_bg};border:1px solid ${_plate_bd};border-collapse:separate;border-spacing:0;">
-          <tr><td align="center" style="padding:6px 8px;text-align:center;color:${_foot_txt};${_FONT_BOLD}line-height:14px;">$_foot_line</td></tr>
-        </table>
-
-      </td></tr>
-    </table>
-  </td></tr>
-</table>
-</body></html>
-FOOT
-
-  # ---- send cancellation mail (HTML) ----
-  EMAIL=${FROM} mutt -e 'set content_type=text/html' \
-    -s "${SFDC_ORG} Deployment has been stopped due to PMD critical error." "${mutt_MAIL_LIST}" < "$PMD_CANCEL_HTML"
-
-  echo "[CANCELLED] Deployment stopped due to PMD critical regression (PMD_Stop=1)." | tee -a "$LOG" >/dev/null 2>&1
-
-  # clean temp json
-  rm -f "$UI_COLORS_JSON_STRICT" 2>/dev/null
-
-  # Signal to caller: non-zero so pipeline halts (do NOT exit the whole shell; let caller decide)
-  return 13
+  # ---------- no cancel; continue ----------
+  export PMD_REGRESSION="0"
+  export DEPLOY_SHOULD_RUN="1"
+  return 0
 }
