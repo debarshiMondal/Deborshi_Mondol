@@ -1,37 +1,1103 @@
- Class Apttus_Agreement_File_AC : External string does not exist: CLLA
-it says 
-
-Latest 2 GIT log >>> (not found):  Class Apttus_Agreement_File_AC : External string does not exist: CLLA
-Hint: file may be generated/renamed or in a subfolder; searched by prefix and common metadata suffixes.
-
-But Apttus_Agreement_File_AC is there in src
-[codedev@vlsj-deploybox src]$ find . -name Apttus_Agreement_File_AC*
-./classes/Apttus_Agreement_File_AC.cls
-./classes/Apttus_Agreement_File_AC.cls-meta.xml
-[codedev@vlsj-deploybox src]$ 
-[codedev@vlsj-deploybox src]$ git log ./classes/Apttus_Agreement_File_AC.cls
-commit c6c339a37bdf4a6f90becd51397c09437148b781
-Author: Subhodip Sadhu <ssadhu@cadence.com>
-Date:   Wed Oct 1 11:29:11 2025 +0530
-
-    [LMA-383]:(Agreement activation)
-
-commit f31d6e5572889c0342ac620fac0d7a8a71f0fff3
-Author: Ravi Chandra <cravi@cadence.com>
-Date:   Fri Sep 19 11:01:01 2025 +0530
-
-    [LMA-000]:(Lightning code fix merge)
-    
-    [LMA-000]:(Lightning code fix merge)
-
-commit 464a1e89a74938cd22a2df5f4bb49ef475ddb447
-Author: Anjali Kumari <kumarian@cadence.com>
-Date:   Thu Sep 11 13:22:49 2025 +0530
-
-    [LMA-0000]:(recheckin class)
-[codedev@vlsj-deploybox src]$ git log ./classes/Apttus_Agreement_File_AC.cls-meta.xml
-commit 464a1e89a74938cd22a2df5f4bb49ef475ddb447
-Author: Anjali Kumari <kumarian@cadence.com>
-Date:   Thu Sep 11 13:22:49 2025 +0530
-
-    [LMA-0000]:(recheckin class)
++ CodeAnalyser
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + rm -f /tmp/CodeAnalysisReport.txt
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' '!' -d changeSetDeploy/force-app/main/default/classes ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + bash build/script/currpmd.sh
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Oct 29, 2025 12:19:02 AM net.sourceforge.pmd.PMD encourageToUseIncrementalAnalysis
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: WARNING: This analysis could be faster, please consider using Incremental Analysis: https://pmd.github.io/pmd-6.36.0/pmd_userdocs_incremental_analysis.html
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: rm: cannot remove 'PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/*': No such file or directory
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ls: cannot access 'changeSetDeploy/force-app/main/default/triggers/*.trigger': No such file or directory
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + bash build/script/createpmdhtml.sh sbx
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ✔ Pages written to: /data/public/pmd_rule/sbx
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + serverProperty=build/property/sbx.conf
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ awk -F= '
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]:       $1 ~ /^[[:space:]]*PMD_Stop[[:space:]]*$/ {
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]:         gsub(/[[:space:]]/,"",$2); print $2
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]:       }' build/property/sbx.conf
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + PMD_Stop=1
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' 1 = 1 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + PAT_FILE=build/property/pmd_high_patterns.txt
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -Ehv '^\s*($|#)' build/property/pmd_high_patterns.txt
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ tr -d '\r'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ paste '-sd|' -
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + pattern='ApexUnitTestShouldNotUseSeeAllDataTrue|UnusedLocalVariable|ClassNamingConventions|FieldDeclarationsShouldBeAtStart|FieldNamingConventions|FormalParameterNamingConventions|LocalVariableNamingConventions|MethodNamingConventions|PropertyNamingConventions|ExcessiveClassLength|ExcessiveParameterList|ApexDoc|ApexCSRF|AvoidDirectAccessTriggerMap|AvoidHardcodingId|AvoidNonExistentAnnotations|EmptyCatchBlock|EmptyIfStmt|EmptyStatementBlock|EmptyTryOrFinallyBlock|EmptyWhileStmt|InaccessibleAuraEnabledGetter|MethodWithSameNameAsEnclosingClass|OverrideBothEqualsAndHashcode|TestMethodsMustBeInTestClasses|AvoidDmlStatementsInLoops|AvoidSoqlInLoops|AvoidSoslInLoops|OperationWithLimitsInLoop|ApexBadCrypto|ApexDangerousMethods|ApexInsecureEndpoint|ApexOpenRedirect|ApexSharingViolations|ApexSOQLInjection|ApexSuggestUsingNamedCred'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -n 'ApexUnitTestShouldNotUseSeeAllDataTrue|UnusedLocalVariable|ClassNamingConventions|FieldDeclarationsShouldBeAtStart|FieldNamingConventions|FormalParameterNamingConventions|LocalVariableNamingConventions|MethodNamingConventions|PropertyNamingConventions|ExcessiveClassLength|ExcessiveParameterList|ApexDoc|ApexCSRF|AvoidDirectAccessTriggerMap|AvoidHardcodingId|AvoidNonExistentAnnotations|EmptyCatchBlock|EmptyIfStmt|EmptyStatementBlock|EmptyTryOrFinallyBlock|EmptyWhileStmt|InaccessibleAuraEnabledGetter|MethodWithSameNameAsEnclosingClass|OverrideBothEqualsAndHashcode|TestMethodsMustBeInTestClasses|AvoidDmlStatementsInLoops|AvoidSoqlInLoops|AvoidSoslInLoops|OperationWithLimitsInLoop|ApexBadCrypto|ApexDangerousMethods|ApexInsecureEndpoint|ApexOpenRedirect|ApexSharingViolations|ApexSOQLInjection|ApexSuggestUsingNamedCred' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ ls changeSetDeploy/force-app/main/default/classes/Opportunities.cls
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ wc -l
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ xargs
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + CLASS_COUNT=1
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ ls 'changeSetDeploy/force-app/main/default/triggers/*.trigger'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ wc -l
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ xargs
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + TRIGGER_COUNT=0
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + PMD_HIGH_CLS=0
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + PMD_HIGH_TRG=0
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + REGRESSION_FOUND=0
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' 1 -gt 0 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ ls changeSetDeploy/force-app/main/default/classes/Opportunities.cls
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + for classePath in $(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null)
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ basename changeSetDeploy/force-app/main/default/classes/Opportunities.cls .cls
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + base=Opportunities
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + currTxt=PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/Opportunities.cls_currpmd.txt
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + orgTxt=PMDReport/orgpmdoutput/src/classes/Opportunities.cls_orgpmd.txt
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -Eh 'ApexUnitTestShouldNotUseSeeAllDataTrue|UnusedLocalVariable|ClassNamingConventions|FieldDeclarationsShouldBeAtStart|FieldNamingConventions|FormalParameterNamingConventions|LocalVariableNamingConventions|MethodNamingConventions|PropertyNamingConventions|ExcessiveClassLength|ExcessiveParameterList|ApexDoc|ApexCSRF|AvoidDirectAccessTriggerMap|AvoidHardcodingId|AvoidNonExistentAnnotations|EmptyCatchBlock|EmptyIfStmt|EmptyStatementBlock|EmptyTryOrFinallyBlock|EmptyWhileStmt|InaccessibleAuraEnabledGetter|MethodWithSameNameAsEnclosingClass|OverrideBothEqualsAndHashcode|TestMethodsMustBeInTestClasses|AvoidDmlStatementsInLoops|AvoidSoqlInLoops|AvoidSoslInLoops|OperationWithLimitsInLoop|ApexBadCrypto|ApexDangerousMethods|ApexInsecureEndpoint|ApexOpenRedirect|ApexSharingViolations|ApexSOQLInjection|ApexSuggestUsingNamedCred' PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/Opportunities.cls_currpmd.txt
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ wc -l
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ xargs
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + curH=56
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + curH=56
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -Eh 'ApexUnitTestShouldNotUseSeeAllDataTrue|UnusedLocalVariable|ClassNamingConventions|FieldDeclarationsShouldBeAtStart|FieldNamingConventions|FormalParameterNamingConventions|LocalVariableNamingConventions|MethodNamingConventions|PropertyNamingConventions|ExcessiveClassLength|ExcessiveParameterList|ApexDoc|ApexCSRF|AvoidDirectAccessTriggerMap|AvoidHardcodingId|AvoidNonExistentAnnotations|EmptyCatchBlock|EmptyIfStmt|EmptyStatementBlock|EmptyTryOrFinallyBlock|EmptyWhileStmt|InaccessibleAuraEnabledGetter|MethodWithSameNameAsEnclosingClass|OverrideBothEqualsAndHashcode|TestMethodsMustBeInTestClasses|AvoidDmlStatementsInLoops|AvoidSoqlInLoops|AvoidSoslInLoops|OperationWithLimitsInLoop|ApexBadCrypto|ApexDangerousMethods|ApexInsecureEndpoint|ApexOpenRedirect|ApexSharingViolations|ApexSOQLInjection|ApexSuggestUsingNamedCred' PMDReport/orgpmdoutput/src/classes/Opportunities.cls_orgpmd.txt
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ wc -l
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ xargs
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + orgH=55
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + orgH=55
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + PMD_HIGH_CLS=56
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' 56 -gt 55 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + REGRESSION_FOUND=1
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' 0 -gt 0 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'DEBUG PMD: classes=1 triggers=0 highCls=56 highTrg=0 regression=1'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' 1 -ne 1 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' 1 -ne 1 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + UI_COLORS_JSONC=build/property/ui_colors.jsonc
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + UI_COLORS_JSONC=build/property/ui_colors.jsonc
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + UI_COLORS_JSON_STRICT=/tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + command -v jq
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -f build/property/ui_colors.jsonc ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + sed -E ':a; s@/\*[^*]*\*+([^/*][^*]*\*+)*/@@g; ta' build/property/ui_colors.jsonc
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + sed -E 's@\r$@@'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + sed -E 's@//[[:space:]]*.*$@@'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + sed '/^[[:space:]]*$/d'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .header.failure_bg '#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .header.failure_bg
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.header.failure_bg // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#a94442' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _hdr_bg='#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .header.text '#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .header.text
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.header.text // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#ffffff' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _hdr_txt='#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .plate.page_bg '#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .plate.page_bg
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.plate.page_bg // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#f6f8fa'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#f6f8fa' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#f6f8fa'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _page_bg='#f6f8fa'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .plate.background '#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .plate.background
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.plate.background // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#ffffff' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _plate_bg='#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .plate.border '#dddddd'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .plate.border
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.plate.border // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#e6e6e6'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#e6e6e6' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#e6e6e6'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _plate_bd='#e6e6e6'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _gets .run_details.strip_failure_bg '#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++++ _getc .run_details.strip_failure_bg
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++++ jq -r '.run_details.strip_failure_bg // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ v='#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ '[' -n '#a94442' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ printf %s '#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .run_details.title_bg_failure '#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .run_details.title_bg_failure
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.run_details.title_bg_failure // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#a94442' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _run_hdr_bg='#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _gets .run_details.title_text '#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++++ _getc .run_details.title_text
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++++ jq -r '.run_details.title_text // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ v='#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ '[' -n '#ffffff' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ printf %s '#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .run_details.title_text_failure '#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .run_details.title_text_failure
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.run_details.title_text_failure // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#ffffff' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _run_hdr_txt='#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .chips.failure_bg '#fff7f7'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .chips.failure_bg
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.chips.failure_bg // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#fef2f2'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#fef2f2' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#fef2f2'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _chip_bg='#fef2f2'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .chips.failure_text '#7f1d1d'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .chips.failure_text
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.chips.failure_text // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#7f1d1d'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#7f1d1d' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#7f1d1d'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _chip_txt='#7f1d1d'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .chips.border '#e5e7eb'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .chips.border
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.chips.border // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#a7f3d0'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#a7f3d0' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#a7f3d0'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _chip_bd='#a7f3d0'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .chips.label_failure_text '#7f1d1d'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .chips.label_failure_text
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.chips.label_failure_text // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#a94442' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _chip_label='#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .status_summary.deployment_failure_bg '#fee2e2'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .status_summary.deployment_failure_bg
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.status_summary.deployment_failure_bg // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#fef2f2'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#fef2f2' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#fef2f2'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _status_bg='#fef2f2'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .status_summary.pmd_bg '#f1f5f9'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .status_summary.pmd_bg
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.status_summary.pmd_bg // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#fff7ed'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#fff7ed' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#fff7ed'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _status_pmd='#fff7ed'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .status_summary.time_bg '#f1f5f9'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .status_summary.time_bg
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.status_summary.time_bg // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#eff6ff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#eff6ff' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#eff6ff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _status_time='#eff6ff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .status_summary.label_text '#374151'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .status_summary.label_text
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.status_summary.label_text // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#047857'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#047857' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#047857'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _status_label='#047857'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .status_summary.value_text '#111827'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .status_summary.value_text
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.status_summary.value_text // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#065f46'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#065f46' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#065f46'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _status_value='#065f46'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .status_summary.corner_radius 3px
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .status_summary.corner_radius
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.status_summary.corner_radius // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v=8px
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n 8px ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s 8px
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _status_radius=8px
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .status_summary.time_text '#065f46'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .status_summary.time_text
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.status_summary.time_text // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#1d4ed8'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#1d4ed8' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#1d4ed8'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _time_text='#1d4ed8'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .status_summary.pmd_text '#065f46'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .status_summary.pmd_text
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.status_summary.pmd_text // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#9a3412'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#9a3412' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#9a3412'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _pmd_text='#9a3412'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .status_summary.deployment_label_failure '#047857'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .status_summary.deployment_label_failure
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.status_summary.deployment_label_failure // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#a94442' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _dep_label='#a94442'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .status_summary.deployment_value_failure '#065f46'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .status_summary.deployment_value_failure
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.status_summary.deployment_value_failure // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#7f1d1d'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#7f1d1d' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#7f1d1d'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _dep_value='#7f1d1d'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .pmd_review.header_bg '#f3f4f6'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .pmd_review.header_bg
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.pmd_review.header_bg // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#eaf2ff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#eaf2ff' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#eaf2ff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _pmd_hdr_bg='#eaf2ff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .pmd_review.header_text '#111827'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .pmd_review.header_text
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.pmd_review.header_text // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#274690'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#274690' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#274690'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _pmd_hdr_txt='#274690'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .pmd_review.row_border '#e5e7eb'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .pmd_review.row_border
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.pmd_review.row_border // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#e6eefc'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#e6eefc' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#e6eefc'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _pmd_row_bd='#e6eefc'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .pmd_review.link_normal '#1d4ed8'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .pmd_review.link_normal
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.pmd_review.link_normal // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#0b5ed7'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#0b5ed7' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#0b5ed7'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _pmd_link_n='#0b5ed7'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .pmd_review.link_high '#b91c1c'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .pmd_review.link_high
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.pmd_review.link_high // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#c62828'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#c62828' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#c62828'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _pmd_link_h='#c62828'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .pmd_review.text_high '#b91c1c'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .pmd_review.text_high
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.pmd_review.text_high // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#c62828'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#c62828' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#c62828'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _pmd_text_hi='#c62828'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .pmd_review.text_normal '#111827'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .pmd_review.text_normal
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.pmd_review.text_normal // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#0b5ed7'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#0b5ed7' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#0b5ed7'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _pmd_text_no='#0b5ed7'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .pmd_review.zebra_alt_bg '#f7f7f7'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .pmd_review.zebra_alt_bg
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.pmd_review.zebra_alt_bg // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#f7f7f7'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#f7f7f7' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#f7f7f7'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _zebra_alt='#f7f7f7'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .footer.bg '#f9fafb'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .footer.bg
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.footer.bg // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#111111'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#111111' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#111111'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _foot_bg='#111111'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .footer.text '#111827'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .footer.text
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.footer.text // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '#ffffff' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _foot_txt='#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .strings.footer.failure '{ORG} • Deployment Failure Report — generated automatically. Review the logs for root cause.'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .strings.footer.failure
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.strings.footer.failure // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v='{ORG} • Deployment Failure Report — generated automatically. Review the logs for root cause.'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n '{ORG} • Deployment Failure Report — generated automatically. Review the logs for root cause.' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s '{ORG} • Deployment Failure Report — generated automatically. Review the logs for root cause.'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _foot_line='{ORG} • Deployment Failure Report — generated automatically. Review the logs for root cause.'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '{ORG} • Deployment Failure Report — generated automatically. Review the logs for root cause.'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ sed 's/{ORG}/sbx/'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _foot_line='sbx • Deployment Failure Report — generated automatically. Review the logs for root cause.'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .typography.font_family Arial,Helvetica,sans-serif
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .typography.font_family
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.typography.font_family // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v=Arial,Helvetica,sans-serif
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n Arial,Helvetica,sans-serif ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s Arial,Helvetica,sans-serif
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _fontfam=Arial,Helvetica,sans-serif
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .typography.base_px 10
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .typography.base_px
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.typography.base_px // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v=10
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n 10 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s 10
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _base=10
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .typography.section_hdr_px 11
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .typography.section_hdr_px
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.typography.section_hdr_px // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v=11
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n 11 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s 11
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _sect=11
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .typography.main_hdr_px 14
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .typography.main_hdr_px
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.typography.main_hdr_px // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v=14
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n 14 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s 14
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _main=14
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _gets .typography.run_hdr_px 11
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ _getc .typography.run_hdr_px
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ jq -r '.typography.run_hdr_px // empty' /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ v=11
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' -n 11 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf %s 11
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _run=11
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _FONT_BASE='font:10px Arial,Helvetica,sans-serif;'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _FONT_BOLD='font:bold 10px Arial,Helvetica,sans-serif;'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _FONT_SEC='font:bold 11px Arial,Helvetica,sans-serif;'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _FONT_MAIN='font:bold 14px Arial,Helvetica,sans-serif;'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _FONT_RUN='font:bold 11px Arial,Helvetica,sans-serif;'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ TZ=Asia/Kolkata
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ date '+%d.%b.%Y %H:%M IST'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _RUN_IST='29.Oct.2025 12:49 IST'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _API=60.0
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ git rev-parse --abbrev-ref HEAD
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _BRANCH=2025-q4nov-release
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ git config --get remote.origin.url
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _REPO=https://github.cadence.com/IT/SFDC/
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _REQID=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -f /tmp/sbx.Deploy.log ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -m1 -E 'Deploy ID[[:space:]]*:' /tmp/sbx.Deploy.log
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ xargs
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ cut -d: -f2-
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ cut '-d ' -f2-
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _REQID='file /tmp/sbx.Deploy.log matches'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _DEPUSER=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -f /tmp/sbx.Deploy.log ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -m1 -E 'Target Org[[:space:]]*:' /tmp/sbx.Deploy.log
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ xargs
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ cut '-d ' -f2-
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ cut -d: -f2-
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + _DEPUSER='file /tmp/sbx.Deploy.log matches'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + OPEN_LOGS_URL=https://cdnsfdc.cadence.com/SFDC_GIT_LOG/sbx.GIT_0472adc7bf258b29f0672f8b12054ccb722c8c51-b55d7b7c3330528d5ddf2cf3f0ce1e556e033e20.29Oct2025_00h18m59s
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + ORIG_PMD_URL=https://cdnsfdc.cadence.com/PMDOUTPUT/sbx
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ basename build/log/sbx.FDLog.html
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + FORCE_DEPLOY_URL=https://cdnsfdc.cadence.com/SFDC_GIT_LOG/sbx.GIT_0472adc7bf258b29f0672f8b12054ccb722c8c51-b55d7b7c3330528d5ddf2cf3f0ce1e556e033e20.29Oct2025_00h18m59s/sbx.FDLog.html.29Oct2025_00h18m59s
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + PAT_PUBLIC_DIR=/data/public/pmd_patterns/sbx/
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + mkdir -p /data/public/pmd_patterns/sbx/
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -s build/property/pmd_high_patterns.txt ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + cp -u build/property/pmd_high_patterns.txt /data/public/pmd_patterns/sbx/pmd_high_patterns.txt
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + PMD_PATTERN_URL=https://cdnsfdc.cadence.com/pmd_patterns/sbx/pmd_high_patterns.txt
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + PMD_CANCEL_HTML=/tmp/pmd_cancel.sbx.3456617.2764.html
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + cat
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _section_bar 'Run Details'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ local 'text=Run Details'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ cat
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _chip_td REPO https://github.cadence.com/IT/SFDC/ 10
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ local label=REPO value=https://github.cadence.com/IT/SFDC/ pr=10
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ cat
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ echo https://github.cadence.com/IT/SFDC/
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _chip_td BRANCH 2025-q4nov-release 10
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ local label=BRANCH value=2025-q4nov-release pr=10
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ cat
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ echo 2025-q4nov-release
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _chip_td 'REQUEST ID' 'file /tmp/sbx.Deploy.log matches' 0
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ local 'label=REQUEST ID' 'value=file /tmp/sbx.Deploy.log matches' pr=0
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ cat
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ echo 'file /tmp/sbx.Deploy.log matches'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _chip_td 'RUN (IST)' '29.Oct.2025 12:49 IST' 10
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ local 'label=RUN (IST)' 'value=29.Oct.2025 12:49 IST' pr=10
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ cat
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ echo '29.Oct.2025 12:49 IST'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _chip_td 'ORG NAME + API' 'sbx • 60.0' 10
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ local 'label=ORG NAME + API' 'value=sbx • 60.0' pr=10
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ cat
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ echo 'sbx • 60.0'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _chip_td 'DEPLOY USER' 'file /tmp/sbx.Deploy.log matches' 0
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ local 'label=DEPLOY USER' 'value=file /tmp/sbx.Deploy.log matches' pr=0
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ cat
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ echo 'file /tmp/sbx.Deploy.log matches'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: +++ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _section_bar 'Status Summary'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ local 'text=Status Summary'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ cat
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;margin-top:10px;border:1px solid #e6eefc;background:#ffffff;border-collapse:separate;border-spacing:0;">'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _section_bar 'PMD Review'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ local 'text=PMD Review'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ cat
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<tr>
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]:   <td style="padding:0;">
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]:     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#a94442;border-collapse:separate;border-spacing:0;">
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]:       <tr><td align="center" style="font:bold 11px Arial,Helvetica,sans-serif;color:#ffffff;padding:6px 8px;">PMD Review</td></tr>
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]:     </table>
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]:   </td>
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: </tr>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<tr><td style="padding:6px;background:#ffffff;">'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' 1 -gt 0 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #e6eefc;">'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<thead><tr style="background:#eaf2ff;">'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<th align="left"  style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;white-space:nowrap;">CLASS NAME</th>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<th align="right" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;white-space:nowrap;">ORIGINAL (HIGH)</th>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<th align="right" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;white-space:nowrap;">CURRENT (HIGH)</th>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<th align="right" style="padding:6px 8px;font:bold 10px Arial,Helvetica,sans-serif;color:#274690;border-bottom:1px solid #e6eefc;white-space:nowrap;">Δ HIGH</th>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '</tr></thead><tbody>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + row=0
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ ls changeSetDeploy/force-app/main/default/classes/Opportunities.cls
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + for classePath in $(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null)
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ basename changeSetDeploy/force-app/main/default/classes/Opportunities.cls .cls
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + base=Opportunities
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + currTxt=PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/Opportunities.cls_currpmd.txt
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + orgTxt=PMDReport/orgpmdoutput/src/classes/Opportunities.cls_orgpmd.txt
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -Eh 'ApexUnitTestShouldNotUseSeeAllDataTrue|UnusedLocalVariable|ClassNamingConventions|FieldDeclarationsShouldBeAtStart|FieldNamingConventions|FormalParameterNamingConventions|LocalVariableNamingConventions|MethodNamingConventions|PropertyNamingConventions|ExcessiveClassLength|ExcessiveParameterList|ApexDoc|ApexCSRF|AvoidDirectAccessTriggerMap|AvoidHardcodingId|AvoidNonExistentAnnotations|EmptyCatchBlock|EmptyIfStmt|EmptyStatementBlock|EmptyTryOrFinallyBlock|EmptyWhileStmt|InaccessibleAuraEnabledGetter|MethodWithSameNameAsEnclosingClass|OverrideBothEqualsAndHashcode|TestMethodsMustBeInTestClasses|AvoidDmlStatementsInLoops|AvoidSoqlInLoops|AvoidSoslInLoops|OperationWithLimitsInLoop|ApexBadCrypto|ApexDangerousMethods|ApexInsecureEndpoint|ApexOpenRedirect|ApexSharingViolations|ApexSOQLInjection|ApexSuggestUsingNamedCred' PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/Opportunities.cls_currpmd.txt
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ wc -l
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ xargs
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + curH=56
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + curH=56
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -Eh 'ApexUnitTestShouldNotUseSeeAllDataTrue|UnusedLocalVariable|ClassNamingConventions|FieldDeclarationsShouldBeAtStart|FieldNamingConventions|FormalParameterNamingConventions|LocalVariableNamingConventions|MethodNamingConventions|PropertyNamingConventions|ExcessiveClassLength|ExcessiveParameterList|ApexDoc|ApexCSRF|AvoidDirectAccessTriggerMap|AvoidHardcodingId|AvoidNonExistentAnnotations|EmptyCatchBlock|EmptyIfStmt|EmptyStatementBlock|EmptyTryOrFinallyBlock|EmptyWhileStmt|InaccessibleAuraEnabledGetter|MethodWithSameNameAsEnclosingClass|OverrideBothEqualsAndHashcode|TestMethodsMustBeInTestClasses|AvoidDmlStatementsInLoops|AvoidSoqlInLoops|AvoidSoslInLoops|OperationWithLimitsInLoop|ApexBadCrypto|ApexDangerousMethods|ApexInsecureEndpoint|ApexOpenRedirect|ApexSharingViolations|ApexSOQLInjection|ApexSuggestUsingNamedCred' PMDReport/orgpmdoutput/src/classes/Opportunities.cls_orgpmd.txt
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ wc -l
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ xargs
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + orgH=55
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + orgH=55
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + delta=1
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + bg='#ffffff'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' 0 -eq 1 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + link=https://cdnsfdc.cadence.com/pmd_rule/sbx/Opportunities.cls_currpmd_orgpm.html
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<tr>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' 1 -gt 0 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '#c62828'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<td style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;;background:#ffffff;"><a href="https://cdnsfdc.cadence.com/pmd_rule/sbx/Opportunities.cls_currpmd_orgpm.html" style="text-decoration:underline;color:#c62828;background:#ffffff;">Opportunities.cls</a></td>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;;background:#ffffff;white-space:nowrap;">55</td>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;;background:#ffffff;white-space:nowrap;">56</td>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ _delta_pill 1
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ local d=1 bg bd col
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ '[' 1 -gt 0 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ bg='#ffe3e3'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ bd='#f5bcbc'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ col='#c62828'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ printf '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid %s;background:%s;"><tr><td style="font:bold %spx %s;color:%s;padding:1px 5px;white-space:nowrap;">%s</td></tr></table>' '#f5bcbc' '#ffe3e3' 10 Arial,Helvetica,sans-serif '#c62828' 1
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<td align="right" style="padding:5px 8px;font:10px Arial,Helvetica,sans-serif;;background:#ffffff;white-space:nowrap;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;border:1px solid #f5bcbc;background:#ffe3e3;"><tr><td style="font:bold 10px Arial,Helvetica,sans-serif;color:#c62828;padding:1px 5px;white-space:nowrap;">1</td></tr></table></td>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '</tr>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<tr><td colspan="4" style="height:1px;line-height:1px;font-size:0;background:#e6eefc;">&nbsp;</td></tr>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + row=1
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '</tbody></table>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '<table role="presentation" width="100%"><tr><td style="height:6px;line-height:6px;font-size:0;">&nbsp;</td></tr></table>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' 0 -gt 0 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '</td></tr></table>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + cat
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + EMAIL=SFDCdeploy@cadence.com
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + mutt -e 'set content_type=text/html' -s 'sbx Deployment has been stopped due to PMD critical error.' 'rchithra@cadence.com,sharmade@cadence.com,nachuris@cadence.com,swarnav@cadence.com,debarshi@cadence.com,ssadhu@cadence.com,akundu@cadence.com,cravi@cadence.com,bhirdesh@cadence.com,ibanerje@cadence.com,rahulbh@cadence.com,kumarian@cadence.com,sprincek@cadence.com,santoshs@cadence.com,challar@cadence.com,patranu@cadence.com,gmittal@cadence.com,apareek@cadence.com,smitra@cadence.com,skoneru@cadence.com,joydeepc@cadence.com,arpitak@cadence.com,supritha@cadence.com,goyaladi@cadence.com,pramita@cadence.com,dasabhis@cadence.com,nmalakar@cadence.com,jainshai@cadence.com,evachen@cadence.com,rdebnath@cadence.com,debarshi@cadence.com -c rdebnath@cadence.com,debarshi@cadence.com,somraj@cadence.com,jbakshi@cadence.com,rdebnath@cadence.com'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo '[CANCELLED] Deployment stopped due to PMD critical regression (PMD_Stop=1).'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + tee -a /tmp/sbx.Deploy.log
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + rm -f /tmp/ui_colors.pmdcancel.3456617.2741.json
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + return 13
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + CustomLabels_Prep
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + ChangeSet_EnvLabel=changeSetDeploy/force-app/main/default/labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + ChangeSet_SrcLabel=changeSetDeploy/force-app/main/default/commonLabel
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + EnvLabel=src/env/sbx/customLabel
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + SrcLabel=src/commonLabel
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + ChangeSet_Src=changeSetDeploy/force-app/main/default
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ cat build/LastCommonCL.txt
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + LastCommonCL=fghj
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ git log -n1 --format=format:%H src/commonLabel/CustomLabels.labels-meta.xml
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + LatestCommonCL=7eb13b92d2031960aaf0c4088a9df15c34abe146
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -d changeSetDeploy/force-app/main/default/labels -o fghj '!=' 7eb13b92d2031960aaf0c4088a9df15c34abe146 ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + mkdir changeSetDeploy/force-app/main/default/labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + cp -r src/commonLabel changeSetDeploy/force-app/main/default
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + sed -n '/<labels>/,/<\/labels>/p' changeSetDeploy/force-app/main/default/commonLabel/CustomLabels.labels-meta.xml
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + sed -i 's/^[ \t]*//' changeSetDeploy/force-app/main/default/CustomLabels_common_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + sed -i '/<labels>/{n;:l N;/<\/labels>/b; s/\n//; bl}' changeSetDeploy/force-app/main/default/CustomLabels_common_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + sed -i '/<\/labels>/d ; /<labels>/d' changeSetDeploy/force-app/main/default/CustomLabels_common_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + sed -n '/<labels>/,/<\/labels>/p' changeSetDeploy/force-app/main/default/labels/CustomLabels.labels-meta.xml
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: sed: can't read changeSetDeploy/force-app/main/default/labels/CustomLabels.labels-meta.xml: No such file or directory
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + sed -i 's/^[ \t]*//' changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + sed -i '/<labels>/{n;:l N;/<\/labels>/b; s/\n//; bl}' changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + sed -i '/<\/labels>/d ; /<labels>/d' changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + cat changeSetDeploy/force-app/main/default/CustomLabels_common_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Training_Modules</fullName><categories>Lead</categories><language>en_US</language><protected>false</protected><shortDescription>Training_Modules</shortDescription><value>Training Modules</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Training_Modules
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Training_Modules changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>lightningRedirectPrefix</fullName><categories>LEX</categories><language>en_US</language><protected>false</protected><shortDescription>lightningRedirectPrefix</shortDescription><value>/one/one.app#/alohaRedirect</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=lightningRedirectPrefix
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep lightningRedirectPrefix changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>LightningTheme</fullName><categories>LEX</categories><language>en_US</language><protected>false</protected><shortDescription>LightningTheme</shortDescription><value>Theme4d,Theme4t,Theme4u</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=LightningTheme
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep LightningTheme changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>CLMOrderCommentError</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>CLMOrderCommentError</shortDescription><value>You are not authorized to add order comments.</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=CLMOrderCommentError
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep CLMOrderCommentError changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Activated</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Activated</shortDescription><value>Activated</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Activated
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Activated changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>ActivatedAgrSub</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>ActivatedAgrSub</shortDescription><value>moved file attachment : @@ to Agreement documents</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=ActivatedAgrSub
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep ActivatedAgrSub changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>AddedFileSub</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>AddedFileSub</shortDescription><value>attached file : @@</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=AddedFileSub
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep AddedFileSub changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>AmendmentNote</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>AmendmentNote</shortDescription><value>Amendment Details</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=AmendmentNote
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep AmendmentNote changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>CDNReadOnlyProfile</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>CDNReadOnlyProfile</shortDescription><value>CDNReadOnly</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=CDNReadOnlyProfile
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep CDNReadOnlyProfile changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>CLLA</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>CLLA</shortDescription><value>CLLA</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=CLLA
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep CLLA changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>DeletedFileSub</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>DeletedFileSub</shortDescription><value>deleted file attachment : @@</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=DeletedFileSub
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep DeletedFileSub changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>EditActivatedIntelErr</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>EditActivatedIntelErr</shortDescription><value>You can&apos;t edit activated Intel RUNDA agreements. Please create a revision instead</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=EditActivatedIntelErr
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep EditActivatedIntelErr changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>FileDownloadUrl</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>FileDownloadUrl</shortDescription><value>/sfc/servlet.shepherd/version/download/</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=FileDownloadUrl
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep FileDownloadUrl changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>FullySigned</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>FullySigned</shortDescription><value>Fully Signed</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=FullySigned
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep FullySigned changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>GeneralNDA</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>GeneralNDA</shortDescription><value>General NDA</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=GeneralNDA
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep GeneralNDA changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>InSignature</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>InSignature</shortDescription><value>In Signatures</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=InSignature
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep InSignature changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>InsufficientErrFile</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>InsufficientErrFile</shortDescription><value>You can&apos;t edit or delete this attachments as you have insufficient privileges.</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=InsufficientErrFile
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep InsufficientErrFile changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>InsufficientErrFileTWR</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>InsufficientErrFileTWR</shortDescription><value>You are not authorized to delete this content version</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=InsufficientErrFileTWR
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep InsufficientErrFileTWR changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>IntegrationProfile</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>IntegrationProfile</shortDescription><value>Integration</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=IntegrationProfile
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep IntegrationProfile changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>IntelSendEmailMsg</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>IntelSendEmailMsg</shortDescription><value>Please select at least one record to send email.</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=IntelSendEmailMsg
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep IntelSendEmailMsg changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>NDA</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>NDA</shortDescription><value>NDA</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=NDA
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep NDA changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>NDAPrefix</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>NDAPrefix</shortDescription><value>NDA-</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=NDAPrefix
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep NDAPrefix changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Original</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Original</shortDescription><value>Original</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Original
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Original changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>ReadyForSignature</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>ReadyForSignature</shortDescription><value>Ready for Signature</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=ReadyForSignature
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep ReadyForSignature changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>ER_Agr_Record_lock_Err</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>ER_Agr_Record_lock_Err</shortDescription><value>Record is locked</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=ER_Agr_Record_lock_Err
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep ER_Agr_Record_lock_Err changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>ER_Agr_Edit_Err</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>ER_Agr_Edit_Err</shortDescription><value>You do not have access to edit this record</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=ER_Agr_Edit_Err
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep ER_Agr_Edit_Err changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>ReadyforReview</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>ReadyforReview</shortDescription><value>Ready for Review</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=ReadyforReview
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep ReadyforReview changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>SystemAdminCustProfile</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>SystemAdminCustProfile</shortDescription><value>System Administrator Custom</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=SystemAdminCustProfile
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep SystemAdminCustProfile changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>TIPtermPrefix</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>TIPtermPrefix</shortDescription><value>TIP Terms-</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=TIPtermPrefix
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep TIPtermPrefix changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>TSMCAdminGrp</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>TSMCAdminGrp</shortDescription><value>TSMC Admin</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=TSMCAdminGrp
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep TSMCAdminGrp changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>TSMCFileErr</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>TSMCFileErr</shortDescription><value>You can&apos;t delete this attachment as you have insufficient privileges.</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=TSMCFileErr
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep TSMCFileErr changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>TWR</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>TWR</shortDescription><value>TWR</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=TWR
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep TWR changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>TWRPrefix</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>TWRPrefix</shortDescription><value>TWR-</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=TWRPrefix
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep TWRPrefix changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>TaskStatusCompleted</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>TaskStatusCompleted</shortDescription><value>Completed</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=TaskStatusCompleted
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep TaskStatusCompleted changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>UploadNote</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>UploadNote</shortDescription><value>Upload Details</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=UploadNote
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep UploadNote changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>ARMTRS</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>ARMTRS</shortDescription><value>ARM TRS</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=ARMTRS
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep ARMTRS changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>ARMTRSErr</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>ARMTRSErr</shortDescription><value>You are not authorized to perform this action.</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=ARMTRSErr
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep ARMTRSErr changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>IntelSuperUserGrp</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>IntelSuperUserGrp</shortDescription><value>Intel_Runda_Super_User</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=IntelSuperUserGrp
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep IntelSuperUserGrp changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Access_Privilege_Err_Msg</fullName><language>en_US</language><protected>false</protected><shortDescription>Access Privilege Err Msg</shortDescription><value>Oops...you don&apos;t have the necessary privileges to create this record. See your administrator for help.</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Access_Privilege_Err_Msg
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Access_Privilege_Err_Msg changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>ApprovalRecordLockStatus</fullName><categories>Message</categories><language>en_US</language><protected>false</protected><shortDescription>ApprovalRecordLockStatus</shortDescription><value>This record is currently locked. Please contact the administrator.</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=ApprovalRecordLockStatus
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep ApprovalRecordLockStatus changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>ApprovalRecordProposalLockStatus</fullName><language>en_US</language><protected>false</protected><shortDescription>ApprovalRecordProposalLockStatus</shortDescription><value>This record is currently locked.</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=ApprovalRecordProposalLockStatus
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep ApprovalRecordProposalLockStatus changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>ApprovalRecordUnlockError</fullName><categories>Error Message</categories><language>en_US</language><protected>false</protected><shortDescription>ApprovalRecordUnlockError</shortDescription><value>Failed to unlock record. Check permissions.</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=ApprovalRecordUnlockError
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep ApprovalRecordUnlockError changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>ApprovalRecordUnlockSuccess</fullName><categories>Message</categories><language>en_US</language><protected>false</protected><shortDescription>ApprovalRecordUnlockSuccess</shortDescription><value>Record unlocked successfully</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=ApprovalRecordUnlockSuccess
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep ApprovalRecordUnlockSuccess changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Profile_Apttus_Platform</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Profile Apttus Platform</shortDescription><value>4_4 - Apttus Platform Profile</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Profile_Apttus_Platform
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Profile_Apttus_Platform changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Profile_Legal_Apttus</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Profile Legal Apttus</shortDescription><value>4_4 - Legal Apttus</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Profile_Legal_Apttus
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Profile_Legal_Apttus changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Profile_Inside_Sales</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Profile Inside Sales</shortDescription><value>2_1 - Inside Sales</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Profile_Inside_Sales
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Profile_Inside_Sales changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>UserRole_Apttus</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>User Role Apttus</shortDescription><value>Apttus</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=UserRole_Apttus
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep UserRole_Apttus changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Default_Light_Profile</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Default Light Profile</shortDescription><value>DEFAULT_LIGHT_PROFILE</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Default_Light_Profile
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Default_Light_Profile changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Apttus_Light_Profile</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Apttus Light Profile</shortDescription><value>APTTUS_LIGHT_PROFILE</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Apttus_Light_Profile
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Apttus_Light_Profile changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Default_Profile</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Default Profile</shortDescription><value>DEFAULT_PROFILE</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Default_Profile
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Default_Profile changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Group_General_Users</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Group General Users</shortDescription><value>Apttus General Users</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Group_General_Users
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Group_General_Users changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Group_NDA_Requester_Users</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Group NDA Requester Users</shortDescription><value>Apttus NDA Requester Users</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Group_NDA_Requester_Users
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Group_NDA_Requester_Users changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Group_Approver_Users</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Group Approver Users</shortDescription><value>Apttus Approver Users</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Group_Approver_Users
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Group_Approver_Users changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Group_NDA_Approver_Users</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Group NDA Approver Users</shortDescription><value>Apttus NDA Approver Users</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Group_NDA_Approver_Users
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Group_NDA_Approver_Users changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Permission_Set_TSMC_Access</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Permission Set TSMC Access</shortDescription><value>TSMC_Access</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Permission_Set_TSMC_Access
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Permission_Set_TSMC_Access changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Permission_Set_CLLA_Approver</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Permission Set CLLA Approver</shortDescription><value>ApttusCLLAApproverPS</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Permission_Set_CLLA_Approver
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Permission_Set_CLLA_Approver changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Permission_Set_CLLA_Approver_Platform</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Permission Set CLLA Approver Platform</shortDescription><value>ApttusCLLAApproverPSForSalesforcePlatform</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Permission_Set_CLLA_Approver_Platform
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Permission_Set_CLLA_Approver_Platform changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Permission_Set_CLLA_Approver_No_License</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Permission Set CLLA Approver No License</shortDescription><value>ApttusCLLAApprover_Nolicense</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Permission_Set_CLLA_Approver_No_License
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Permission_Set_CLLA_Approver_No_License changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Message_No_User_Selected</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Message No User Selected</shortDescription><value>No User Selected!</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Message_No_User_Selected
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Message_No_User_Selected changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Message_Select_Access</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Message Select Access</shortDescription><value>Please select access type!</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Message_Select_Access
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Message_Select_Access changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Message_Invalid_Profile</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Message Invalid Profile</shortDescription><value>User {0} has an invalid profile!</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Message_Invalid_Profile
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Message_Invalid_Profile changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Message_Success</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Message Success</shortDescription><value>User: {0} successfully updated!</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Message_Success
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Message_Success changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Message_TSMC_Access_Updated</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Message TSMC Access Updated</shortDescription><value>TSMC Access for {0} updated successfully!</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Message_TSMC_Access_Updated
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Message_TSMC_Access_Updated changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Message_TSMC_Access_Exists</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Message TSMC Access Exists</shortDescription><value>{0} already has TSMC Access!</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Message_TSMC_Access_Exists
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Message_TSMC_Access_Exists changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>Max_SOQL_Limit</fullName><categories>LEX_CLM</categories><language>en_US</language><protected>false</protected><shortDescription>Max SOQL Limit</shortDescription><value>48500</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=Max_SOQL_Limit
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep Max_SOQL_Limit changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>LightningTheme</fullName><categories>LEX</categories><language>en_US</language><protected>false</protected><shortDescription>LightningTheme</shortDescription><value>Theme4d,Theme4t,Theme4u</value>'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep -o -P '(?<=<fullName>).*(?=<\/fullName>)'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + fullname=LightningTheme
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ grep LightningTheme changeSetDeploy/force-app/main/default/CustomLabels_after.labels
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + value=
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + '[' -z '' ']'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + echo 'Value is NULL'
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: Value is NULL
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: + read line
+<13>Oct 29 00:18:59 SFDC_DEPLOY:[]: ++ echo '<fullName>INTEL_RUNDA</fullName><categories>LEX</categories><language>en_US</language><protected>false</protected><shortDescription>Intel Runda</shortDescription><value>Intel Runda</value>'
