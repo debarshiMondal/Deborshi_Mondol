@@ -1,6 +1,7 @@
 CodeAnalyser() {
-  # --- 0) Run PMD (same as today) -------------------------------------------
   rm -f /tmp/CodeAnalysisReport.txt
+
+  # Only run PMD if Apex exists
   if [ -d changeSetDeploy/force-app/main/default/classes -o -d changeSetDeploy/force-app/main/default/triggers ]; then
     bash build/script/currpmd.sh
     bash build/script/createpmdhtml.sh "$SFDC_ORG"
@@ -9,305 +10,373 @@ CodeAnalyser() {
     return 0
   fi
 
-  # --- 1) Count High violations ---------------------------------------------
-  local PAT_FILE="build/property/pmd_high_patterns.txt"
-  local pattern
+  # ---------- Compute HIGH counts ----------
+  PAT_FILE="build/property/pmd_high_patterns.txt"
   pattern="$(grep -Ehv '^\s*($|#)' "$PAT_FILE" 2>/dev/null | tr -d '\r' | paste -sd'|' -)"
-  [ -n "$pattern" ] || pattern="(High|Priority\s*:\s*High|Severity\s*:\s*High)"
+  [ -n "$pattern" ] || pattern="(DUMMY-NO-PATTERN)"
 
-  local CLASS_DIR="PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes"
-  local TRIG_DIR="PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers"
+  class_dir="PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes"
+  trig_dir="PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers"
 
-  _sum_matches() {
-    local dir="$1"
-    [ -d "$dir" ] || { echo 0; return; }
-    find "$dir" -maxdepth 1 -type f -name '*.txt' -print0 2>/dev/null \
-      | xargs -0 -r grep -Eh "$pattern" 2>/dev/null | wc -l | xargs
+  _sum_hits() {
+    local d="$1"
+    [ -d "$d" ] || { echo 0; return; }
+    find "$d" -maxdepth 1 -type f -name '*.txt' -print0 2>/dev/null \
+      | xargs -0 -r grep -Eh "$pattern" 2>/dev/null \
+      | wc -l | xargs
   }
 
-  local PMD_HIGH_CLS PMD_HIGH_TRG CLASS_COUNT TRIGGER_COUNT
-  PMD_HIGH_CLS=$(_sum_matches "$CLASS_DIR")
-  PMD_HIGH_TRG=$(_sum_matches "$TRIG_DIR")
   CLASS_COUNT=$(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null | wc -l | xargs)
   TRIGGER_COUNT=$(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null | wc -l | xargs)
 
-  local TOTAL_HIGH=$(( PMD_HIGH_CLS + PMD_HIGH_TRG ))
+  PMD_HIGH_CLS=$(_sum_hits "$class_dir")
+  PMD_HIGH_TRG=$(_sum_hits "$trig_dir")
+  TOTAL_HIGH=$(( PMD_HIGH_CLS + PMD_HIGH_TRG ))
 
-  # --- 2) If NO Regression → continue deployment ----------------------------
-  if [ "${TOTAL_HIGH:-0}" -le 0 ]; then
-    echo "PMD: No High regression detected (classes=${CLASS_COUNT}, triggers=${TRIGGER_COUNT})."
+  # ---------- If no regression, continue pipeline ----------
+  if [ "$TOTAL_HIGH" -le 0 ]; then
+    echo "PMD regression: NONE (High=0). Continuing pipeline." >> /tmp/CodeAnalysisReport.txt
     return 0
   fi
 
-  # --- 3) Build an HTML report (failure colors) + send email + stop ----------
-  # 3a) Read failure palette from ui_colors.jsonc (no change to HTML_REPORT)
-  local UI_COLORS_JSONC="${property:+${property}/ui_colors.jsonc}"
+  # ======================= PMD REGRESSION MAIL (CANCEL DEPLOY) =======================
+  # Build a self-contained HTML report that mirrors HTML_REPORT() failure palette and width
+  PMD_HTML="/tmp/${SFDC_ORG}.PMDRegression.${DATE}.html"
+  : > "$PMD_HTML"
+  CodeAnalyserFILE="$PMD_HTML"   # so PublishLOG will pick it up later
+
+  # ---- config / prerequisites (reuse HTML_REPORT conventions) ----
+  UI_COLORS_JSONC="${property:+${property}/ui_colors.jsonc}"
   UI_COLORS_JSONC="${UI_COLORS_JSONC:-ui_colors.jsonc}"
-  local UI_COLORS_JSON_STRICT="/tmp/ui_colors.$$.$RANDOM.json"
+  UI_COLORS_JSON_STRICT="/tmp/ui_colors.pmd.$$.$RANDOM.json"
 
-  command -v jq >/dev/null 2>&1 || { echo "jq missing"; Unlock; }
-  [ -f "$UI_COLORS_JSONC" ] || { echo "ui_colors.jsonc missing"; Unlock; }
+  _esc(){ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
+  _fatal(){ echo "[FATAL] $1"; printf "%s\n" "[FATAL] $1" | mutt -s "---${SFDC_ORG}--- UI Color Config Error" "${mutt_MAIL_LIST}" 2>/dev/null; rm -f "$UI_COLORS_JSON_STRICT" 2>/dev/null; Unlock; }
 
-  # strip comments -> strict JSON
+  command -v jq >/dev/null 2>&1 || _fatal "jq not found (needed for UI colors)."
+  [ -f "$UI_COLORS_JSONC" ] || _fatal "UI colors JSONC not found at: $UI_COLORS_JSONC"
+
+  # strip comments -> strict json
   sed -E ':a; s@/\*[^*]*\*+([^/*][^*]*\*+)*/@@g; ta' "$UI_COLORS_JSONC" \
-    | sed -E 's@\r$@@' \
-    | sed -E 's@//[[:space:]]*.*$@@' \
-    | sed '/^[[:space:]]*$/d' > "$UI_COLORS_JSON_STRICT"
+  | sed -E 's@//[[:space:]]*.*$@@' | sed '/^[[:space:]]*$/d' > "$UI_COLORS_JSON_STRICT" \
+  || _fatal "Failed producing strict JSON from $UI_COLORS_JSONC"
+  jq empty "$UI_COLORS_JSON_STRICT" >/dev/null 2>&1 || _fatal "ui_colors.jsonc invalid."
 
-  # helpers to read with defaults
   _getc(){ jq -r "$1 // empty" "$UI_COLORS_JSON_STRICT"; }
-  _gets(){ v=$(_getc "$1"); [ -n "$v" ] && printf '%s' "$v" || printf '%s' "$2"; }
+  _gets(){ local k="$1" d="$2" v; v=$(_getc "$k"); [ -n "$v" ] && printf '%s' "$v" || printf '%s' "$d"; }
 
-  # Failure palette
-  local HDR_BG HDR_TX PLATE_BG PLATE_BD CHIP_BG CHIP_TX CHIP_BD RUN_HDR_BG RUN_HDR_TX
-  HDR_BG=$(_gets '.header.failure_bg' '#a94442')
-  HDR_TX=$(_gets '.header.text' '#ffffff')
-  PLATE_BG=$(_gets '.plate.background' '#eef8ef')
-  PLATE_BD=$(_gets '.plate.border' '#b5d2b8')
-  CHIP_BG=$(_gets '.chips.failure_bg' '#def5de')
-  CHIP_TX=$(_gets '.chips.failure_text' '#1f2937')
-  CHIP_BD=$(_gets '.chips.border_failure' "$(_gets '.chips.border' '#b5d2b8')")
-  RUN_HDR_BG=$(_gets '.run_details.title_bg_failure' "$(_gets '.run_details.strip_failure_bg' '#a94442')")
-  RUN_HDR_TX=$(_gets '.run_details.title_text_failure' "$(_gets '.run_details.title_text' '#ffffff')")
+  # ---- read palette (failure branch) ----
+  _hdr_bg=$(_getc '.header.failure_bg'); _hdr_txt=$(_getc '.header.text')
+  _page_bg=$(_getc '.plate.page_bg'); _plate_bg=$(_getc '.plate.background'); _plate_border=$(_getc '.plate.border')
+  _container_px="$(_gets '.plate.container_px' '')"
 
-  local STAT_DEP_BG STAT_DEP_L STAT_DEP_V STAT_PMD STAT_TIME STATUS_RADIUS
-  STAT_DEP_BG=$(_gets '.status_summary.deployment_failure_bg' '#ffecec')
-  STAT_DEP_L=$(_gets '.status_summary.label_text' '#374151')
-  STAT_DEP_V=$(_gets '.status_summary.value_text' '#111827')
-  STAT_PMD=$(_gets '.status_summary.pmd_bg' '#e9f5ff')
-  STAT_TIME=$(_gets '.status_summary.time_bg' '#eef2ff')
-  STATUS_RADIUS=$(_gets '.status_summary.corner_radius' '4px')
+  _run_hdr_bg=$(_gets '.run_details.title_bg_failure' "$(_gets '.run_details.strip_failure_bg' '#a94442')")
+  _run_hdr_txt=$(_gets '.run_details.title_text_failure' "$(_gets '.run_details.title_text' '#ffffff')")
 
-  local FOOT_BG FOOT_TX FOOT_COPY
-  FOOT_BG=$(_gets '.footer.bg' '#f5f5f5')
-  FOOT_TX=$(_gets '.footer.text' '#374151')
-  FOOT_COPY=$(_gets '.strings.footer.failure' '{ORG} • Deployment Failure Report — generated automatically.')
+  _chip_bg=$(_getc '.chips.failure_bg'); _chip_txt=$(_getc '.chips.failure_text'); _chip_border=$(_getc '.chips.border_failure')
+  [ -n "$_chip_border" ] || _chip_border="$(_getc '.chips.border')"
+  _chip_label="$(_gets '.chips.label_failure_text' "$_chip_txt")"
 
-  # 3b) Runtime info for chips
-  local _RUN_IST _API _BRANCH _REPO _REQID _DEPUSER
+  _ql1=$(_getc '.quick_links.tile_1_bg'); _ql2=$(_getc '.quick_links.tile_2_bg'); _ql3=$(_getc '.quick_links.tile_3_bg'); _ql4=$(_getc '.quick_links.tile_4_bg'); _ql_text=$(_getc '.quick_links.text'); _ql_gap=$(_getc '.quick_links.gap_px')
+
+  _status_bg=$(_getc '.status_summary.deployment_failure_bg'); _status_pmd=$(_getc '.status_summary.pmd_bg'); _status_time=$(_getc '.status_summary.time_bg')
+  _status_title=$(_getc '.status_summary.title_text'); _status_label=$(_getc '.status_summary.label_text'); _status_value=$(_getc '.status_summary.value_text'); _status_radius=$(_getc '.status_summary.corner_radius')
+
+  _dep_label_col=$(_gets '.status_summary.deployment_label_failure' "$_status_label")
+  _dep_value_col=$(_gets '.status_summary.deployment_value_failure' "$_status_value")
+  _pmd_textcol=$(_gets '.status_summary.pmd_text' "$_status_value")
+  _time_textcol=$(_gets '.status_summary.time_text' "$_status_value")
+
+  _pmd_hdr_bg=$(_getc '.pmd_review.header_bg'); _pmd_hdr_text=$(_getc '.pmd_review.header_text'); _pmd_row_border=$(_getc '.pmd_review.row_border')
+  _pmd_link_normal=$(_getc '.pmd_review.link_normal'); _pmd_link_high=$(_getc '.pmd_review.link_high'); _pmd_text_high=$(_getc '.pmd_review.text_high'); _pmd_text_normal=$(_getc '.pmd_review.text_normal')
+  _zebra_alt=$(_gets '.pmd_review.zebra_alt_bg' '#f7f7f7')
+  _reg_bg=$(_gets '.pmd_review.regression_row_bg' '#ffefef')
+
+  _foot_bg=$(_getc '.footer.bg'); _foot_text=$(_getc '.footer.text')
+  _foot_line="$(_gets '.strings.footer.failure' '{ORG} • Deployment Failure Report — generated automatically. Review the logs for root cause.')"
+  _foot_line="$(echo "$_foot_line" | sed "s/{ORG}/${SFDC_ORG}/")"
+
+  # ---- strings / typography (reuse keys) ----
+  _fontfam="$(_gets '.typography.font_family' 'Arial,Helvetica,sans-serif')"
+  _base="$(_gets '.typography.base_px' '10')"
+  _sect="$(_gets '.typography.section_hdr_px' '11')"
+  _main="$(_gets '.typography.main_hdr_px' '14')"
+  _run="$(_gets '.typography.run_hdr_px' '11')"
+
+  _STR_HDR_CORE="$(_gets '.strings.header.title_core' 'Deployment')"
+  _STR_HDR_SUFFIX="$(_gets '.strings.header.title_suffix' 'Report')"
+
+  _STR_RUN_TITLE="$(_gets '.strings.run_details.title' 'Run Details')"
+  _STR_CHIP_REPO="$(_gets '.strings.chips.repo' 'REPO')"
+  _STR_CHIP_BRANCH="$(_gets '.strings.chips.branch' 'BRANCH')"
+  _STR_CHIP_REQID="$(_gets '.strings.chips.request_id' 'REQUEST ID')"
+  _STR_CHIP_RUNIST="$(_gets '.strings.chips.run_ist' 'RUN (IST)')"
+  _STR_CHIP_ORGAPI="$(_gets '.strings.chips.org_api' 'ORG NAME + API')"
+  _STR_CHIP_DEPUSER="$(_gets '.strings.chips.deploy_user' 'DEPLOY USER')"
+
+  _STR_SECT_STATUS="$(_gets '.strings.sections.status_summary' 'Status Summary')"
+  _STR_TILE_DEPLOY="$(_gets '.strings.sections.deployment_tile' 'DEPLOYMENT')"
+  _STR_TILE_PMD="$(_gets '.strings.sections.pmd_tile' 'PMD — CHANGESET')"
+  _STR_TILE_DUR="$(_gets '.strings.sections.duration_tile' 'DURATION')"
+  _STR_DUR_START="$(_gets '.strings.sections.duration_start' 'Start')"
+  _STR_DUR_END="$(_gets '.strings.sections.duration_end' 'End')"
+  _STR_PMD_REVIEW="$(_gets '.strings.sections.pmd_review' 'PMD Review')"
+
+  _STR_COL_ORIG="$(_gets '.strings.pmd_columns.original_label' 'ORIGINAL (HIGH)')"
+  _STR_COL_ORIG_X="$(_gets '.strings.pmd_columns.original_explain' 'Original PMD total; High in parentheses')"
+  _STR_COL_CUR="$(_gets '.strings.pmd_columns.current_label' 'CURRENT (HIGH)')"
+  _STR_COL_CUR_X="$(_gets '.strings.pmd_columns.current_explain' 'Current PMD total; High in parentheses')"
+  _STR_COL_DEL="$(_gets '.strings.pmd_columns.delta_label' 'Δ HIGH')"
+
+  # ---- runtime chips ----
   _RUN_IST="$(TZ=Asia/Kolkata date +'%d.%b.%Y %H:%M IST')"
   _API="${SetAPI:-N/A}"
   _BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo N/A)"
   _REPO="$(git config --get remote.origin.url 2>/dev/null || echo N/A)"
   _REQID="No Deployment"
-  _DEPUSER="${FROM:-N/A}"
+  _DEPUSER="$(grep -m1 -E 'Target Org[[:space:]]*:' "$LOG" 2>/dev/null | xargs | cut -d: -f2- | cut '-d ' -f2-)"
+  [ -n "$_DEPUSER" ] || _DEPUSER="SFDCdeploy@cadence.com"
 
-  # 3c) Quick links
-  local OPEN_LOGS_URL ORIG_PMD_URL PMD_PATTERN_URL FORCE_DEPLOY_URL
+  # ---- helpful links (reuse same scheme as HTML_REPORT) ----
   OPEN_LOGS_URL="https://cdnsfdc.cadence.com/SFDC_GIT_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
   ORIG_PMD_URL="https://cdnsfdc.cadence.com/PMDOUTPUT/${SFDC_ORG}"
-  [ -s "$PAT_FILE" ] && {
-    mkdir -p "/data/public/pmd_patterns/${SFDC_ORG}/"
+  PMD_PATTERN_URL="$ORIG_PMD_URL"
+  if [ -s "$PAT_FILE" ]; then
+    mkdir -p "/data/public/pmd_patterns/${SFDC_ORG}/" 2>/dev/null
     cp -u "$PAT_FILE" "/data/public/pmd_patterns/${SFDC_ORG}/pmd_high_patterns.txt" 2>/dev/null
     PMD_PATTERN_URL="https://cdnsfdc.cadence.com/pmd_patterns/${SFDC_ORG}/pmd_high_patterns.txt"
-  }
-  FORCE_DEPLOY_URL="$OPEN_LOGS_URL"
+  fi
+  FORCE_DEPLOY_URL="$OPEN_LOGS_URL/${SFDC_ORG}.Deploy.log.${DATE}.html"
 
-  # 3d) Build PMD Review rows (classes + triggers) with deltas
-  local rows=() max_oh=0 max_ch=0
+  # ---- header helpers ----
+  _FONT_BASE="font:${_base}px ${_fontfam};"
+  _FONT_BASE_BOLD="font:bold ${_base}px ${_fontfam};"
+  _FONT_SECTION_HDR="font:bold ${_sect}px ${_fontfam};"
+  _FONT_MAIN_HDR="font:bold ${_main}px ${_fontfam};"
 
-  _add_rows_for_dir() {
-    local kind="$1" src_glob="$2" curr_dir="$3" org_dir="$4" ext="$5"
-    local f base pmd_html OP CP OH CH delta author display link
-    for f in $src_glob; do
-      [ -e "$f" ] || continue
-      base="$(basename "$f" ".$ext")"
-      pmd_html="/data/public/pmd_rule/$SFDC_ORG/${base}.$ext"_currpmd_orgpm.html
-      OP=$(awk '/Original PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p'); OP=${OP:-0}
-      CP=$(awk '/Current PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p'); CP=${CP:-0}
-      OH=$(grep -Eh "$pattern" "$org_dir/${base}.*" 2>/dev/null | wc -l | xargs); OH=${OH:-0}
-      CH=$(grep -Eh "$pattern" "$curr_dir/${base}.*" 2>/dev/null | wc -l | xargs); CH=${CH:-0}
-      delta=$(( CH - OH ))
-      author="$(git log -1 --format='%an' "src/${kind}/${base}.*" 2>/dev/null | head -n1)"; [ -n "$author" ] || author="N/A"
-      display="${base}.${ext}"
-      link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${base}.$ext"_currpmd_orgpm.html
-      rows+=("$display|$link|$author|$OP|$OH|$CP|$CH|$delta")
-      [ "$OH" -gt "$max_oh" ] && max_oh="$OH"
-      [ "$CH" -gt "$max_ch" ] && max_ch="$CH"
-    done
+  _section_bar(){ cat <<BAR
+<tr>
+  <td style="padding:0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${_run_hdr_bg};border-collapse:separate;border-spacing:0;">
+      <tr><td align="center" style="${_FONT_SECTION_HDR}color:${_run_hdr_txt};padding:6px 8px;">$1</td></tr>
+    </table>
+  </td>
+</tr>
+BAR
   }
 
-  _add_rows_for_dir "classes" "changeSetDeploy/force-app/main/default/classes/*.cls"  \
-                    "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes" \
-                    "PMDReport/orgpmdoutput/src/classes" "cls"
+  _chip_td(){
+    local label="$1" value="$2" pr="$3"
+    cat <<CELL
+<td valign="top" width="260" style="padding:0 ${pr}px 10px 0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${_chip_bg};border:1px solid ${_chip_border};border-collapse:separate;border-spacing:0;">
+    <tr><td style="padding:6px 8px;">
+      <div style="font:700 ${_base}px ${_fontfam};color:${_chip_label};letter-spacing:.3px;text-transform:uppercase;">$label</div>
+      <div style="margin-top:2px;${_FONT_BASE}color:${_chip_txt};word-wrap:break-word;">$(_esc <<<"$value")</div>
+    </td></tr>
+  </table>
+</td>
+CELL
+  }
 
-  _add_rows_for_dir "triggers" "changeSetDeploy/force-app/main/default/triggers/*.trigger" \
-                    "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers" \
-                    "PMDReport/orgpmdoutput/src/triggers" "trigger"
+  # ---- container sizing identical to HTML_REPORT ----
+  _container_attr='width="100%"'
+  _container_style='width:100%;'
+  if [ -n "$_container_px" ]; then
+    _container_attr="width=\"${_container_px}\""
+    _container_style="width:${_container_px}px;"
+  fi
 
-  # 3e) Render a compact HTML (same look as your failure report)
-  local PMD_HTML="/tmp/${SFDC_ORG}.PMDRegression.${DATE}.html"
-  : > "$PMD_HTML"
+  # ---- build HTML (Header + Run Details + Status + PMD Review + Footer) ----
+  {
+    cat <<TOP
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta name="viewport" content="width=device-width, initial-scale=1">
+<style> a.cta{ text-decoration:none !important; color:${_ql_text} !important; } a.cta:hover{ text-decoration:underline !important; } </style>
+</head><body style="margin:0;padding:0;background:${_page_bg};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${_page_bg};">
+  <tr><td align="center" style="padding:0;">
+    <table role="presentation" align="center" ${_container_attr} cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;${_container_style}">
+      <tr><td style="padding:0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:separate;border-spacing:0;">
+          <tr>
+            <td style="background:${_hdr_bg};padding:6px 10px;color:${_hdr_txt};${_FONT_MAIN_HDR};line-height:16px;border:1px solid ${_plate_border};" align="center">
+              ---${SFDC_ORG}--- PMD Regression Detected: Deployment Canceled
+            </td>
+          </tr>
+        </table>
+TOP
 
-  cat >>"$PMD_HTML" <<HTML
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="x-ua-compatible" content="ie=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${SFDC_ORG} PMD Regression</title>
-</head>
-<body style="margin:0;padding:0;background:#ffffff;font:12px Arial,Helvetica,sans-serif;color:#111827;">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-  <tr><td style="background:${HDR_BG};color:${HDR_TX};padding:8px 10px;border-bottom:1px solid ${PLATE_BD};text-align:center;font-weight:700;">
-    ---${SFDC_ORG}--- PMD Regression Detected: Deployment Canceled
-  </td></tr>
-</table>
+        # Run Details
+        cat <<RUN
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${_plate_bg};border:1px solid ${_plate_border};margin-top:8px;border-collapse:separate;border-spacing:0;">
+          $(_section_bar "${_STR_RUN_TITLE}")
+          <tr><td style="padding:8px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                $(_chip_td "${_STR_CHIP_REPO}" "$_REPO" 10)
+                $(_chip_td "${_STR_CHIP_BRANCH}" "$_BRANCH" 10)
+                $(_chip_td "${_STR_CHIP_REQID}" "$_REQID" 0)
+              </tr>
+              <tr>
+                $(_chip_td "${_STR_CHIP_RUNIST}" "$_RUN_IST" 10)
+                $(_chip_td "${_STR_CHIP_ORGAPI}" "${SFDC_ORG} • ${_API}" 10)
+                $(_chip_td "${_STR_CHIP_DEPUSER}" "$_DEPUSER" 0)
+              </tr>
+            </table>
 
-<!-- Run Details -->
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:8px;border:1px solid ${PLATE_BD};">
-  <tr><td style="background:${RUN_HDR_BG};color:${RUN_HDR_TX};padding:6px 8px;text-align:center;font-weight:700;">Run Details</td></tr>
-  <tr><td style="background:${PLATE_BG};padding:8px;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-      <tr>
-        <td style="width:33%;padding:0 8px 8px 0;">
-          <div style="background:${CHIP_BG};border:1px solid ${CHIP_BD};padding:6px;">
-            <div style="font-weight:700;text-transform:uppercase;color:${CHIP_TX};">REPO</div>
-            <div style="color:${CHIP_TX};word-break:break-all;">${_REPO}</div>
-          </div>
-        </td>
-        <td style="width:33%;padding:0 8px 8px 0;">
-          <div style="background:${CHIP_BG};border:1px solid ${CHIP_BD};padding:6px;">
-            <div style="font-weight:700;text-transform:uppercase;color:${CHIP_TX};">BRANCH</div>
-            <div style="color:${CHIP_TX};">${_BRANCH}</div>
-          </div>
-        </td>
-        <td style="width:33%;padding:0 0 8px 0;">
-          <div style="background:${CHIP_BG};border:1px solid ${CHIP_BD};padding:6px;">
-            <div style="font-weight:700;text-transform:uppercase;color:${CHIP_TX};">REQUEST ID</div>
-            <div style="color:${CHIP_TX};">${_REQID}</div>
-          </div>
-        </td>
-      </tr>
-      <tr>
-        <td style="width:33%;padding:0 8px 0 0;">
-          <div style="background:${CHIP_BG};border:1px solid ${CHIP_BD};padding:6px;">
-            <div style="font-weight:700;text-transform:uppercase;color:${CHIP_TX};">RUN (IST)</div>
-            <div style="color:${CHIP_TX};">${_RUN_IST}</div>
-          </div>
-        </td>
-        <td style="width:33%;padding:0 8px 0 0;">
-          <div style="background:${CHIP_BG};border:1px solid ${CHIP_BD};padding:6px;">
-            <div style="font-weight:700;text-transform:uppercase;color:${CHIP_TX};">ORG NAME + API</div>
-            <div style="color:${CHIP_TX};">${SFDC_ORG} • ${_API}</div>
-          </div>
-        </td>
-        <td style="width:33%;padding:0;">
-          <div style="background:${CHIP_BG};border:1px solid ${CHIP_BD};padding:6px;">
-            <div style="font-weight:700;text-transform:uppercase;color:${CHIP_TX};">DEPLOY USER</div>
-            <div style="color:${CHIP_TX};">${_DEPUSER}</div>
-          </div>
-        </td>
-      </tr>
-    </table>
+            <!-- Quick links -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 2px 0;">
+              <tr>
+                <td style="padding:0 ${_ql_gap}px 0 0;">
+                  <table role="presentation" style="background:${_ql1};border:1px solid ${_chip_border};border-radius:3px;"><tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}"><a class="cta" href="${OPEN_LOGS_URL}">Open Logs</a></td></tr></table>
+                </td>
+                <td style="padding:0 ${_ql_gap}px 0 0;">
+                  <table role="presentation" style="background:${_ql2};border:1px solid ${_chip_border};border-radius:3px;"><tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}"><a class="cta" href="${ORIG_PMD_URL}">Original PMD Report</a></td></tr></table>
+                </td>
+                <td style="padding:0 ${_ql_gap}px 0 0;">
+                  <table role="presentation" style="background:${_ql3};border:1px solid ${_chip_border};border-radius:3px;"><tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}"><a class="cta" href="${PMD_PATTERN_URL}">PMD Critical Warning Pattern</a></td></tr></table>
+                </td>
+                <td>
+                  <table role="presentation" style="background:${_ql4};border:1px solid ${_chip_border};border-radius:3px;"><tr><td align="center" style="padding:6px 12px;${_FONT_BASE_BOLD}"><a class="cta" href="${FORCE_DEPLOY_URL}">ForceDeploy</a></td></tr></table>
+                </td>
+              </tr>
+            </table>
+          </td></tr>
+        </table>
+RUN
 
-    <!-- Quick links -->
-    <div style="margin-top:8px;">
-      <a href="${OPEN_LOGS_URL}" style="display:inline-block;margin-right:8px;padding:6px 10px;border:1px solid ${CHIP_BD};background:#ffffff;text-decoration:none;color:#0f172a;">Open Logs</a>
-      <a href="${ORIG_PMD_URL}" style="display:inline-block;margin-right:8px;padding:6px 10px;border:1px solid ${CHIP_BD};background:#ffffff;text-decoration:none;color:#0f172a;">Original PMD Report</a>
-      <a href="${PMD_PATTERN_URL:-$ORIG_PMD_URL}" style="display:inline-block;margin-right:8px;padding:6px 10px;border:1px solid ${CHIP_BD};background:#ffffff;text-decoration:none;color:#0f172a;">PMD Critical Warning Pattern</a>
-      <a href="${FORCE_DEPLOY_URL}" style="display:inline-block;padding:6px 10px;border:1px solid ${CHIP_BD};background:#ffffff;text-decoration:none;color:#0f172a;">ForceDeploy</a>
-    </div>
-  </td></tr>
-</table>
+        # Status Summary
+        cat <<STATUS
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:6px;border:1px solid ${_chip_border};background:${_plate_bg};border-collapse:separate;border-spacing:0;">
+          $(_section_bar "${_STR_SECT_STATUS}")
+          <tr><td style="padding:6px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td width="33%" valign="top" style="padding:2px;">
+                  <table role="presentation" width="100%" style="background:${_status_bg};border:1px solid ${_chip_border};border-radius:${_status_radius};">
+                    <tr><td style="padding:6px;">
+                      <div style="${_FONT_BASE}color:${_dep_label_col};">${_STR_TILE_DEPLOY}</div>
+                      <div style="${_FONT_BASE_BOLD}color:${_dep_value_col};">Canceled</div>
+                      <div style="${_FONT_BASE}color:${_dep_value_col};">Passed: 0</div>
+                    </td></tr>
+                  </table>
+                </td>
+                <td width="33%" valign="top" style="padding:2px;">
+                  <table role="presentation" width="100%" style="background:${_status_pmd};border:1px solid ${_chip_border};border-radius:${_status_radius};">
+                    <tr><td style="padding:6px;">
+                      <div style="${_FONT_BASE}color:${_status_label};">${_STR_TILE_PMD}</div>
+                      <div style="${_FONT_BASE_BOLD}color:${_pmd_textcol};white-space:nowrap;">Classes: ${CLASS_COUNT} • Triggers: ${TRIGGER_COUNT}</div>
+                      <div style="${_FONT_BASE}color:${_pmd_textcol};white-space:nowrap;">High (Classes): ${PMD_HIGH_CLS} • High (Triggers): ${PMD_HIGH_TRG}</div>
+                    </td></tr>
+                  </table>
+                </td>
+                <td width="33%" valign="top" style="padding:2px;">
+                  <table role="presentation" width="100%" style="background:${_status_time};border:1px solid ${_chip_border};border-radius:${_status_radius};">
+                    <tr><td style="padding:6px;">
+                      <div style="${_FONT_BASE}color:${_status_label};">${_STR_TILE_DUR}</div>
+                      <div style="${_FONT_BASE_BOLD}color:${_time_textcol};">0</div>
+                      <div style="${_FONT_BASE}color:${_time_textcol};white-space:nowrap;">${_STR_DUR_START}: 0 • ${_STR_DUR_END}: 0</div>
+                    </td></tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td></tr>
+        </table>
+STATUS
+  } >>"$PMD_HTML"
 
-<!-- Status Summary -->
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:8px;border:1px solid ${PLATE_BD};">
-  <tr><td style="background:${RUN_HDR_BG};color:${RUN_HDR_TX};padding:6px 8px;text-align:center;font-weight:700;">Status Summary</td></tr>
-  <tr><td style="background:${PLATE_BG};padding:8px;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-      <tr>
-        <td style="width:33%;padding:2px;">
-          <div style="background:${STAT_DEP_BG};border:1px solid ${CHIP_BD};border-radius:${STATUS_RADIUS};padding:6px;">
-            <div style="color:${STAT_DEP_L};">DEPLOYMENT</div>
-            <div style="font-weight:700;color:${STAT_DEP_V};">Canceled</div>
-            <div style="color:${STAT_DEP_V};">Passed: 0</div>
-          </div>
-        </td>
-        <td style="width:33%;padding:2px;">
-          <div style="background:${STAT_PMD};border:1px solid ${CHIP_BD};border-radius:${STATUS_RADIUS};padding:6px;">
-            <div style="color:${STAT_DEP_L};">PMD — CHANGESET</div>
-            <div style="font-weight:700;color:${STAT_DEP_V};">Classes: ${CLASS_COUNT} • Triggers: ${TRIGGER_COUNT}</div>
-            <div style="color:${STAT_DEP_V};">High (Classes): ${PMD_HIGH_CLS} • High (Triggers): ${PMD_HIGH_TRG}</div>
-          </div>
-        </td>
-        <td style="width:33%;padding:2px;">
-          <div style="background:${STAT_TIME};border:1px solid ${CHIP_BD};border-radius:${STATUS_RADIUS};padding:6px;">
-            <div style="color:${STAT_DEP_L};">DURATION</div>
-            <div style="font-weight:700;color:${STAT_DEP_V};">0</div>
-            <div style="color:${STAT_DEP_V};">Start: 0 • End: 0</div>
-          </div>
-        </td>
-      </tr>
-    </table>
-  </td></tr>
-</table>
+  # ---- PMD Review table (identical columns) ----
+  _COL_NAME_W="40%"; _COL_ORIG_W="15%"; _COL_CUR_W="15%"; _COL_DELTA_W="10%"; _COL_AUTHOR_W="20%"
 
-<!-- PMD Review -->
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:10px;border:1px solid ${PLATE_BD};">
-  <tr><td style="background:${RUN_HDR_BG};color:${RUN_HDR_TX};padding:6px 8px;text-align:center;font-weight:700;">PMD Review</td></tr>
-  <tr><td style="background:${PLATE_BG};padding:6px;">
-    <div style="margin-bottom:6px;">
-      <strong style="color:#b91c1c;">Red = got worse (Δ High > 0)</strong> &nbsp;&nbsp;
-      <strong style="color:#7c2d12;">Light red = improvement (Δ High < 0)</strong> &nbsp;&nbsp;
-      <strong style="color:#6b7280;">White/Grey = no change (Δ High = 0)</strong>
-    </div>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid ${PLATE_BD};">
-      <thead>
-        <tr style="background:#e5e7eb;">
-          <th align="left"  style="padding:6px 8px;">CLASS / TRIGGER NAME</th>
-          <th align="right" style="padding:6px 8px;">ORIGINAL (HIGH)</th>
-          <th align="right" style="padding:6px 8px;">CURRENT (HIGH)</th>
-          <th align="right" style="padding:6px 8px;">Δ HIGH</th>
-          <th align="left"  style="padding:6px 8px;">AUTHOR</th>
-        </tr>
-      </thead>
-      <tbody>
-HTML
-
-  # emit rows with zebra + delta coloring
-  local i=0 display link author OP OH CP CH delta bg
-  for row in "${rows[@]}"; do
-    IFS='|' read -r display link author OP OH CP CH delta <<<"$row"
-    if   [ "$delta" -gt 0 ]; then bg="#ffefef"
-    elif [ "$delta" -lt 0 ]; then bg="#fff5f5"
-    else                         bg="$([ $((i%2)) -eq 0 ] && echo '#ffffff' || echo '#f7f7f7')"
-    fi
-    cat >>"$PMD_HTML" <<ROW
-        <tr style="background:${bg};">
-          <td style="padding:6px 8px;"><a href="$link" style="color:#0f172a;">$display</a></td>
-          <td align="right" style="padding:6px 8px;">${OP} <span style="opacity:.7;">(${OH})</span></td>
-          <td align="right" style="padding:6px 8px;">${CP} <span style="opacity:.7;">(${CH})</span></td>
-          <td align="right" style="padding:6px 8px;font-weight:700;">${delta}</td>
-          <td style="padding:6px 8px;">${author}</td>
-        </tr>
+  _pmd_row(){
+    local display="$1" link="$2" author="$3" op="$4" oh="$5" cp="$6" ch="$7" delta="$8" row_num="$9"
+    local bg="#ffffff" tc="${_pmd_text_normal}" lc="${_pmd_link_normal}"
+    [ $((row_num % 2)) -eq 1 ] && bg="$_zebra_alt"
+    if [ "$delta" -gt 0 ]; then bg="$_reg_bg"; tc="${_pmd_text_high}"; lc="${_pmd_link_high}"; fi
+    cat <<ROW >>"$PMD_HTML"
+<tr>
+  <td width="${_COL_NAME_W}" style="padding:5px 8px;${_FONT_BASE};background:${bg};"><a href="$link" style="color:${lc};text-decoration:underline;background:${bg};display:inline-block;">$display</a></td>
+  <td width="${_COL_ORIG_W}" align="right" style="padding:5px 8px;${_FONT_BASE};background:${bg};white-space:nowrap;">${op} <span style="opacity:.75;">(${oh})</span></td>
+  <td width="${_COL_CUR_W}"  align="right" style="padding:5px 8px;${_FONT_BASE};background:${bg};white-space:nowrap;">${cp} <span style="opacity:.75;">(${ch})</span></td>
+  <td width="${_COL_DELTA_W}" align="right" style="padding:5px 6px;${_FONT_BASE};background:${bg};white-space:nowrap;"><strong>${delta}</strong></td>
+  <td width="${_COL_AUTHOR_W}" style="padding:5px 8px;${_FONT_BASE};background:${bg};white-space:nowrap;">${author}</td>
+</tr>
+<tr><td colspan="5" style="height:1px;line-height:1px;font-size:0;background:${_pmd_row_border};">&nbsp;</td></tr>
 ROW
-    i=$((i+1))
+  }
+
+  echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0" \
+       "\" border=\"0\" style=\"width:100%;margin-top:10px;border:1px solid ${_pmd_row_border};background:${_plate_bg};border-collapse:separate;border-spacing:0;\">" >>"$PMD_HTML"
+  echo "$(_section_bar "${_STR_PMD_REVIEW}")" >>"$PMD_HTML"
+  echo "<tr><td style=\"padding:6px;\">" >>"$PMD_HTML"
+
+  # Column headers
+  {
+    echo "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border:1px solid ${_pmd_row_border};\">"
+    echo "<thead><tr style=\"background:${_pmd_hdr_bg};\">"
+    echo "<th width=\"${_COL_NAME_W}\"  align=\"left\"  style=\"padding:6px 8px;${_FONT_BASE_BOLD};color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">CLASS / TRIGGER NAME</th>"
+    echo "<th width=\"${_COL_ORIG_W}\"  align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD};color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">${_STR_COL_ORIG}</th>"
+    echo "<th width=\"${_COL_CUR_W}\"   align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD};color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">${_STR_COL_CUR}</th>"
+    echo "<th width=\"${_COL_DELTA_W}\" align=\"right\" style=\"padding:6px 8px;${_FONT_BASE_BOLD};color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">${_STR_COL_DEL}</th>"
+    echo "<th width=\"${_COL_AUTHOR_W}\" align=\"left\"  style=\"padding:6px 8px;${_FONT_BASE_BOLD};color:${_pmd_hdr_text};border-bottom:1px solid ${_pmd_row_border};\">AUTHOR</th>"
+    echo "</tr></thead><tbody>"
+  } >>"$PMD_HTML"
+
+  # Collect PMD numbers per file (reuse same parsing style as HTML_REPORT)
+  row_num=0
+  for p in $(ls changeSetDeploy/force-app/main/default/classes/*.cls 2>/dev/null); do
+    base="$(basename "$p" .cls)"
+    pmd_html="/data/public/pmd_rule/$SFDC_ORG/${base}.cls_currpmd_orgpm.html"
+    OriginalPmd=$(awk '/Original PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p'); OriginalPmd=${OriginalPmd:-0}
+    CurrentPmd=$(awk  '/Current PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p'); CurrentPmd=${CurrentPmd:-0}
+    CurrH=$(grep -Eh "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/classes/${base}.cls_currpmd.txt" 2>/dev/null | wc -l | xargs); CurrH=${CurrH:-0}
+    OrigH=$(grep -Eh "$pattern" "PMDReport/orgpmdoutput/src/classes/${base}.cls_orgpmd.txt" 2>/dev/null | wc -l | xargs); OrigH=${OrigH:-0}
+    delta=$(( CurrH - OrigH ))
+    author="$(git log -1 --format='%an' "src/classes/${base}.cls" 2>/dev/null | head -n1)"; [ -n "$author" ] || author="N/A"
+    link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${base}.cls_currpmd_orgpm.html"
+    _pmd_row "${base}.cls" "$link" "$author" "$OriginalPmd" "$OrigH" "$CurrentPmd" "$CurrH" "$delta" "$row_num"
+    row_num=$((row_num+1))
   done
 
-  cat >>"$PMD_HTML" <<HTML
-      </tbody>
+  for p in $(ls changeSetDeploy/force-app/main/default/triggers/*.trigger 2>/dev/null); do
+    base="$(basename "$p" .trigger)"
+    pmd_html="/data/public/pmd_rule/$SFDC_ORG/${base}.trigger_currpmd_orgpm.html"
+    OriginalPmd=$(awk '/Original PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p'); OriginalPmd=${OriginalPmd:-0}
+    CurrentPmd=$(awk  '/Current PMD Warnings/{f=1; next} f && /class="stat/{print; exit}' "$pmd_html" 2>/dev/null | sed -n 's/.*>\([0-9][0-9]*\)<.*/\1/p'); CurrentPmd=${CurrentPmd:-0}
+    CurrH=$(grep -Eh "$pattern" "PMDReport/currentpmdoutput/changeSetDeploy/force-app/main/default/triggers/${base}.trigger_currpmd.txt" 2>/dev/null | wc -l | xargs); CurrH=${CurrH:-0}
+    OrigH=$(grep -Eh "$pattern" "PMDReport/orgpmdoutput/src/triggers/${base}.trigger_orgpmd.txt" 2>/dev/null | wc -l | xargs); OrigH=${OrigH:-0}
+    delta=$(( CurrH - OrigH ))
+    author="$(git log -1 --format='%an' "src/triggers/${base}.trigger" 2>/dev/null | head -n1)"; [ -n "$author" ] || author="N/A"
+    link="https://cdnsfdc.cadence.com/pmd_rule/$SFDC_ORG/${base}.trigger_currpmd_orgpm.html"
+    _pmd_row "${base}.trigger" "$link" "$author" "$OriginalPmd" "$OrigH" "$CurrentPmd" "$CurrH" "$delta" "$row_num"
+    row_num=$((row_num+1))
+  done
+
+  echo "</tbody></table>" >>"$PMD_HTML"
+  echo "</td></tr></table>" >>"$PMD_HTML"
+
+  # Footer (inside the same centered container)
+  cat >>"$PMD_HTML" <<FOOT
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:6px 0 10px;background:${_foot_bg};border:1px solid ${_plate_border};">
+          <tr><td align="center" style="padding:6px 8px;${_FONT_BASE_BOLD};color:${_foot_text};">$_foot_line</td></tr>
+        </table>
+      </td></tr>
     </table>
   </td></tr>
 </table>
-
-<!-- Footer -->
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:8px 0;border:1px solid ${PLATE_BD};">
-  <tr><td align="center" style="background:${FOOT_BG};color:${FOOT_TX};padding:6px 8px;font-weight:700;">
-    $(echo "$FOOT_COPY" | sed "s/{ORG}/${SFDC_ORG}/")
-  </td></tr>
-</table>
-
 </body></html>
-HTML
+FOOT
 
-  # 3f) Send email + stop everything
+  # ---- Mail it & publish ----
   EMAIL=${FROM} mutt -e 'set content_type=text/html' \
     -s "---${SFDC_ORG}--- PMD Regression Detected: Deployment Canceled [`TZ=Asia/Kolkata date +%d.%b.%Y` IST - git ${gitlast}-${gitlatest} ]" \
     "${mutt_MAIL_LIST}" < "$PMD_HTML"
 
-  echo "[PMD] Regression detected: classes=${PMD_HIGH_CLS}, triggers=${PMD_HIGH_TRG}. Deployment canceled." | tee -a "$LOG"
+  # publish alongside other logs
+  PublishLOG changeset
 
-  # Clean temp color file
-  rm -f "$UI_COLORS_JSON_STRICT" 2>/dev/null
-
-  # Hard stop the pipeline
-  Unlock   # <- removes LOCK and exits
+  # hard stop the pipeline
+  echo "PMD regression detected (High>0). Deployment canceled." | tee -a "$LOG"
+  Unlock
 }
