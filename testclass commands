@@ -1,0 +1,12 @@
+sf project deploy report --job-id 0AfVA00000DJmB7 --target-org prprdnov25 --json > report_mod.json
+
+4.
+
+jq -r '.result.details.componentFailures[] | [.fullName, .componentType, .problem, .fileName, (.lineNumber//"-"), (.columnNumber//"-")] | @tsv' report_mod.json > report_final.json
+
+
+jq -r '.result.details.runTestResult.failures[] | [.name, .methodName, .message, .stackTrace] | @tsv' report_mod.json > report_final.json
+
+jq -r '.result.details.runTestResult.failures[] | [.name, .methodName, .message, .stackTrace] | @tsv' report_mod.json > report_final.json
+
+jq -r '.result.details.runTestResult.codeCoverageWarnings[]? | [.name, .message] | @tsv' report_mod.json > report_codecoveragewar.json
