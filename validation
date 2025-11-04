@@ -1,6 +1,6 @@
 #!/bin/bash
 # jbakshi@cadence.com Jan'2018
-# Description: Validate changeSet against SFDC ORG + HTML email report (inline CSS)
+# Description: Validate changeset against SFDC ORG + HTML email report (colored, numbered) + git authors
 
 USAGE=">>>>>  Usage: validation_git_sfcli.sh env (replace env with Sandbox or Production alias)   GitHash1 GitHash2 <<<<<<"
 
@@ -48,11 +48,16 @@ REPORT_JSON=${Logpath}/${SFDC_ORG}.${DATE}.report.json
 HTMLLog=/tmp/$SFDC_ORG.Validation.log.html
 HTMLFDLog=${Logpath}/${SFDC_ORG}.forceDeploy.${DATE}.html
 
-# --- polling knobs (override in ${serverProperty}) ---
+# TSVs used by the renderer (and attached for debugging)
+COMPONENT_TSV=${Logpath}/${SFDC_ORG}.${DATE}.component_failures.tsv
+TEST_TSV=${Logpath}/${SFDC_ORG}.${DATE}.test_failures.tsv
+COV_TSV=${Logpath}/${SFDC_ORG}.${DATE}.codecov.tsv
+
+# --- polling knobs (configurable via ${serverProperty}) ---
 POLL_MAX_MIN=$(grep -E '^report_poll_minutes=' "$serverProperty" | cut -d'=' -f2 2>/dev/null)
-POLL_SLEEP_SEC=$(grep -E '^report_poll_sleep='   "$serverProperty" | cut -d'=' -f2 2>/dev/null)
-: "${POLL_MAX_MIN:=10}"      # wait up to 10 min by default
-: "${POLL_SLEEP_SEC:=15}"    # poll every 15s by default
+POLL_SLEEP_SEC=$(grep -E '^report_poll_sleep=' "$serverProperty" | cut -d'=' -f2 2>/dev/null)
+: "${POLL_MAX_MIN:=10}"      # default: wait up to 10 minutes total
+: "${POLL_SLEEP_SEC:=15}"    # default: poll every 15 seconds
 MAX_POLLS=$(( (POLL_MAX_MIN*60) / POLL_SLEEP_SEC ))
 [ "$MAX_POLLS" -lt 8 ] && MAX_POLLS=8   # minimum ~2 minutes
 
@@ -61,7 +66,7 @@ MAX_POLLS=$(( (POLL_MAX_MIN*60) / POLL_SLEEP_SEC ))
 Check_Lock() {
   if [ -f "$LOCK" ]; then
     echo "Another Validation process is present for $SFDC_ORG ...exit"
-    mail -s "Another Validation process is present for $SFDC_ORG"  ${MAIL_LIST} < /dev/null
+    mail -s "Another Validation process is present for $SFDC_ORG" ${MAIL_LIST} < /dev/null
     exit
   else
     touch "$LOCK"
@@ -73,10 +78,8 @@ Prepare_RunTest() {
   dos2unix -n build/testClasses.txt "${TCtxt}"
   grep -v "#" "${TCtxt}" | grep -v '^\s*$' | sort -u > "$TCNAME"
 
-  # ensure destination exists
   mkdir -p changeSetDeploy/src/classes
 
-  # copy requested test classes into changeSetDeploy
   while IFS= read -r i; do
     [ -z "$i" ] && continue
     cp "src/classes/$i".* changeSetDeploy/src/classes/ 2>/dev/null || true
@@ -110,25 +113,20 @@ Mail_Setup() {
 
 _esc(){ sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
 
-# single-pass file index to avoid repeated "find"
+# Fast single-pass file index to avoid repeated 'find'
 SRC_INDEX_FILE="/tmp/src_file_index.$$"
 _build_src_index(){
   find src -type f -printf "%f\t%p\n" > "$SRC_INDEX_FILE" 2>/dev/null || : > "$SRC_INDEX_FILE"
 }
 
-# clean noisy tokens like:
-# "Class Apttus_Agreement_File_AC : External string does not exist: CLLA"
-# "src/ Class ContentDocumentTriggerHandler_AC"
 _clean_token(){
   local s="$*"
-  s="$(echo "$s" | tr '\t' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ +| +$//g')"  # norm spaces
-  s="${s%% -- *}"    # keep left of " -- "
-  s="${s%%:*}"       # keep left of first colon
-  s="${s%%|*}"       # keep left of pipe
-  s="${s#src/}"      # drop src/
-  s="$(echo "$s" | sed -E 's#^(Class|Trigger|Apex( class)?|src|/)+[[:space:]]+##I')" # drop noisy lead
-  s="$(echo "$s" | sed -E 's/[[:space:]]+line[[:space:]]+[0-9]+.*$//I')"            # drop "line 23.."
-  s="$(echo "$s" | sed -E 's/^ +| +$//g')"                                          # final trim
+  s="$(echo "$s" | tr '\t' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ +| +$//g')"
+  s="${s%% -- *}"; s="${s%%:*}"; s="${s%%|*}"
+  s="${s#src/}"
+  s="$(echo "$s" | sed -E 's#^(Class|Trigger|Apex( class)?|src|/)+[[:space:]]+##I')"
+  s="$(echo "$s" | sed -E 's/[[:space:]]+line[[:space:]]+[0-9]+.*$//I')"
+  s="$(echo "$s" | sed -E 's/^ +| +$//g')"
   echo "$s"
 }
 
@@ -151,7 +149,6 @@ _guess_dir_for_token(){
   esac
 }
 
-# resolve token → list of plausible repo paths
 _resolve_files(){
   local token raw base dir
   raw="$*"
@@ -162,7 +159,6 @@ _resolve_files(){
   dir="$(_guess_dir_for_token "$token")"
   local matches=()
 
-  # index lookup (fast)
   if [ -s "$SRC_INDEX_FILE" ]; then
     if [ -n "$dir" ]; then
       mapfile -t matches < <(awk -v b="$base" -v d="/$dir/" -F'\t' '
@@ -176,19 +172,15 @@ _resolve_files(){
     fi
   fi
 
-  # narrow find in guessed dir
   if [ "${#matches[@]}" -eq 0 ] && [ -n "$dir" ] && [ -d "src/$dir" ]; then
     mapfile -t matches < <(find "src/$dir" -type f \( -name "${base}*" -o -name "*${base}*" \) 2>/dev/null \
       | awk '{ print length, $0 }' | sort -n | cut -d" " -f2-)
   fi
-
-  # global find
   if [ "${#matches[@]}" -eq 0 ]; then
     mapfile -t matches < <(find src -type f \( -name "${base}*" -o -name "*${base}*" \) 2>/dev/null \
       | awk '{ print length, $0 }' | sort -n | cut -d" " -f2-)
   fi
 
-  # labels fallback
   if [ "${#matches[@]}" -eq 0 ] && [[ "$base" =~ ^CustomLabels(\.labels)?$ ]]; then
     matches=("env/${SFDC_ORG}/customLabel/CustomLabels.labels-meta.xml")
   fi
@@ -196,15 +188,13 @@ _resolve_files(){
   printf '%s\n' "${matches[@]}"
 }
 
-# print last 2 commits for best-matching path(s), pref non-meta over meta
 _gitlog_for_component(){
   local token="$*"
   local resolved=()
   mapfile -t resolved < <(_resolve_files "$token")
 
   if [ "${#resolved[@]}" -eq 0 ]; then
-    echo "Latest 2 GIT log >>> (not found): $token"
-    echo "Hint: file may be generated/renamed or in a subfolder; searched by prefix and common metadata suffixes."
+    echo "Git Log --> (not found)"
     return
   fi
 
@@ -217,12 +207,12 @@ _gitlog_for_component(){
 
   local shown=0
   for f in "${ordered[@]}"; do
-    echo "Latest 2 GIT log >>> ${f}"
+    echo "Git Log --> ${f}"
     if [ -f "$f" ]; then
       git --no-pager log -2 --date=short --pretty='format:%h %ad %an %s' -- "$f" \
         | sed 's/$/ |/' | paste -sd' ' -
     else
-      echo "(exists-in-index? Could not read path: $f)"
+      echo "(path not readable)"
     fi
     shown=$((shown+1))
     [ $shown -ge 3 ] && break
@@ -255,7 +245,6 @@ Validation() {
         echo "[ERROR] No deploy ID found in initial output" | tee -a "$LOG"
         antReturnCode="Request Status: Failed"
       else
-        # fetch & bounded poll
         sf project deploy report --job-id "$DEPLOY_ID" --target-org "$SFDC_ORG" --json > "$REPORT_JSON" 2> "${LOG}.err"
         cat "${LOG}.err" >> "$LOG"
 
@@ -295,7 +284,16 @@ Validation() {
     fi
   fi
 
-  # filtered human log (safe if array-or-object)
+  # Prepare TSVs (robust to empty arrays)
+  if [ -s "$REPORT_JSON" ]; then
+    jq -r '.result.details.componentFailures[]? | [.fileName, .problem] | @tsv' "$REPORT_JSON" > "$COMPONENT_TSV" 2>/dev/null || : > "$COMPONENT_TSV"
+    jq -r '.result.details.runTestResult.failures[]? | [.name, .methodName, .message, (.stackTrace // "")] | @tsv' "$REPORT_JSON" > "$TEST_TSV" 2>/dev/null || : > "$TEST_TSV"
+    jq -r '.result.details.runTestResult.codeCoverageWarnings[]? | [.name, .message] | @tsv' "$REPORT_JSON" > "$COV_TSV" 2>/dev/null || : > "$COV_TSV"
+  else
+    : > "$COMPONENT_TSV"; : > "$TEST_TSV"; : > "$COV_TSV"
+  fi
+
+  # filtered human log (kept for backward compatibility/attachments)
   if [ -s "$REPORT_JSON" ]; then
     jq -r '.result.details | {componentFailures, runTestResult: {failures, codeCoverageWarnings}}' "$REPORT_JSON" > "${LOG}.filtered.json" 2>/dev/null || true
     jq -r 'to_entries | map("\(.key): \(.value)") | join("\n")' "${LOG}.filtered.json" > "${LOG}.filtered" 2>/dev/null || true
@@ -311,199 +309,181 @@ Validation() {
   esac
 }
 
-# ============================== HTML Report (inline CSS) ==============================
+# ============================== HTML Report (colored + numbered) ==============================
 
 HTML_Report(){
   Report=$1
 
-  # prepare detail files (array-or-object tolerant + sanitized)
-  if [ -s "$REPORT_JSON" ]; then
-    jq -r '
-      (.result.details.componentFailures // empty)
-      | (if type=="array" then . else [.] end)
-      | .[]
-      | "\(.fileName) -- \(.problem|tostring|gsub("[\r\n\t]";" "))"
-    ' "$REPORT_JSON" > "${LOG}.component_failures" 2>/dev/null || : > "${LOG}.component_failures"
-
-    jq -r '
-      (.result.details.runTestResult.failures // empty)
-      | (if type=="array" then . else [.] end)
-      | .[]
-      | [ .name, .methodName,
-          (.message|tostring|gsub("[\r\n\t]";" ")),
-          (.stackTrace|tostring|gsub("[\r\n\t]";" "))
-        ]
-      | @tsv
-    ' "$REPORT_JSON" > "${LOG}.test_failures" 2>/dev/null || : > "${LOG}.test_failures"
-
-    jq -r '
-      (.result.details.runTestResult.codeCoverageWarnings // empty)
-      | (if type=="array" then . else [.] end)
-      | .[]
-      | [ .name, (.message|tostring|gsub("[\r\n\t]";" ")) ]
-      | @tsv
-    ' "$REPORT_JSON" > "${LOG}.code_coverage_warnings" 2>/dev/null || : > "${LOG}.code_coverage_warnings"
-  else
-    : > "${LOG}.component_failures"
-    : > "${LOG}.test_failures"
-    : > "${LOG}.code_coverage_warnings"
-  fi
-
-  comp_count=$(wc -l < "${LOG}.component_failures" 2>/dev/null || echo 0)
-  test_count=$(wc -l < "${LOG}.test_failures" 2>/dev/null || echo 0)
-  cov_count=$(wc -l < "${LOG}.code_coverage_warnings" 2>/dev/null || echo 0)
-  REQ_ID=$(jq -r '(.result.id // .id // .data.deployId // "N/A")' "$REPORT_JSON" 2>/dev/null || echo "N/A")
-
   SAVEIFS=$IFS
   IFS=$(echo -en "\n\b")
 
-  # build index once for speed
+  # Build src index once
   _build_src_index
 
-  # --- Email body (inline CSS) ---
-  # NOTE: table-based layout; minimal styles for email clients
-  cat > "$HTMLLog" <<EOF
-<!DOCTYPE html>
-<html>
-<body style="margin:0;padding:0;background:#f7f7f9;font-family:Segoe UI,Arial,Helvetica,sans-serif;color:#222;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-    <tr>
-      <td>
-        <table align="center" width="980" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin:16px auto;background:#ffffff;border:1px solid #e5e7eb;">
-          <!-- Header bar -->
-          <tr>
-            <td style="background:#111827;color:#ffffff;padding:14px 18px;font-size:18px;font-weight:600;letter-spacing:.2px;">
-              ${SFDC_ORG} ChangeSet Validation ${Report}
-            </td>
-          </tr>
+  # Simple color tokens (email-safe inline)
+  BAR_BG="#0D47A1"
+  BAR_TX="#FFFFFF"
+  SUC_BG="#E8F5E9"
+  SUC_TX="#1B5E20"
+  FAIL_BG="#FDECEA"
+  FAIL_TX="#B71C1C"
+  WARN_BG="#FFF8E1"
+  WARN_TX="#8D6E00"
+  CHIP_BG="#E3F2FD"
+  CHIP_TX="#0D47A1"
+  GREY_BG="#F5F5F5"
+  GREY_TX="#333333"
+  LINK_TX="#1565C0"
 
-          <!-- quick links / meta -->
-          <tr>
-            <td style="padding:12px 18px;border-bottom:1px solid #f0f0f0;">
-              <span style="display:inline-block;margin-right:16px;font-size:13px;">
-                <b>API:</b> ${API}
-              </span>
-              <span style="display:inline-block;margin-right:16px;font-size:13px;">
-                <b>Request ID:</b> ${REQ_ID}
-              </span>
-              <span style="display:inline-block;margin-right:16px;font-size:13px;">
-                <b>Git Range:</b> ${gitlast} → ${gitlatest}
-              </span>
-              <div style="margin-top:8px;">
-                <a href="https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}" style="font-size:13px;text-decoration:none;color:#2563eb;">Log and changeset</a>
-                <span style="color:#9ca3af;">&nbsp;•&nbsp;</span>
-                <a href="https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/${SFDC_ORG}.changesetList.${DATE}.html" style="font-size:13px;text-decoration:none;color:#2563eb;">Changeset List</a>
-                <span style="color:#9ca3af;">&nbsp;•&nbsp;</span>
-                <a href="https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/${HTMLFDLog##*/}" style="font-size:13px;text-decoration:none;color:#2563eb;">ForceDeploy</a>
+  echo "<html><body style='font-family:Segoe UI,Arial,sans-serif;font-size:13px;color:#222;margin:0;padding:0;'>" > $HTMLLog
+
+  # Header Bar
+  echo "<div style='background:${BAR_BG};color:${BAR_TX};padding:12px 16px;font-weight:600;'>
+          ${SFDC_ORG} ChangeSet Validation ${Report}
+        </div>" >> $HTMLLog
+
+  # Summary strip
+  REQ_ID=$(jq -r '.result.id // "N/A"' "$REPORT_JSON" 2>/dev/null || echo "N/A")
+  STATUS=$(jq -r '.result.status // .status // "N/A"' "$REPORT_JSON" 2>/dev/null || echo "N/A")
+  SUCCESS=$(jq -r '.result.success // "N/A"' "$REPORT_JSON" 2>/dev/null || echo "N/A")
+  echo "<div style='padding:10px 16px;background:${CHIP_BG};color:${CHIP_TX};'>
+          <span style='margin-right:14px;'>Request ID: <b>${REQ_ID}</b></span>
+          <span style='margin-right:14px;'>Status: <b>${STATUS}</b></span>
+          <span style='margin-right:14px;'>Success: <b>${SUCCESS}</b></span>
+          <span style='margin-right:14px;'>API: <b>${API}</b></span>
+          <span>Git Range: <b>${gitlast}..${gitlatest}</b></span>
+        </div>" >> $HTMLLog
+
+  # Quick Links
+  echo "<div style='padding:8px 16px;'>
+          <a style='color:${LINK_TX};text-decoration:none;margin-right:14px;' href='https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}'>Log & Changeset</a>
+          <a style='color:${LINK_TX};text-decoration:none;margin-right:14px;' href='https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/${SFDC_ORG}.changesetList.${DATE}.html'>Changeset List</a>
+          <a style='color:${LINK_TX};text-decoration:none;' href='https://cdnsfdc.cadence.com/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}/${HTMLFDLog##*/}'>ForceDeploy</a>
+        </div>" >> $HTMLLog
+
+  # Status banner
+  if [ "${Report}" == "SUCCEEDED" ]; then
+    echo "<div style='margin:8px 16px 12px;background:${SUC_BG};color:${SUC_TX};border:1px solid #C8E6C9;padding:10px 12px;border-radius:6px;'>
+            <b>Deployment Succeeded</b>
+          </div>" >> $HTMLLog
+  elif [ "${Report}" == "LOCKED" ]; then
+    LOCK_TXT=$(jq -r '.result.details // ""' "$REPORT_JSON" 2>/dev/null | grep -i locked | _esc)
+    echo "<div style='margin:8px 16px 12px;background:${WARN_BG};color:${WARN_TX};border:1px solid #FFECB3;padding:10px 12px;border-radius:6px;'>
+            <b>Org is Locked</b><div style='margin-top:6px;'>${LOCK_TXT}</div>
+          </div>" >> $HTMLLog
+  else
+    echo "<div style='margin:8px 16px 12px;background:${FAIL_BG};color:${FAIL_TX};border:1px solid #F5C6CB;padding:10px 12px;border-radius:6px;'>
+            <b>Deployment Failed</b>
+          </div>" >> $HTMLLog
+  fi
+
+  # ========== Section: Component Failures ==========
+  echo "<div style='margin:0 16px 12px;border:1px solid #eee;border-radius:8px;'>
+          <div style='background:#ECEFF1;color:#263238;padding:8px 12px;font-weight:600;border-top-left-radius:8px;border-top-right-radius:8px;'>
+            Component Failures
+          </div>
+          <div style='padding:8px 12px;'>" >> $HTMLLog
+
+  if [ -s "$COMPONENT_TSV" ]; then
+    idx=1
+    while IFS=$'\t' read -r FILE PROBLEM; do
+      [ -z "$FILE" ] && continue
+      echo "<div style='background:${FAIL_BG};color:${FAIL_TX};border:1px solid #F5C6CB;margin-bottom:8px;border-radius:6px;'>
+              <div style='padding:8px 10px;'>
+                <div style='font-weight:600;'>${idx}. $(echo "${FILE}" | _esc) -- Error: $(echo "${PROBLEM}" | _esc)</div>
+                <div style='margin-top:6px;background:${GREY_BG};color:${GREY_TX};border:1px solid #e0e0e0;border-radius:4px;padding:6px 8px;'>
+                  <pre style='margin:0;white-space:pre-wrap;'>$( _gitlog_for_component "${FILE}" | _esc )</pre>
+                </div>
               </div>
-            </td>
-          </tr>
-
-          <!-- summary tiles -->
-          <tr>
-            <td style="padding:14px 18px;">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-                <tr>
-                  <td style="width:33.33%;padding:10px;">
-                    <div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;background:#f9fafb;">
-                      <div style="font-size:12px;color:#6b7280;">Component Failures</div>
-                      <div style="font-size:20px;font-weight:700;margin-top:4px;color:#b91c1c;">${comp_count}</div>
-                    </div>
-                  </td>
-                  <td style="width:33.33%;padding:10px;">
-                    <div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;background:#f9fafb;">
-                      <div style="font-size:12px;color:#6b7280;">Test Failures</div>
-                      <div style="font-size:20px;font-weight:700;margin-top:4px;color:#b91c1c;">${test_count}</div>
-                    </div>
-                  </td>
-                  <td style="width:33.33%;padding:10px;">
-                    <div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;background:#f9fafb;">
-                      <div style="font-size:12px;color:#6b7280;">Coverage Warnings</div>
-                      <div style="font-size:20px;font-weight:700;margin-top:4px;color:#ca8a04;">${cov_count}</div>
-                    </div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- sections start -->
-EOF
-
-  # SUCCEEDED note
-  if [ "${Report}" = "SUCCEEDED" ]; then
-    echo "          <tr><td style=\"padding:10px 18px 6px 18px;font-size:14px;color:#065f46;background:#ecfdf5;border-top:1px solid #d1fae5;\">Deployment validated successfully.</td></tr>" >> "$HTMLLog"
+            </div>" >> $HTMLLog
+      idx=$((idx+1))
+    done < "$COMPONENT_TSV"
+  else
+    echo "<div style='color:#555;'>None</div>" >> $HTMLLog
   fi
+  echo "</div></div>" >> $HTMLLog
 
-  # FAILED/LOCKED: details
-  if [ "${Report}" = "FAILED" ] || [ "${Report}" = "LOCKED" ]; then
-    # Component Failures
-    if [ "$comp_count" -gt 0 ]; then
-      echo "          <tr><td style=\"padding:8px 18px;\"><div style=\"font-size:15px;font-weight:600;margin:8px 0 6px 0;\">Component Failures</div></td></tr>" >> "$HTMLLog"
-      while IFS= read -r LINE; do
-        FILE=$(echo "$LINE" | awk -F ' -- ' '{print $1}')
-        echo "          <tr><td style=\"padding:0 18px 8px 18px;\">" >> "$HTMLLog"
-        echo "            <div style=\"border:1px solid #fee2e2;background:#fff7f7;border-radius:6px;padding:8px 10px;margin:6px 0;\">" >> "$HTMLLog"
-        echo "              <div style=\"font-family:monospace;font-size:12px;color:#b91c1c;\">" >> "$HTMLLog"
-        echo "$(echo "$LINE" | _esc)" >> "$HTMLLog"
-        echo "              </div>" >> "$HTMLLog"
-        echo "              <div style=\"margin-top:6px;padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;border-radius:4px;\">" >> "$HTMLLog"
-        _gitlog_for_component "${FILE}" | _esc >> "$HTMLLog"
-        echo "              </div>" >> "$HTMLLog"
-        echo "            </div>" >> "$HTMLLog"
-        echo "          </td></tr>" >> "$HTMLLog"
-      done < "${LOG}.component_failures"
-    fi
+  # ========== Section: Test Failures ==========
+  echo "<div style='margin:0 16px 12px;border:1px solid #eee;border-radius:8px;'>
+          <div style='background:#FFF3CD;color:#7A5B00;padding:8px 12px;font-weight:600;border-top-left-radius:8px;border-top-right-radius:8px;'>
+            Test Failures
+          </div>
+          <div style='padding:8px 12px;'>" >> $HTMLLog
 
-    # Test Failures
-    echo "          <tr><td style=\"padding:8px 18px;\"><div style=\"font-size:15px;font-weight:600;margin:12px 0 6px 0;\">${SFDC_ORG} Test Class</div></td></tr>" >> "$HTMLLog"
-    if [ "$test_count" -gt 0 ]; then
-      idx=1
-      while IFS=$'\t' read -r CLASS METHOD MSG STACK; do
-        [ -z "$CLASS" ] && continue
-        echo "          <tr><td style=\"padding:0 18px 8px 18px;\">" >> "$HTMLLog"
-        echo "            <div style=\"border:1px solid #fde68a;background:#fffbeb;border-radius:6px;padding:8px 10px;margin:6px 0;\">" >> "$HTMLLog"
-        echo "              <div style=\"font-size:13px;\"><b>${idx}. $(echo "${CLASS}.${METHOD}()" | _esc)</b></div>" >> "$HTMLLog"
-        echo "              <div style=\"font-size:12px;margin-top:4px;color:#374151;\">$(echo "Error: ${MSG}" | _esc)</div>" >> "$HTMLLog"
-        echo "              <div style=\"font-size:12px;margin-top:2px;color:#6b7280;font-family:monospace;\">$(echo "StackTrace: ${STACK}" | _esc)</div>" >> "$HTMLLog"
-        echo "              <div style=\"margin-top:8px;padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;border-radius:4px;\">" >> "$HTMLLog"
-        _gitlog_for_component "${CLASS}" | _esc >> "$HTMLLog"
-        echo "              </div>" >> "$HTMLLog"
-        echo "            </div>" >> "$HTMLLog"
-        echo "          </td></tr>" >> "$HTMLLog"
-        ((idx++))
-      done < "${LOG}.test_failures"
-    else
-      echo "          <tr><td style=\"padding:0 18px 12px 18px;color:#6b7280;font-size:13px;\">No test failures.</td></tr>" >> "$HTMLLog"
-    fi
-
-    # Code Coverage Warnings
-    echo "          <tr><td style=\"padding:8px 18px;\"><div style=\"font-size:15px;font-weight:600;margin:12px 0 6px 0;\">${SFDC_ORG} Code Coverage</div></td></tr>" >> "$HTMLLog"
-    if [ "$cov_count" -gt 0 ]; then
-      cov_idx=1
-      while IFS=$'\t' read -r NAME MESSAGE; do
-        [ -z "$NAME" ] && continue
-        echo "          <tr><td style=\"padding:0 18px 8px 18px;\">" >> "$HTMLLog"
-        echo "            <div style=\"border:1px solid #fee2e2;background:#fff7f7;border-radius:6px;padding:8px 10px;margin:6px 0;\">" >> "$HTMLLog"
-        echo "              <div style=\"font-size:13px;\"><b>${cov_idx}. $(echo "$NAME" | _esc)</b></div>" >> "$HTMLLog"
-        echo "              <div style=\"font-size:12px;margin-top:4px;color:#374151;\">$(echo "Warning: ${MESSAGE}" | _esc)</div>" >> "$HTMLLog"
-        echo "              <div style=\"margin-top:8px;padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;border-radius:4px;\">" >> "$HTMLLog"
-        _gitlog_for_component "${NAME}" | _esc >> "$HTMLLog"
-        echo "              </div>" >> "$HTMLLog"
-        echo "            </div>" >> "$HTMLLog"
-        echo "          </td></tr>" >> "$HTMLLog"
-        ((cov_idx++))
-      done < "${LOG}.code_coverage_warnings"
-    else
-      echo "          <tr><td style=\"padding:0 18px 12px 18px;color:#6b7280;font-size:13px;\">No coverage warnings.</td></tr>" >> "$HTMLLog"
-    fi
+  if [ -s "$TEST_TSV" ]; then
+    idx=1
+    while IFS=$'\t' read -r CLASS METHOD MSG STACK; do
+      [ -z "$CLASS" ] && continue
+      local_title="${CLASS}.${METHOD}() -- Error: ${MSG}"
+      echo "<div style='background:#FFFDE7;color:#5D4037;border:1px solid #FFE082;margin-bottom:8px;border-radius:6px;'>
+              <div style='padding:8px 10px;'>
+                <div style='font-weight:600;'>${idx}. $(echo "${local_title}" | _esc)</div>
+                <div style='margin-top:6px;color:#444;'>
+                  <pre style='margin:0;white-space:pre-wrap;'>$( echo "${STACK}" | _esc )</pre>
+                </div>
+                <div style='margin-top:6px;background:${GREY_BG};color:${GREY_TX};border:1px solid #e0e0e0;border-radius:4px;padding:6px 8px;'>
+                  <pre style='margin:0;white-space:pre-wrap;'>$( _gitlog_for_component "${CLASS}" | _esc )</pre>
+                </div>
+              </div>
+            </div>" >> $HTMLLog
+      idx=$((idx+1))
+    done < "$TEST_TSV"
+  else
+    echo "<div style='color:#555;'>None</div>" >> $HTMLLog
   fi
+  echo "</div></div>" >> $HTMLLog
 
-  # Changeset list (always)
-  echo "          <tr><td style=\"padding:8px 18px;\"><div style=\"font-size:15px;font-weight:600;margin:14px 0 6px 0;\">Changeset file/s &nbsp;...&nbsp; [$(find changeSetDeploy -type f | egrep -v "package.xml|staticResourceFolders.txt" | wc -l)]</div></td></tr>" >> "$HTMLLog"
+  # ========== Section: Code Coverage Warnings ==========
+  echo "<div style='margin:0 16px 16px;border:1px solid #eee;border-radius:8px;'>
+          <div style='background:#E1F5FE;color:#01579B;padding:8px 12px;font-weight:600;border-top-left-radius:8px;border-top-right-radius:8px;'>
+            Code Coverage Warnings
+          </div>
+          <div style='padding:8px 12px;'>" >> $HTMLLog
 
-  # build deployed file list
-  find changeSetDeploy -type f | egrep -v "package.xml|staticResourceFolders.txt" | cut -d "/" -f  1,2 --complement | sort -u > "${DEPLOYEDFILE}"
+  if [ -s "$COV_TSV" ]; then
+    idx=1
+    while IFS=$'\t' read -r NAME MESSAGE; do
+      [ -z "$NAME" ] && continue
+      echo "<div style='background:#E3F2FD;color:#0D47A1;border:1px solid #BBDEFB;margin-bottom:8px;border-radius:6px;'>
+              <div style='padding:8px 10px;'>
+                <div style='font-weight:600;'>${idx}. $(echo "${NAME}" | _esc) -- Warning: $(echo "${MESSAGE}" | _esc)</div>
+                <div style='margin-top:6px;background:${GREY_BG};color:${GREY_TX};border:1px solid #e0e0e0;border-radius:4px;padding:6px 8px;'>
+                  <pre style='margin:0;white-space:pre-wrap;'>$( _gitlog_for_component "${NAME}" | _esc )</pre>
+                </div>
+              </div>
+            </div>" >> $HTMLLog
+      idx=$((idx+1))
+    done < "$COV_TSV"
+  else
+    echo "<div style='color:#555;'>None</div>" >> $HTMLLog
+  fi
+  echo "</div></div>" >> $HTMLLog
+
+  # Footer
+  echo "<div style='padding:10px 16px;color:#777;font-size:12px;'>Generated on $(date '+%d %b %Y, %H:%M %Z')</div>" >> $HTMLLog
+
+  echo "</body></html>" >> $HTMLLog
+
+  # Attach TSVs so you can sort/filter offline
+  EMAIL=${FROM} mutt -e 'set content_type=text/html' \
+    -s "---${SFDC_ORG}---ChangeSet Validation ${Report} [$(date +%d.%b.%Y) PST - git ${gitlast}-${gitlatest} ]" \
+    ${mutt_MAIL_LIST} \
+    -a "$LOG.filtered" "$COMPONENT_TSV" "$TEST_TSV" "$COV_TSV" \
+    < "$HTMLLog"
+
+  IFS=$SAVEIFS
+}
+
+# ============================== Changeset & publish ==============================
+
+Changeset_List(){
+  _build_src_index
+
+  find changeSetDeploy -type f | egrep -v "package.xml|staticResourceFolders.txt" \
+    | cut -d "/" -f  1,2 --complement | sort -u > "${DEPLOYEDFILE}"
+
+  changesetFile=$(find changeSetDeploy -type f | egrep -v "package.xml|staticResourceFolders.txt" | wc -l)
+  echo "<div style='margin:0 16px 12px;color:#263238;'>Changeset file(s): <b>${changesetFile}</b></div>" >> $HTMLLog
 
   NUM=1
   while IFS= read -r FILE; do
@@ -516,10 +496,6 @@ EOF
       FILE=$(echo "${FILE}" | sed -e "s/^env\/${SFDC_ORG}//g")
     fi
 
-    echo "          <tr><td style=\"padding:0 18px 8px 18px;\">" >> "$HTMLLog"
-    echo "            <div style=\"border:1px solid #e5e7eb;background:#f9fafb;border-radius:6px;padding:8px 10px;margin:6px 0;\">" >> "$HTMLLog"
-    echo "              <div style=\"font-family:monospace;font-size:12px;color:#111827;\">[$((NUM++))] $(echo "${FILE}" | _esc)</div>" >> "$HTMLLog"
-
     LastAuthor="$(
       _resolve_files "${FILE}" | head -n1 | while read -r p; do
         if [ -f "$p" ]; then
@@ -529,36 +505,17 @@ EOF
       done
     )"
 
-    echo "              <div style=\"margin-top:6px;padding:6px 8px;border:1px dashed #d1d5db;background:#ffffff;border-radius:4px;font-size:12px;\">$(echo "Last author... ${LastAuthor}" | _esc)</div>" >> "$HTMLLog"
-    echo "            </div>" >> "$HTMLLog"
-    echo "          </td></tr>" >> "$HTMLLog"
+    echo "<div style='margin:0 16px 6px;background:#FAFAFA;border:1px solid #eee;border-radius:6px;padding:6px 10px;'>
+            [$NUM] $(echo "${FILE}" | _esc)
+            <div style='margin-top:4px;color:#555;'>
+              Last author... $(echo "${LastAuthor}" | _esc)
+            </div>
+          </div>" >> $HTMLLog
+    NUM=$((NUM+1))
   done < "${DEPLOYEDFILE}"
-
-  # footer
-  cat >> "$HTMLLog" <<EOF
-          <tr>
-            <td style="padding:14px 18px;color:#6b7280;font-size:12px;border-top:1px solid #f0f0f0;background:#fafafa;">
-              Generated: $(date +"%d %b %Y, %H:%M %Z") &nbsp;•&nbsp; Org: ${SFDC_ORG} &nbsp;•&nbsp; API ${API}
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-EOF
-
-  EMAIL=${FROM} mutt -e 'set content_type=text/html' \
-    -s "---${SFDC_ORG}---ChangeSet Validation ${Report} [$(date +%d.%b.%Y) PST - git ${gitlast}-${gitlatest} ]" \
-    ${mutt_MAIL_LIST} -a "$LOG.filtered" < "$HTMLLog"
-
-  IFS=$SAVEIFS
 }
 
-# ============================== Changeset publish (unchanged) ==============================
-
-CHNGSETLIST (){
+CHNGSETLIST () {
   ORGchngSet=${SFDC_ORG}.${DATE}.changeSetDeploy
   ORGchngSetFILE=${Logpath}/${SFDC_ORG}.changesetList.${DATE}
   cp -r changeSetDeploy  ${ORGchngSet}
@@ -577,10 +534,12 @@ CHNGSETLIST (){
 PublishLOG(){
   LogStorePath="/data/public/SFDC_LOG/${SFDC_ORG}.GIT_${gitlast}-${gitlatest}.${DATE}"
   mkdir -p ${LogStorePath}
+
   if [ "$1" == "changeset" ]; then
     cp ${CHANGESETLOG} ${LogStorePath}/$SFDC_ORG.Changeset.log.${DATE} 2>/dev/null || true
     cp ${LOG} ${LogStorePath}/$SFDC_ORG.Deploy.log.${DATE} 2>/dev/null || true
     cp ${HTMLLog} ${LogStorePath}/${SFDC_ORG}.Deploy.log.${DATE}.html 2>/dev/null || true
+
     cp -r changeSetDeploy ${LogStorePath}/${SFDC_ORG}.changeSetDeploy.${DATE} 2>/dev/null || true
     cp ${ORGchngSetFILE}.html  ${ORGchngSetFILE}.csv ${LogStorePath}/ 2>/dev/null || true
     cp $REPORT_JSON ${LogStorePath}/ 2>/dev/null || true
