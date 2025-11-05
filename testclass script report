@@ -1,182 +1,172 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Generate a beautiful HTML report from a pasted Salesforce test+coverage dump.
-Input:  testclass_report.txt   (in the same directory as this script)
-Output: /data/public/testclass_failure_report/YYYY-MM-DD/index.html
+Generate a compact HTML report from a pasted Salesforce test+coverage dump.
+- Input  : testclass_report.txt  (same folder as this script)
+- Output : /data/public/testclass_failure_report/YYYY-MM-DD/index.html
+           (falls back to ./testclass_failure_report/YYYY-MM-DD/index.html if perms fail)
+
+Columns (Test Failures):
+  Class → Author → Date → Comment → Method → Error (stack trace collapsible)
+
+Columns (Coverage Failures):
+  Class → Author → Date → Comment → Coverage → Note
+
 Assumptions:
-- Apex classes (including test classes) live at src/classes/<ClassName>.cls
-- Git repo is available; we read last 2 logs for each class (author, date, subject)
+- Apex classes live at src/classes/<ClassName>.cls
+- Git repo available; we read last 1 commit (author, date, subject) per class file
 """
 
-from __future__ import annotations
 from pathlib import Path
 from datetime import datetime
 import subprocess
-import os
 import re
 import html
 import sys
-from typing import List, Dict, Tuple, Optional
+import os
 
 HERE = Path(__file__).resolve().parent
 INPUT_FILE = HERE / "testclass_report.txt"
-# Output root (as requested)
 OUTPUT_ROOT = Path("/data/public/testclass_failure_report")
 
 # ---------- Utilities ----------
 
-def run(cmd: List[str], cwd: Optional[Path] = None) -> Tuple[int, str, str]:
-    """Run a subprocess and capture (rc, out, err)."""
+def run_cmd(cmd, cwd=None):
     try:
-        proc = subprocess.Popen(cmd, cwd=str(cwd) if cwd else None,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        out, err = proc.communicate()
-        return proc.returncode, out, err
+        p = subprocess.Popen(
+            cmd, cwd=str(cwd) if cwd else None,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
+        out, err = p.communicate()
+        return p.returncode, out, err
     except FileNotFoundError as e:
         return 127, "", str(e)
     except Exception as e:
         return 1, "", str(e)
 
-def resolve_class_path(class_name: str, src_root: Path) -> Optional[Path]:
-    """
-    Resolve a class name to a .cls file under src/classes.
-    Tries exact match first, then case-insensitive match.
-    """
-    exact = src_root / "classes" / f"{class_name}.cls"
+def esc(s):
+    return html.escape(s if s is not None else "", quote=True)
+
+def find_repo_root(start_dir: Path):
+    probe = start_dir
+    while True:
+        if (probe / ".git").exists():
+            return probe
+        if probe.parent == probe:
+            return start_dir
+        probe = probe.parent
+
+def resolve_class_path(class_name: str, repo_root: Path):
+    src_root = repo_root / "src"
+    exact = src_root / "classes" / (class_name + ".cls")
     if exact.exists():
         return exact
 
-    # Case-insensitive / fuzzy
-    want = f"{class_name}.cls".lower()
+    want = (class_name + ".cls").lower()
     candidates = list((src_root / "classes").glob("*.cls"))
     for c in candidates:
         if c.name.lower() == want:
             return c
-
-    # As a fallback, try contains (dangerous, but better than nothing)
     for c in candidates:
         if class_name.lower() in c.stem.lower():
             return c
-
     return None
 
-def git_last_two_logs_for_class(class_name: str, repo_root: Path) -> List[Tuple[str, str, str]]:
-    """
-    Return up to 2 tuples: (author, date, subject) for src/classes/<class_name>.cls.
-    Date is short format (YYYY-MM-DD).
-    """
-    src_root = repo_root / "src"
-    cls_path = resolve_class_path(class_name, src_root)
+def git_last_one_log_for_class(class_name: str, repo_root: Path):
+    """Return [(author, date, subject)] for the class, or [] if not found."""
+    cls_path = resolve_class_path(class_name, repo_root)
     if not cls_path:
         return []
-
     cmd = [
-        "git", "log", "-n", "2",
+        "git", "log", "-n", "1",
         "--pretty=format:%an|%ad|%s", "--date=short",
         "--", str(cls_path)
     ]
-    rc, out, err = run(cmd, cwd=repo_root)
-    if rc != 0:
+    rc, out, err = run_cmd(cmd, cwd=repo_root)
+    if rc != 0 or not out.strip():
         return []
-    logs = []
-    for line in out.splitlines():
-        if not line.strip():
-            continue
-        parts = line.split("|", 2)
-        if len(parts) == 3:
-            author, date, subject = parts
-            logs.append((author.strip(), date.strip(), subject.strip()))
-    return logs[:2]
-
-def esc(s: str) -> str:
-    return html.escape(s, quote=True)
+    parts = out.strip().split("|", 2)
+    if len(parts) == 3:
+        return [(parts[0].strip(), parts[1].strip(), parts[2].strip())]
+    return []
 
 # ---------- Parsing ----------
 
-def parse_input_text(text: str) -> Tuple[List[Dict], List[Dict]]:
-    """
-    Parse the text into (test_failures, coverage_failures)
-    test_failures: list of dicts with keys: class_name, method_name, error, stack (optional full stack trace)
-    coverage_failures: list of dicts with keys: class_name, coverage (float/None), note (original line)
-    """
-    # Split into two sections using the divider or the coverage header
+HEADER_RE = re.compile(r"^(Testclass|Class\s+Name|Method\s+Name|Error\s+Message)", re.IGNORECASE)
+
+def parse_input_text(text):
     divider_idx = text.find("_________________")
     coverage_hdr_idx = text.find("Code Coverage Failure")
-
     if coverage_hdr_idx == -1 and divider_idx != -1:
-        # If Code Coverage header is missing but divider present, try after divider
         coverage_hdr_idx = divider_idx
 
     if coverage_hdr_idx == -1:
-        # No coverage section found
         test_section = text
         cov_section = ""
     else:
         test_section = text[:coverage_hdr_idx]
         cov_section = text[coverage_hdr_idx:]
 
-    test_failures = parse_test_failures(test_section)
-    coverage_failures = parse_coverage(cov_section)
-    return test_failures, coverage_failures
+    return parse_test_failures(test_section), parse_coverage(cov_section)
 
-def parse_test_failures(section: str) -> List[Dict]:
+def parse_test_failures(section: str):
+    """
+    Expect lines shaped like: <Class>\t<Method>\t<Error...>
+    Followed by optional lines starting with 'Stack Trace:' (captured).
+    Any non-tab continuation lines are appended to previous error.
+    """
     lines = [ln.rstrip("\n") for ln in section.splitlines()]
     entries = []
-    current = None
 
-    # Skip header lines and capture rows shaped like: <Class>\t<Method>\t<Error...>
     for ln in lines:
         if not ln.strip():
             continue
-        if ln.strip().startswith(("Testclass Failure Report", "Class Name", "Method Name", "Error Message")):
-            continue
-        if ln.strip().startswith("Stack Trace:"):
-            if current:
-                # append to stack; keep original line (minus label) too
-                current["stack"] = (current.get("stack", "") + "\n" + ln.split("Stack Trace:", 1)[-1].strip()).strip()
+        if HEADER_RE.match(ln):
             continue
 
         if "\t" in ln:
-            parts = ln.split("\t", 2)
-            if len(parts) == 3:
+            parts = [p.strip() for p in ln.split("\t", 2)]
+            if len(parts) == 3 and all(parts):
                 class_name, method_name, err = parts
-                current = {
-                    "class_name": class_name.strip(),
-                    "method_name": method_name.strip(),
-                    "error": err.strip(),
-                }
-                entries.append(current)
+                entries.append({
+                    "class_name": class_name,
+                    "method_name": method_name,
+                    "error": err,
+                    "stack": ""
+                })
                 continue
 
-        # Sometimes errors wrap without tab – append to last error if present
+        # stack trace line
+        if entries and ln.strip().lower().startswith("stack trace:"):
+            st = ln.split("Stack Trace:", 1)[-1].strip()
+            prev = entries[-1]
+            prev["stack"] = (prev.get("stack", "") + ("\n" if prev.get("stack") else "") + st).strip()
+            continue
+
+        # continuation of error (wrapped line)
         if entries:
-            # Append as continuation of error
-            entries[-1]["error"] = (entries[-1]["error"] + " " + ln.strip()).strip()
+            prev = entries[-1]
+            prev["error"] = (prev["error"] + " " + ln.strip()).strip()
 
     return entries
 
-def parse_coverage(section: str) -> List[Dict]:
+def parse_coverage(section: str):
     lines = [ln.strip() for ln in section.splitlines() if ln.strip()]
-    # Find the start
-    try:
-        start = next(i for i, ln in enumerate(lines) if ln.startswith("Code Coverage Failure"))
-        lines = lines[start+1:]
-    except StopIteration:
-        # If not found, maybe the section starts right away
-        pass
-
     cov_entries = []
+    # find start after header if present
+    start = 0
+    for i, ln in enumerate(lines):
+        if ln.lower().startswith("code coverage failure"):
+            start = i + 1
+            break
+    lines = lines[start:]
+
     i = 0
     coverage_re = re.compile(r"Your code coverage is\s+(\d+)%", re.IGNORECASE)
     while i < len(lines):
         name = lines[i]
         if name.startswith("See the input"):
             break
-        # If it looks like a coverage line, skip and move on
-        if name.lower().startswith("your code coverage is"):
-            i += 1
-            continue
 
         coverage = None
         note = ""
@@ -184,42 +174,34 @@ def parse_coverage(section: str) -> List[Dict]:
             note = lines[i+1]
             m = coverage_re.search(note)
             if m:
-                coverage = float(m.group(1))
+                try:
+                    coverage = float(m.group(1))
+                except Exception:
+                    coverage = None
             i += 2
         else:
             i += 1
 
-        cov_entries.append({"class_name": name, "coverage": coverage, "note": note})
+        cov_entries.append({
+            "class_name": name,
+            "coverage": coverage,
+            "note": note
+        })
 
     return cov_entries
 
 # ---------- HTML ----------
 
-def build_html(test_rows: List[Dict], cov_rows: List[Dict], repo_root: Path) -> str:
+def build_html(test_rows, cov_rows, repo_root: Path):
     today = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    # Preload logs cache to avoid calling git twice for same class
-    log_cache: Dict[str, List[Tuple[str, str, str]]] = {}
 
-    def logs_for(cls: str) -> List[Tuple[str, str, str]]:
+    log_cache = {}
+    def get_log(cls):
         if cls not in log_cache:
-            log_cache[cls] = git_last_two_logs_for_class(cls, repo_root)
+            log_cache[cls] = git_last_one_log_for_class(cls, repo_root)
         return log_cache[cls]
 
-    def log_cells(cls: str) -> str:
-        logs = logs_for(cls)
-        # Author1, Date1, Comment1, Author2, Date2, Comment2
-        cells = []
-        for idx in range(2):
-            if idx < len(logs):
-                a, d, s = logs[idx]
-                cells.extend([esc(a), esc(d), esc(s)])
-            else:
-                cells.extend(["—", "—", "—"])
-        # Wrap in <td>
-        return "".join(f"<td>{c}</td>" for c in cells)
-
-    # Styles
-    css = r"""
+    css = """
 :root {
   --bg: #0b0d10;
   --card: #11161c;
@@ -233,190 +215,204 @@ def build_html(test_rows: List[Dict], cov_rows: List[Dict], repo_root: Path) -> 
   --chip: #15202b;
 }
 * { box-sizing: border-box; }
-html, body { margin:0; padding:0; background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; }
-.container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+html, body { margin:0; padding:0; background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans"; }
+.container { max-width: 1000px; margin: 24px auto; padding: 0 16px; }
 .header {
   background: linear-gradient(135deg, rgba(91,157,255,0.25), rgba(255,107,107,0.25));
   border: 1px solid var(--line);
   border-radius: 16px;
-  padding: 20px;
+  padding: 16px;
   display:flex; align-items:center; justify-content:space-between;
   box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
-.header h1 { margin: 0; font-size: 22px; letter-spacing: 0.3px; }
+.header h1 { margin: 0; font-size: 20px; letter-spacing: 0.2px; }
 .header .meta { color: var(--muted); font-size: 12px; }
-.section { margin-top: 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); overflow: hidden; }
-.section h2 { margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 16px; background: #0f141a; position: sticky; top: 0; z-index: 1; }
+.kpis { display:flex; gap:12px; flex-wrap: wrap; }
+.kpi { background:#0f141a; border:1px solid var(--line); border-radius:12px; padding:8px 10px; }
+.kpi .label { color: var(--muted); font-size:11px; }
+.kpi .value { font-size:16px; font-weight:700; }
+.section { margin-top: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); overflow: hidden; }
+.section h2 { margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 15px; background: #0f141a; position: sticky; top: 0; z-index: 1; }
 .table-wrap { width: 100%; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 thead th {
   text-align: left; font-weight: 600; color: var(--muted);
-  border-bottom: 1px solid var(--line); padding: 10px 8px; font-size: 12px;
-  position: sticky; top: 38px; background: #0f141a;
+  border-bottom: 1px solid var(--line); padding: 9px 8px; font-size: 12px;
+  position: sticky; top: 36px; background: #0f141a;
 }
-tbody td { padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; word-wrap: break-word; overflow-wrap: anywhere; white-space: pre-wrap; }
+tbody td { padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; word-wrap: break-word; overflow-wrap: anywhere; white-space: pre-wrap; }
 tbody tr:hover { background: #0e141a; }
 .badge { display:inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; border:1px solid var(--line); background: var(--chip); color: var(--ink); }
 .badge.fail { background: rgba(255,107,107,0.1); border-color: rgba(255,107,107,0.35); color: #ffb3b3; }
 .badge.warn { background: rgba(255,209,102,0.08); border-color: rgba(255,209,102,0.35); color: #ffe29b; }
 .badge.ok { background: rgba(123,216,143,0.1); border-color: rgba(123,216,143,0.35); color: #c6f1cf; }
-.kpis { display:flex; gap:12px; flex-wrap: wrap; }
-.kpi { background:#0f141a; border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
-.kpi .label { color: var(--muted); font-size:11px; }
-.kpi .value { font-size:18px; font-weight:700; }
-details { background: #0f141a; border:1px dashed var(--line); border-radius:10px; padding:8px 10px; margin-top:8px; }
-details > summary { cursor:pointer; color: var(--accent); }
 .small { font-size: 12px; color: var(--muted); }
 .num { color: var(--muted); font-variant-numeric: tabular-nums; }
-.sticky-note { padding: 8px 12px; color: #ffd3d3; background: rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.32); border-radius: 10px; }
-.footer { text-align:center; color: var(--muted); font-size: 12px; margin: 18px 0 6px; }
-.col-narrow { width: 68px; }
-.col-class { width: 180px; }
-.col-method { width: 160px; }
-.col-error { width: 320px; }
-.col-comment { width: 200px; }
-.col-date { width: 110px; }
-.col-author { width: 140px; }
+details { background: #0f141a; border:1px dashed var(--line); border-radius:10px; padding:8px 10px; margin-top:8px; }
+details > summary { cursor:pointer; color: var(--accent); }
+.footer { text-align:center; color: var(--muted); font-size: 12px; margin: 16px 0 6px; }
 """
 
-    # Build KPIs
-    kpi_html = f"""
-    <div class="kpis">
-      <div class="kpi"><div class="label">Generated</div><div class="value">{esc(today)}</div></div>
-      <div class="kpi"><div class="label">Test Failures</div><div class="value">{len(test_rows)}</div></div>
-      <div class="kpi"><div class="label">Coverage Failures</div><div class="value">{len(cov_rows)}</div></div>
-    </div>
-    """
+    # KPIs
+    kpi_html = []
+    kpi_html.append('<div class="kpis">')
+    kpi_html.append('<div class="kpi"><div class="label">Generated</div><div class="value">{}</div></div>'.format(esc(today)))
+    kpi_html.append('<div class="kpi"><div class="label">Test Failures</div><div class="value">{}</div></div>'.format(len(test_rows)))
+    kpi_html.append('<div class="kpi"><div class="label">Coverage Failures</div><div class="value">{}</div></div>'.format(len(cov_rows)))
+    kpi_html.append('</div>')
+    kpi_html = "".join(kpi_html)
 
-    # Test Failures table
-    test_table_head = """
+    # ----- Test Failures table -----
+    test_head = """
     <thead>
       <tr>
         <th class="col-narrow">#</th>
-        <th class="col-class">Class</th>
-        <th class="col-author">Author #1</th>
-        <th class="col-date">Date #1</th>
-        <th class="col-comment">Comment #1</th>
-        <th class="col-author">Author #2</th>
-        <th class="col-date">Date #2</th>
-        <th class="col-comment">Comment #2</th>
-        <th class="col-method">Method</th>
-        <th class="col-error">Error</th>
+        <th>Class</th>
+        <th>Author</th>
+        <th>Date</th>
+        <th>Comment</th>
+        <th>Method</th>
+        <th>Error</th>
       </tr>
     </thead>
-    """
-    test_table_rows = []
+    """.strip()
+
+    test_rows_html = []
     for idx, row in enumerate(test_rows, 1):
-        cells = [
-            f"<td class='num'>{idx}</td>",
-            f"<td><span class='badge fail'>cls</span> {esc(row['class_name'])}</td>",
-            log_cells(row["class_name"]),
-            f"<td>{esc(row.get('method_name',''))}</td>",
-            f"<td>{esc(row.get('error',''))}"
-        ]
-        # Append stack as details
+        cls = row.get("class_name", "")
+        logs = get_log(cls)
+        a, d, s = ("—", "—", "—")
+        if logs:
+            a, d, s = logs[0]
+        error_cell = esc(row.get("error", ""))
         st = row.get("stack", "").strip()
         if st:
-            cells[-1] += f"<details><summary>Stack Trace</summary><div class='small'>{esc(st)}</div></details>"
-        cells[-1] += "</td>"
-        test_table_rows.append("<tr>" + "".join(cells) + "</tr>")
-    test_table = f"<div class='table-wrap'><table>{test_table_head}<tbody>{''.join(test_table_rows) if test_table_rows else '<tr><td colspan=10 class=\"small\">No failures found.</td></tr>'}</tbody></table></div>"
+            error_cell += "<details><summary>Stack Trace</summary><div class='small'>{}</div></details>".format(esc(st))
 
-    # Coverage table
-    cov_table_head = """
+        test_rows_html.append(
+            "<tr>"
+            "<td class='num'>{idx}</td>"
+            "<td><span class='badge fail'>cls</span> {cls}</td>"
+            "<td>{author}</td>"
+            "<td>{date}</td>"
+            "<td>{comment}</td>"
+            "<td>{method}</td>"
+            "<td>{error}</td>"
+            "</tr>".format(
+                idx=idx,
+                cls=esc(cls),
+                author=esc(a),
+                date=esc(d),
+                comment=esc(s),
+                method=esc(row.get("method_name", "")),
+                error=error_cell
+            )
+        )
+
+    if test_rows_html:
+        test_body = "".join(test_rows_html)
+    else:
+        test_body = '<tr><td colspan="7" class="small">No failures found.</td></tr>'
+
+    test_table = "<div class='table-wrap'><table>{head}<tbody>{body}</tbody></table></div>".format(
+        head=test_head, body=test_body
+    )
+
+    # ----- Coverage table -----
+    cov_head = """
     <thead>
       <tr>
         <th class="col-narrow">#</th>
-        <th class="col-class">Class</th>
-        <th class="col-author">Author #1</th>
-        <th class="col-date">Date #1</th>
-        <th class="col-comment">Comment #1</th>
-        <th class="col-author">Author #2</th>
-        <th class="col-date">Date #2</th>
-        <th class="col-comment">Comment #2</th>
-        <th class="col-date">Coverage</th>
-        <th class="col-error">Note</th>
+        <th>Class</th>
+        <th>Author</th>
+        <th>Date</th>
+        <th>Comment</th>
+        <th>Coverage</th>
+        <th>Note</th>
       </tr>
     </thead>
-    """
+    """.strip()
+
     cov_rows_html = []
     for idx, row in enumerate(cov_rows, 1):
+        cls = row.get("class_name", "")
+        logs = get_log(cls)
+        a, d, s = ("—", "—", "—")
+        if logs:
+            a, d, s = logs[0]
         cov = row.get("coverage")
-        badge = "warn" if cov is None else ("ok" if cov >= 75.0 else "fail")
-        coverage_txt = "—" if cov is None else f"{cov:.0f}%"
-        cells = [
-            f"<td class='num'>{idx}</td>",
-            f"<td><span class='badge {'ok' if cov and cov>=75 else 'fail'}'>cls</span> {esc(row['class_name'])}</td>",
-            log_cells(row["class_name"]),
-            f"<td><span class='badge {badge}'>{coverage_txt}</span></td>",
-            f"<td>{esc(row.get('note',''))}</td>",
-        ]
-        cov_rows_html.append("<tr>" + "".join(cells) + "</tr>")
-    cov_table = f"<div class='table-wrap'><table>{cov_table_head}<tbody>{''.join(cov_rows_html) if cov_rows_html else '<tr><td colspan=10 class=\"small\">No coverage issues found.</td></tr>'}</tbody></table></div>"
+        badge_cls = "warn" if cov is None else ("ok" if cov >= 75.0 else "fail")
+        cov_txt = "—" if cov is None else "{}%".format(int(cov))
 
-    # Compose
-    html_doc = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TestClass Failure Report</title>
-  <style>{css}</style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>TestClass Failure Report</h1>
-      {kpi_html}
-    </div>
+        cov_rows_html.append(
+            "<tr>"
+            "<td class='num'>{idx}</td>"
+            "<td><span class='badge {b}'>cls</span> {cls}</td>"
+            "<td>{author}</td>"
+            "<td>{date}</td>"
+            "<td>{comment}</td>"
+            "<td><span class='badge {b}'>{cov}</span></td>"
+            "<td>{note}</td>"
+            "</tr>".format(
+                idx=idx,
+                b=badge_cls,
+                cls=esc(cls),
+                author=esc(a),
+                date=esc(d),
+                comment=esc(s),
+                cov=esc(cov_txt),
+                note=esc(row.get("note", ""))
+            )
+        )
 
-    <div class="section">
-      <h2>Test Failures</h2>
-      {test_table}
-      <div style="padding:12px 16px" class="small">
-        Columns order: Class → Author#1 → Date#1 → Comment#1 → Author#2 → Date#2 → Comment#2 → Method → Error.
-      </div>
-    </div>
+    if cov_rows_html:
+        cov_body = "".join(cov_rows_html)
+    else:
+        cov_body = '<tr><td colspan="7" class="small">No coverage issues found.</td></tr>'
 
-    <div class="section" style="margin-top:16px">
-      <h2>Code Coverage Failure Report</h2>
-      <div style="padding:12px 16px">
-        <div class="sticky-note">Note: Required coverage is &ge; 75%.</div>
-      </div>
-      {cov_table}
-      <div style="padding:12px 16px" class="small">
-        Columns order: Class → Author#1 → Date#1 → Comment#1 → Author#2 → Date#2 → Comment#2 → Coverage → Note.
-      </div>
-    </div>
+    cov_table = "<div class='table-wrap'><table>{head}<tbody>{body}</tbody></table></div>".format(
+        head=cov_head, body=cov_body
+    )
 
-    <div class="footer">
-      &copy; {datetime.now().strftime('%Y')} Build generated at {esc(today)}.
-    </div>
-  </div>
-</body>
-</html>
-"""
-    return html_doc
+    # ----- Compose full HTML -----
+    html_doc = []
+    html_doc.append("<!DOCTYPE html>")
+    html_doc.append("<html lang='en'><head><meta charset='utf-8' />")
+    html_doc.append("<meta name='viewport' content='width=device-width, initial-scale=1' />")
+    html_doc.append("<title>TestClass Failure Report</title>")
+    html_doc.append("<style>{}</style>".format(css))
+    html_doc.append("</head><body>")
+    html_doc.append("<div class='container'>")
+    html_doc.append("<div class='header'><h1>TestClass Failure Report</h1>{}</div>".format(kpi_html))
+
+    html_doc.append("<div class='section'>")
+    html_doc.append("<h2>Test Failures</h2>")
+    html_doc.append(test_table)
+    html_doc.append("<div style='padding:10px 14px' class='small'>Columns: Class → Author → Date → Comment → Method → Error.</div>")
+    html_doc.append("</div>")
+
+    html_doc.append("<div class='section' style='margin-top:14px'>")
+    html_doc.append("<h2>Code Coverage Failure Report</h2>")
+    html_doc.append("<div style='padding:10px 14px' class='small'>Required coverage ≥ 75%.</div>")
+    html_doc.append(cov_table)
+    html_doc.append("<div style='padding:10px 14px' class='small'>Columns: Class → Author → Date → Comment → Coverage → Note.</div>")
+    html_doc.append("</div>")
+
+    html_doc.append("<div class='footer'>&copy; {} Generated {}</div>".format(datetime.now().strftime("%Y"), esc(today)))
+    html_doc.append("</div></body></html>")
+    return "".join(html_doc)
+
+# ---------- Main ----------
 
 def main():
     if not INPUT_FILE.exists():
-        print(f"[ERROR] Input file not found: {INPUT_FILE}", file=sys.stderr)
+        print("[ERROR] Input file not found: {}".format(INPUT_FILE), file=sys.stderr)
         sys.exit(2)
 
     raw = INPUT_FILE.read_text(encoding="utf-8", errors="ignore")
     test_rows, cov_rows = parse_input_text(raw)
 
-    # Determine repo root (where .git lives). If not found, fallback to HERE.
-    repo_root = HERE
-    probe = HERE
-    while True:
-        if (probe / ".git").exists():
-            repo_root = probe
-            break
-        if probe.parent == probe:
-            break
-        probe = probe.parent
-
+    repo_root = find_repo_root(HERE)
     html_doc = build_html(test_rows, cov_rows, repo_root)
 
     date_folder = datetime.now().strftime("%Y-%m-%d")
@@ -424,15 +420,13 @@ def main():
     try:
         out_dir.mkdir(parents=True, exist_ok=True)
     except Exception:
-        # Fallback to local folder if permission denied
         out_dir = HERE / "testclass_failure_report" / date_folder
         out_dir.mkdir(parents=True, exist_ok=True)
 
     out_file = out_dir / "index.html"
     out_file.write_text(html_doc, encoding="utf-8")
 
-    print(f"[OK] Report written to: {out_file}")
-    print(f"[HINT] Serve this path via web server if needed.")
+    print("[OK] Report written to: {}".format(out_file))
 
 if __name__ == "__main__":
     main()
