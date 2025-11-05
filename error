@@ -1,3 +1,1 @@
-[codedev@vlsj-deploybox SFDC]$ python3.9 geberate_testclass_fail_report.py
-  File "/data/code/GitHub_prod_validation/branches/2025-q4nov-release/SFDC/geberate_testclass_fail_report.py", line 324
-    test_table = f"<div class='table-wrap'><table>{test_table_head}<tbody>{''.join(test_table_rows) if test_table_rows else "<tr><td colspan=10 class='small'>No failures found.</td></tr>"}</tbody></table></div>"
+test_table = f"<div class='table-wrap'><table>{test_table_head}<tbody>{(''.join(test_table_rows) if test_table_rows else '<tr><td colspan=10 class=\"small\">No failures found.</td></tr>')}</tbody></table></div>"
