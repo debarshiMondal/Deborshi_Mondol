@@ -1,1 +1,2 @@
-test_table = f"<div class='table-wrap'><table>{test_table_head}<tbody>{(''.join(test_table_rows) if test_table_rows else '<tr><td colspan=10 class=\"small\">No failures found.</td></tr>')}</tbody></table></div>"
+body_rows = ''.join(test_table_rows) if test_table_rows else '<tr><td colspan=10 class="small">No failures found.</td></tr>'
+test_table = f"<div class='table-wrap'><table>{test_table_head}<tbody>{body_rows}</tbody></table></div>"
