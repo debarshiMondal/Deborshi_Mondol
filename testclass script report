@@ -1,232 +1,438 @@
-Testclass Failure Report:
-Class Name
-Method Name
-Error Message
-AccountAgreementListPage_Test	testCreateAndDeleteAgreement	System.LimitException: Too many SOQL queries: 101
-Stack Trace: Class.AccountExecutiveHelperClass.afterInsertHelper: line 29, column 1 Trigger.TempKeyRegionOptIn: line 70, column 1
-AccountAgreementListPage_Test	testSearchCLLA	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_EXECUTE_FLOW_TRIGGER, We can't save this record because the “Set Agreement Number” process failed. Give your Salesforce admin these details. This error occurred when the flow tried to update records: LIMIT_EXCEEDED: System.LimitException: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: []
-Stack Trace: Class.AccountAgreementListPage_Test.testSearchCLLA: line 41, column 1
-AccountAgreementListPage_Test	testSearchTempKey	System.LimitException: Too many SOQL queries: 101
-Stack Trace: Class.AccountExecutiveHelperClass.afterInsertHelper: line 29, column 1 Trigger.TempKeyRegionOptIn: line 70, column 1
-AgreementDetailControllerTest	submitCIC	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_EXECUTE_FLOW_TRIGGER, We can't save this record because the “Account After Create Update Event” process failed. Give your Salesforce admin these details. This error occurred when the flow tried to update records: FIELD_CUSTOM_VALIDATION_EXCEPTION: Account has been validated - Changes cannot be made to fields: Company Code, Sales Organization, Distribution Channel, Delivering Plant, Division Code, Language Code, Currency Code, Sold to SAP Customer ID, Address Status, SAP Customer ID. You can look up ExceptionCode values in the SOAP API Developer Guide.ress Status, SAP Customer ID. You can look up ExceptionCode values in the SOAP API Developer Guide.: []
-Stack Trace: Class.AgreementDetailControllerTest.submitCIC: line 179, column 1
-AgreementLineItemsTest	testSetLineItemsTempKey	System.LimitException: Too many SOQL queries: 101
-Stack Trace: Class.AccountExecutiveHelperClass.afterInsertHelper: line 16, column 1 Trigger.TempKeyRegionOptIn: line 70, column 1
-APTPS_NDA_TestClass	Test_APTPS_NDA_DocumentUpload	System.LimitException: Too many SOQL queries: 101
-Stack Trace: Trigger.AgreementApexSharing: line 84, column 1
-APTPS_NDA_TestClass	Test_APTPS_NDA_DocumentUpload2	System.LimitException: Too many SOQL queries: 101
-Stack Trace: Trigger.Apttus_AgreementTrigger_AT: line 63, column 1
-APTPS_TWR_LWCTest	testGetAgreement	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_EXECUTE_FLOW_TRIGGER, We can't save this record because the “Set Agreement Number” process failed. Give your Salesforce admin these details. This error occurred when the flow tried to update records: LIMIT_EXCEEDED: System.LimitException: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: []
-Stack Trace: Class.APTPS_TWR_LWCTest.createTestData: line 173, column 1
-APTPS_TWR_LWCTest	testGetClausePicklist	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_EXECUTE_FLOW_TRIGGER, We can't save this record because the “Set Agreement Number” process failed. Give your Salesforce admin these details. This error occurred when the flow tried to update records: LIMIT_EXCEEDED: System.LimitException: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: []
-Stack Trace: Class.APTPS_TWR_LWCTest.createTestData: line 173, column 1
-APTPS_TWR_LWCTest	testGetPicklistsAndSettings	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_EXECUTE_FLOW_TRIGGER, We can't save this record because the “Set Agreement Number” process failed. Give your Salesforce admin these details. This error occurred when the flow tried to update records: LIMIT_EXCEEDED: System.LimitException: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: []
-Stack Trace: Class.APTPS_TWR_LWCTest.createTestData: line 173, column 1
-APTPS_TWR_LWCTest	testGetRoyality	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_EXECUTE_FLOW_TRIGGER, We can't save this record because the “Set Agreement Number” process failed. Give your Salesforce admin these details. This error occurred when the flow tried to update records: LIMIT_EXCEEDED: System.LimitException: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: []
-Stack Trace: Class.APTPS_TWR_LWCTest.createTestData: line 173, column 1
-APTPS_TWR_LWCTest	testGetSObjectRecords	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_EXECUTE_FLOW_TRIGGER, We can't save this record because the “Set Agreement Number” process failed. Give your Salesforce admin these details. This error occurred when the flow tried to update records: LIMIT_EXCEEDED: System.LimitException: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: []
-Stack Trace: Class.APTPS_TWR_LWCTest.createTestData: line 173, column 1
-APTPS_TWR_LWCTest	testHasPlatformLicense	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_EXECUTE_FLOW_TRIGGER, We can't save this record because the “Set Agreement Number” process failed. Give your Salesforce admin these details. This error occurred when the flow tried to update records: LIMIT_EXCEEDED: System.LimitException: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: []
-Stack Trace: Class.APTPS_TWR_LWCTest.createTestData: line 173, column 1
-APTPS_TWR_LWCTest	testRedirectAndCommitments	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_EXECUTE_FLOW_TRIGGER, We can't save this record because the “Set Agreement Number” process failed. Give your Salesforce admin these details. This error occurred when the flow tried to update records: LIMIT_EXCEEDED: System.LimitException: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: []
-Stack Trace: Class.APTPS_TWR_LWCTest.createTestData: line 173, column 1
-APTPS_TWR_LWCTest	testSaveAgreementAsDraft	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_EXECUTE_FLOW_TRIGGER, We can't save this record because the “Set Agreement Number” process failed. Give your Salesforce admin these details. This error occurred when the flow tried to update records: LIMIT_EXCEEDED: System.LimitException: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: []
-Stack Trace: Class.APTPS_TWR_LWCTest.createTestData: line 173, column 1
-APTPS_TWR_LWCTest	testSaveTwr	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_EXECUTE_FLOW_TRIGGER, We can't save this record because the “Set Agreement Number” process failed. Give your Salesforce admin these details. This error occurred when the flow tried to update records: LIMIT_EXCEEDED: System.LimitException: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: []
-Stack Trace: Class.APTPS_TWR_LWCTest.createTestData: line 173, column 1
-APTPSHelper_Test	testGetSelectedAccountSites2	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_EXECUTE_FLOW_TRIGGER, We can't save this record because the “Account After Create Update Event” process failed. Give your Salesforce admin these details. This error occurred when the flow tried to update records: FIELD_CUSTOM_VALIDATION_EXCEPTION: Account has been validated - Changes cannot be made to fields: Company Code, Sales Organization, Distribution Channel, Delivering Plant, Division Code, Language Code, Currency Code, Sold to SAP Customer ID, Address Status, SAP Customer ID. You can look up ExceptionCode values in the SOAP API Developer Guide.ress Status, SAP Customer ID. You can look up ExceptionCode values in the SOAP API Developer Guide.: []
-Stack Trace: Class.APTPSHelper_Test.testGetSelectedAccountSites2: line 108, column 1
-APTPSSUBMITREQUEST_Test	TestReleaseApproversSoftware	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_INSERT_UPDATE_ACTIVATE_ENTITY, Apttus_AgreementItemsAfterInsertUpdate: execution of AfterInsert caused by: cache.Org.OrgCacheException: Failed Cache.Org.get() for key 'RuleSetToEccnMap': Org cache is only supported in Data Silo tests (System Code) Class.ECC_ExportControlHandler.getRuleSetToEccnMapFromCache: line 545, column 1 Class.Apttus_Agreement_Utility.getEccnsForCountries: line 55, column 1 Class.Apttus_AgreementUpdateTriggerHandler.doUpdateOnAfterAction: line 127, column 1 Class.Apttus_AgreementUpdateTriggerHandler.onAfterUpsert: line 38, column 1 Trigger.Apttus_AgreementItemsAfterInsertUpdate: line 20, column 1: []
-Stack Trace: Class.APTPSSUBMITREQUEST_Test.TestReleaseApproversSoftware: line 1052, column 1
-APTPSSUBMITREQUEST_Test	saveCLLACompleteTestForSoftware	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_EXECUTE_FLOW_TRIGGER, We can't save this record because the “Search Field Update” process failed. Give your Salesforce admin these details. This error occurred when the flow tried to update records: LIMIT_EXCEEDED: System.LimitException: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: Too many SOQL queries: 101. You can look up ExceptionCode values in the SOAP API Developer Guide.: []
-Stack Trace: Class.APTPSSUBMITREQUEST_Test.saveCLLACompleteTestForSoftware: line 199, column 1
-APTPSSUBMITREQUEST_Test	testSaveCLLA	System.LimitException: Apttus_Base2:Too many SOQL queries: 101
-Stack Trace: (Apttus_Base2)
-APTPSSUBMITREQUEST_Test	testforMasterRenderedFlagSoftware	System.LimitException: Too many SOQL queries: 101
-Stack Trace: Class.APTPSSUBMITREQUEST.LoadAccountandVar: line 653, column 1 Class.APTPSSUBMITREQUEST.<init>: line 119, column 1 Class.APTPSSUBMITREQUEST_Test.testforMasterRenderedFlagSoftware: line 757, column 1
-APTPSSUBMITREQUEST_Test	testforMasterRenderedFlagSoftware2	System.LimitException: Too many SOQL queries: 101
-Stack Trace: Class.APTPSSUBMITREQUEST.LoadAccountandVar: line 653, column 1 Class.APTPSSUBMITREQUEST.<init>: line 119, column 1 Class.APTPSSUBMITREQUEST_Test.testforMasterRenderedFlagSoftware2: line 809, column 1
-APTPSSUBMITREQUEST_Test	testforMasterRenderedFlagSoftware4	System.LimitException: Too many SOQL queries: 101
-Stack Trace: Class.APTPSSUBMITREQUEST.LoadAccountandVar: line 653, column 1 Class.APTPSSUBMITREQUEST.<init>: line 119, column 1 Class.APTPSSUBMITREQUEST_Test.testforMasterRenderedFlagSoftware4: line 908, column 1
-APTS_QuoteTriggerTest	ccEmailsTest	System.DmlException: Update failed. First exception on row 0 with id a1tVA00000HBE65YAH; first error: FIELD_CUSTOM_VALIDATION_EXCEPTION, Exception occurred at line number 2181 Message --> Attempt to de-reference a null object: []
-Stack Trace: Class.APTS_QuoteTriggerTest.ccEmailsTest: line 1526, column 1
-APTS_QuoteTriggerTest	opptyBillingPlanTest	System.DmlException: Insert failed. First exception on row 2; first error: CANNOT_EXECUTE_FLOW_TRIGGER, We can't save this record because the “Quote/Proposal After Create/Update Event” process failed. Give your Salesforce admin these details. This error occurred when the flow tried to update records: FIELD_CUSTOM_VALIDATION_EXCEPTION: You must assign a Legal Partner to this quote.. You can look up ExceptionCode values in the SOAP API Developer Guide.Legal Partner to this quote.. You can look up ExceptionCode values in the SOAP API Developer Guide.: []
-Stack Trace: Class.APTS_QuoteTriggerTest.opptyBillingPlanTest: line 1815, column 1
-APTS_QuoteTriggerTest	quoteCCEmailsTest	System.DmlException: Update failed. First exception on row 0 with id a1tVA00000HBE6BYAX; first error: FIELD_CUSTOM_VALIDATION_EXCEPTION, Exception occurred at line number 2181 Message --> Attempt to de-reference a null object: []
-Stack Trace: Class.APTS_QuoteTriggerTest.quoteCCEmailsTest: line 1351, column 1
-Apttus_Cancel_Request_Test	testCLLACancelRequest	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_INSERT_UPDATE_ACTIVATE_ENTITY, Apttus_AgreementItemsAfterInsertUpdate: execution of AfterInsert caused by: cache.Org.OrgCacheException: Failed Cache.Org.get() for key 'RuleSetToEccnMap': Org cache is only supported in Data Silo tests (System Code) Class.ECC_ExportControlHandler.getRuleSetToEccnMapFromCache: line 545, column 1 Class.Apttus_Agreement_Utility.getEccnsForCountries: line 55, column 1 Class.Apttus_AgreementUpdateTriggerHandler.doUpdateOnAfterAction: line 127, column 1 Class.Apttus_AgreementUpdateTriggerHandler.onAfterUpsert: line 38, column 1 Trigger.Apttus_AgreementItemsAfterInsertUpdate: line 20, column 1: []
-Stack Trace: Class.Apttus_Cancel_Request_Test.testCLLACancelRequest: line 14, column 1
-Apttus_Cancel_Request_Test	testNDACancelRequest	System.DmlException: Insert failed. First exception on row 0; first error: CANNOT_INSERT_UPDATE_ACTIVATE_ENTITY, Apttus_AgreementItemsAfterInsertUpdate: execution of AfterInsert caused by: cache.Org.OrgCacheException: Failed Cache.Org.get() for key 'RuleSetToEccnMap': Org cache is only supported in Data Silo tests (System Code) Class.ECC_ExportControlHandler.getRuleSetToEccnMapFromCache: line 545, column 1 Class.Apttus_Agreement_Utility.getEccnsForCountries: line 55, column 1 Class.Apttus_AgreementUpdateTriggerHandler.doUpdateOnAfterAction: line 127, column 1 Class.Apttus_AgreementUpdateTriggerHandler.onAfterUpsert: line 38, column 1 Trigger.Apttus_AgreementItemsAfterInsertUpdate: line 20, column 1: []
-Stack Trace: Class.Apttus_Cancel_Request_Test.testNDACancelRequest: line 56, column 1
-CustomEmailTemplateForRefTest	Method1	System.NullPointerException: Attempt to de-reference a null object
-Stack Trace: Class.CustomEmailTemplateforRef.sendEmail: line 90, column 1 Class.CustomEmailTemplateForRefTest.Method1: line 30, column 1
-CustomEmailTemplateTest	Method1	System.NullPointerException: Attempt to de-reference a null object
-Stack Trace: Class.CustomEmailTemplate.sendEmail: line 93, column 1 Class.CustomEmailTemplateTest.Method1: line 32, column 1
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Generate a beautiful HTML report from a pasted Salesforce test+coverage dump.
+Input:  testclass_report.txt   (in the same directory as this script)
+Output: /data/public/testclass_failure_report/YYYY-MM-DD/index.html
+Assumptions:
+- Apex classes (including test classes) live at src/classes/<ClassName>.cls
+- Git repo is available; we read last 2 logs for each class (author, date, subject)
+"""
 
-_________________
+from __future__ import annotations
+from pathlib import Path
+from datetime import datetime
+import subprocess
+import os
+import re
+import html
+import sys
+from typing import List, Dict, Tuple, Optional
 
-Code Coverage Failure
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-CadenceAppAdminProfileController
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-NDA_Response
-Your code coverage is 43%. You need at least 75% coverage to complete this deployment.
-Send_GL_ForEsign_Controller
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-CustApvl_HandleSubmitForApprovalCTRL
-Your code coverage is 49%. You need at least 75% coverage to complete this deployment.
-APTPS_SoftwarePage_TempKey
-Your code coverage is 56%. You need at least 75% coverage to complete this deployment.
-APTPS_SoftwarePage
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-AccountAgreementListPage_AC
-Your code coverage is 70%. You need at least 75% coverage to complete this deployment.
-bookingPackageContentTab_Controller_AC
-Your code coverage is 58%. You need at least 75% coverage to complete this deployment.
-APTPSSUBMITREQUEST
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-AptsFileUploader
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-AptsAgmtLineItemSubmitController
-Your code coverage is 10%. You need at least 75% coverage to complete this deployment.
-IntelRundaReport_AC
-Your code coverage is 52%. You need at least 75% coverage to complete this deployment.
-UploadNDAController
-Your code coverage is 20%. You need at least 75% coverage to complete this deployment.
-TSMCController
-Your code coverage is 37%. You need at least 75% coverage to complete this deployment.
-TSMC_Trigger_Handler
-Your code coverage is 74%. You need at least 75% coverage to complete this deployment.
-APTS_QuoteTriggerhandler
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-Apttus_Cancel_Request
-Your code coverage is 37%. You need at least 75% coverage to complete this deployment.
-APTS_ContentDocumentLinkTriggerHandler
-Your code coverage is 26%. You need at least 75% coverage to complete this deployment.
-EntitlementContactTriggerHandler_AC
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-APTS_QuoteExportBatch
-Your code coverage is 73%. You need at least 75% coverage to complete this deployment.
-APTS_GeoInstallHandler
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-APTS_ApprovalRequestDataShowController
-Your code coverage is 30%. You need at least 75% coverage to complete this deployment.
-APTS_ProposalUtility
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-APTS_ViewDiscountHierarchy
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-APTS_ProductAvailabilityCtrl
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-APTS_SendforeSignatureController
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-APTS_RecallSignaturesController
-Your code coverage is 47%. You need at least 75% coverage to complete this deployment.
-RestrictedEmployeeForm
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-TWRActions
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-TWRNoteAtt_cls
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-GenerateLicenseExceptionUserList
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-RundaSigned
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-RundaNoteAttach_cls
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-RundaHistoryClass
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-Termination
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-VarCustomLookupCtrl
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-APTS_GenerateDocumentQueueable
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-VarPortalProductPage
-Your code coverage is 67%. You need at least 75% coverage to complete this deployment.
-Intel_Runda_30_Day_Email
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-TWR_Error
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-TWR_Review
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-APTPS_Edit
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-APTPS_TWR_LWC
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-APTS_AcceptOrder
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-Apttus_DocuSign_EnvelopeTriggerHandler
-Your code coverage is 47%. You need at least 75% coverage to complete this deployment.
-Apttus_Agreement_File_AC
-Your code coverage is 56%. You need at least 75% coverage to complete this deployment.
-ContentDocumentTriggerHandler_AC
-Your code coverage is 46%. You need at least 75% coverage to complete this deployment.
-BookingPackageTriggerHandler
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-VarWrapper
-Your code coverage is 58%. You need at least 75% coverage to complete this deployment.
-CustomEmailTemplateforRef
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-AccountContentTabController_AC
-Your code coverage is 56%. You need at least 75% coverage to complete this deployment.
-CustomEmailTemplate
-Your code coverage is 16%. You need at least 75% coverage to complete this deployment.
-DocuSign_Utility
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-ClmNDAFileHandler
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-CloudProductDeleteController
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-ApttusUserSetupController
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-LightningUtility
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-ErRequestFlowAccess
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-CosLiteTechPubsDocRetrieverController
-Your code coverage is 67%. You need at least 75% coverage to complete this deployment.
-AgreementDetailController
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-APTS_CloudProductPageCntrl
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-VarProfileUtility
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-APTS_AttachmentService
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-SFDCOktaUserAdminCreate
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-listHostID
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-BaseDuplicateChecker
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-ManageDQMVersionController
-Your code coverage is 50%. You need at least 75% coverage to complete this deployment.
-LWRext
-Your code coverage is 1%. You need at least 75% coverage to complete this deployment.
-COSCaseCreationController
-Your code coverage is 50%. You need at least 75% coverage to complete this deployment.
-ContentDocumentLink_AT
-Your code coverage is 0%. You need at least 75% coverage to complete this deployment.
-Apttus_DocuSign_EnvelopeTrigger
+HERE = Path(__file__).resolve().parent
+INPUT_FILE = HERE / "testclass_report.txt"
+# Output root (as requested)
+OUTPUT_ROOT = Path("/data/public/testclass_failure_report")
 
+# ---------- Utilities ----------
 
-See the input. And create me a script which will give me last two author log, date, comment in seperate coloumns of the classes.
+def run(cmd: List[str], cwd: Optional[Path] = None) -> Tuple[int, str, str]:
+    """Run a subprocess and capture (rc, out, err)."""
+    try:
+        proc = subprocess.Popen(cmd, cwd=str(cwd) if cwd else None,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        out, err = proc.communicate()
+        return proc.returncode, out, err
+    except FileNotFoundError as e:
+        return 127, "", str(e)
+    except Exception as e:
+        return 1, "", str(e)
 
-Classes should be append with .cls and are located at src/classes folder.
+def resolve_class_path(class_name: str, src_root: Path) -> Optional[Path]:
+    """
+    Resolve a class name to a .cls file under src/classes.
+    Tries exact match first, then case-insensitive match.
+    """
+    exact = src_root / "classes" / f"{class_name}.cls"
+    if exact.exists():
+        return exact
 
- last two author log, date, comment in seperate coloumns of the classes.
+    # Case-insensitive / fuzzy
+    want = f"{class_name}.cls".lower()
+    candidates = list((src_root / "classes").glob("*.cls"))
+    for c in candidates:
+        if c.name.lower() == want:
+            return c
 
+    # As a fallback, try contains (dangerous, but better than nothing)
+    for c in candidates:
+        if class_name.lower() in c.stem.lower():
+            return c
 
-First class name, author, comment, date, method name and then error.
+    return None
 
-Header of the web page will be TestClass Failure Report.
+def git_last_two_logs_for_class(class_name: str, repo_root: Path) -> List[Tuple[str, str, str]]:
+    """
+    Return up to 2 tuples: (author, date, subject) for src/classes/<class_name>.cls.
+    Date is short format (YYYY-MM-DD).
+    """
+    src_root = repo_root / "src"
+    cls_path = resolve_class_path(class_name, src_root)
+    if not cls_path:
+        return []
 
-Then Code Coverage Failure report
+    cmd = [
+        "git", "log", "-n", "2",
+        "--pretty=format:%an|%ad|%s", "--date=short",
+        "--", str(cls_path)
+    ]
+    rc, out, err = run(cmd, cwd=repo_root)
+    if rc != 0:
+        return []
+    logs = []
+    for line in out.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split("|", 2)
+        if len(parts) == 3:
+            author, date, subject = parts
+            logs.append((author.strip(), date.strip(), subject.strip()))
+    return logs[:2]
 
-First class name, author, comment, date, and then error.
+def esc(s: str) -> str:
+    return html.escape(s, quote=True)
 
-The python script will create a html file with date in /data/public/testclass_failure_report/ folder.
+# ---------- Parsing ----------
 
-So that web page can be visible. Create a very beautiful web page repport.
+def parse_input_text(text: str) -> Tuple[List[Dict], List[Dict]]:
+    """
+    Parse the text into (test_failures, coverage_failures)
+    test_failures: list of dicts with keys: class_name, method_name, error, stack (optional full stack trace)
+    coverage_failures: list of dicts with keys: class_name, coverage (float/None), note (original line)
+    """
+    # Split into two sections using the divider or the coverage header
+    divider_idx = text.find("_________________")
+    coverage_hdr_idx = text.find("Code Coverage Failure")
 
-the input will be pasted in a testclass_report.txt file in the same location as the script.
+    if coverage_hdr_idx == -1 and divider_idx != -1:
+        # If Code Coverage header is missing but divider present, try after divider
+        coverage_hdr_idx = divider_idx
+
+    if coverage_hdr_idx == -1:
+        # No coverage section found
+        test_section = text
+        cov_section = ""
+    else:
+        test_section = text[:coverage_hdr_idx]
+        cov_section = text[coverage_hdr_idx:]
+
+    test_failures = parse_test_failures(test_section)
+    coverage_failures = parse_coverage(cov_section)
+    return test_failures, coverage_failures
+
+def parse_test_failures(section: str) -> List[Dict]:
+    lines = [ln.rstrip("\n") for ln in section.splitlines()]
+    entries = []
+    current = None
+
+    # Skip header lines and capture rows shaped like: <Class>\t<Method>\t<Error...>
+    for ln in lines:
+        if not ln.strip():
+            continue
+        if ln.strip().startswith(("Testclass Failure Report", "Class Name", "Method Name", "Error Message")):
+            continue
+        if ln.strip().startswith("Stack Trace:"):
+            if current:
+                # append to stack; keep original line (minus label) too
+                current["stack"] = (current.get("stack", "") + "\n" + ln.split("Stack Trace:", 1)[-1].strip()).strip()
+            continue
+
+        if "\t" in ln:
+            parts = ln.split("\t", 2)
+            if len(parts) == 3:
+                class_name, method_name, err = parts
+                current = {
+                    "class_name": class_name.strip(),
+                    "method_name": method_name.strip(),
+                    "error": err.strip(),
+                }
+                entries.append(current)
+                continue
+
+        # Sometimes errors wrap without tab – append to last error if present
+        if entries:
+            # Append as continuation of error
+            entries[-1]["error"] = (entries[-1]["error"] + " " + ln.strip()).strip()
+
+    return entries
+
+def parse_coverage(section: str) -> List[Dict]:
+    lines = [ln.strip() for ln in section.splitlines() if ln.strip()]
+    # Find the start
+    try:
+        start = next(i for i, ln in enumerate(lines) if ln.startswith("Code Coverage Failure"))
+        lines = lines[start+1:]
+    except StopIteration:
+        # If not found, maybe the section starts right away
+        pass
+
+    cov_entries = []
+    i = 0
+    coverage_re = re.compile(r"Your code coverage is\s+(\d+)%", re.IGNORECASE)
+    while i < len(lines):
+        name = lines[i]
+        if name.startswith("See the input"):
+            break
+        # If it looks like a coverage line, skip and move on
+        if name.lower().startswith("your code coverage is"):
+            i += 1
+            continue
+
+        coverage = None
+        note = ""
+        if i + 1 < len(lines) and lines[i+1].lower().startswith("your code coverage is"):
+            note = lines[i+1]
+            m = coverage_re.search(note)
+            if m:
+                coverage = float(m.group(1))
+            i += 2
+        else:
+            i += 1
+
+        cov_entries.append({"class_name": name, "coverage": coverage, "note": note})
+
+    return cov_entries
+
+# ---------- HTML ----------
+
+def build_html(test_rows: List[Dict], cov_rows: List[Dict], repo_root: Path) -> str:
+    today = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # Preload logs cache to avoid calling git twice for same class
+    log_cache: Dict[str, List[Tuple[str, str, str]]] = {}
+
+    def logs_for(cls: str) -> List[Tuple[str, str, str]]:
+        if cls not in log_cache:
+            log_cache[cls] = git_last_two_logs_for_class(cls, repo_root)
+        return log_cache[cls]
+
+    def log_cells(cls: str) -> str:
+        logs = logs_for(cls)
+        # Author1, Date1, Comment1, Author2, Date2, Comment2
+        cells = []
+        for idx in range(2):
+            if idx < len(logs):
+                a, d, s = logs[idx]
+                cells.extend([esc(a), esc(d), esc(s)])
+            else:
+                cells.extend(["—", "—", "—"])
+        # Wrap in <td>
+        return "".join(f"<td>{c}</td>" for c in cells)
+
+    # Styles
+    css = r"""
+:root {
+  --bg: #0b0d10;
+  --card: #11161c;
+  --ink: #e6edf3;
+  --muted: #a9b2bd;
+  --accent: #5b9dff;
+  --accent-2: #ff6b6b;
+  --ok: #7bd88f;
+  --warn: #ffd166;
+  --line: #1e2630;
+  --chip: #15202b;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; }
+.container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+.header {
+  background: linear-gradient(135deg, rgba(91,157,255,0.25), rgba(255,107,107,0.25));
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  display:flex; align-items:center; justify-content:space-between;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+}
+.header h1 { margin: 0; font-size: 22px; letter-spacing: 0.3px; }
+.header .meta { color: var(--muted); font-size: 12px; }
+.section { margin-top: 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); overflow: hidden; }
+.section h2 { margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 16px; background: #0f141a; position: sticky; top: 0; z-index: 1; }
+.table-wrap { width: 100%; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+thead th {
+  text-align: left; font-weight: 600; color: var(--muted);
+  border-bottom: 1px solid var(--line); padding: 10px 8px; font-size: 12px;
+  position: sticky; top: 38px; background: #0f141a;
+}
+tbody td { padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; word-wrap: break-word; overflow-wrap: anywhere; white-space: pre-wrap; }
+tbody tr:hover { background: #0e141a; }
+.badge { display:inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; border:1px solid var(--line); background: var(--chip); color: var(--ink); }
+.badge.fail { background: rgba(255,107,107,0.1); border-color: rgba(255,107,107,0.35); color: #ffb3b3; }
+.badge.warn { background: rgba(255,209,102,0.08); border-color: rgba(255,209,102,0.35); color: #ffe29b; }
+.badge.ok { background: rgba(123,216,143,0.1); border-color: rgba(123,216,143,0.35); color: #c6f1cf; }
+.kpis { display:flex; gap:12px; flex-wrap: wrap; }
+.kpi { background:#0f141a; border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+.kpi .label { color: var(--muted); font-size:11px; }
+.kpi .value { font-size:18px; font-weight:700; }
+details { background: #0f141a; border:1px dashed var(--line); border-radius:10px; padding:8px 10px; margin-top:8px; }
+details > summary { cursor:pointer; color: var(--accent); }
+.small { font-size: 12px; color: var(--muted); }
+.num { color: var(--muted); font-variant-numeric: tabular-nums; }
+.sticky-note { padding: 8px 12px; color: #ffd3d3; background: rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.32); border-radius: 10px; }
+.footer { text-align:center; color: var(--muted); font-size: 12px; margin: 18px 0 6px; }
+.col-narrow { width: 68px; }
+.col-class { width: 180px; }
+.col-method { width: 160px; }
+.col-error { width: 320px; }
+.col-comment { width: 200px; }
+.col-date { width: 110px; }
+.col-author { width: 140px; }
+"""
+
+    # Build KPIs
+    kpi_html = f"""
+    <div class="kpis">
+      <div class="kpi"><div class="label">Generated</div><div class="value">{esc(today)}</div></div>
+      <div class="kpi"><div class="label">Test Failures</div><div class="value">{len(test_rows)}</div></div>
+      <div class="kpi"><div class="label">Coverage Failures</div><div class="value">{len(cov_rows)}</div></div>
+    </div>
+    """
+
+    # Test Failures table
+    test_table_head = """
+    <thead>
+      <tr>
+        <th class="col-narrow">#</th>
+        <th class="col-class">Class</th>
+        <th class="col-author">Author #1</th>
+        <th class="col-date">Date #1</th>
+        <th class="col-comment">Comment #1</th>
+        <th class="col-author">Author #2</th>
+        <th class="col-date">Date #2</th>
+        <th class="col-comment">Comment #2</th>
+        <th class="col-method">Method</th>
+        <th class="col-error">Error</th>
+      </tr>
+    </thead>
+    """
+    test_table_rows = []
+    for idx, row in enumerate(test_rows, 1):
+        cells = [
+            f"<td class='num'>{idx}</td>",
+            f"<td><span class='badge fail'>cls</span> {esc(row['class_name'])}</td>",
+            log_cells(row["class_name"]),
+            f"<td>{esc(row.get('method_name',''))}</td>",
+            f"<td>{esc(row.get('error',''))}"
+        ]
+        # Append stack as details
+        st = row.get("stack", "").strip()
+        if st:
+            cells[-1] += f"<details><summary>Stack Trace</summary><div class='small'>{esc(st)}</div></details>"
+        cells[-1] += "</td>"
+        test_table_rows.append("<tr>" + "".join(cells) + "</tr>")
+    test_table = f"<div class='table-wrap'><table>{test_table_head}<tbody>{''.join(test_table_rows) if test_table_rows else '<tr><td colspan=10 class=\"small\">No failures found.</td></tr>'}</tbody></table></div>"
+
+    # Coverage table
+    cov_table_head = """
+    <thead>
+      <tr>
+        <th class="col-narrow">#</th>
+        <th class="col-class">Class</th>
+        <th class="col-author">Author #1</th>
+        <th class="col-date">Date #1</th>
+        <th class="col-comment">Comment #1</th>
+        <th class="col-author">Author #2</th>
+        <th class="col-date">Date #2</th>
+        <th class="col-comment">Comment #2</th>
+        <th class="col-date">Coverage</th>
+        <th class="col-error">Note</th>
+      </tr>
+    </thead>
+    """
+    cov_rows_html = []
+    for idx, row in enumerate(cov_rows, 1):
+        cov = row.get("coverage")
+        badge = "warn" if cov is None else ("ok" if cov >= 75.0 else "fail")
+        coverage_txt = "—" if cov is None else f"{cov:.0f}%"
+        cells = [
+            f"<td class='num'>{idx}</td>",
+            f"<td><span class='badge {'ok' if cov and cov>=75 else 'fail'}'>cls</span> {esc(row['class_name'])}</td>",
+            log_cells(row["class_name"]),
+            f"<td><span class='badge {badge}'>{coverage_txt}</span></td>",
+            f"<td>{esc(row.get('note',''))}</td>",
+        ]
+        cov_rows_html.append("<tr>" + "".join(cells) + "</tr>")
+    cov_table = f"<div class='table-wrap'><table>{cov_table_head}<tbody>{''.join(cov_rows_html) if cov_rows_html else '<tr><td colspan=10 class=\"small\">No coverage issues found.</td></tr>'}</tbody></table></div>"
+
+    # Compose
+    html_doc = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TestClass Failure Report</title>
+  <style>{css}</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>TestClass Failure Report</h1>
+      {kpi_html}
+    </div>
+
+    <div class="section">
+      <h2>Test Failures</h2>
+      {test_table}
+      <div style="padding:12px 16px" class="small">
+        Columns order: Class → Author#1 → Date#1 → Comment#1 → Author#2 → Date#2 → Comment#2 → Method → Error.
+      </div>
+    </div>
+
+    <div class="section" style="margin-top:16px">
+      <h2>Code Coverage Failure Report</h2>
+      <div style="padding:12px 16px">
+        <div class="sticky-note">Note: Required coverage is &ge; 75%.</div>
+      </div>
+      {cov_table}
+      <div style="padding:12px 16px" class="small">
+        Columns order: Class → Author#1 → Date#1 → Comment#1 → Author#2 → Date#2 → Comment#2 → Coverage → Note.
+      </div>
+    </div>
+
+    <div class="footer">
+      &copy; {datetime.now().strftime('%Y')} Build generated at {esc(today)}.
+    </div>
+  </div>
+</body>
+</html>
+"""
+    return html_doc
+
+def main():
+    if not INPUT_FILE.exists():
+        print(f"[ERROR] Input file not found: {INPUT_FILE}", file=sys.stderr)
+        sys.exit(2)
+
+    raw = INPUT_FILE.read_text(encoding="utf-8", errors="ignore")
+    test_rows, cov_rows = parse_input_text(raw)
+
+    # Determine repo root (where .git lives). If not found, fallback to HERE.
+    repo_root = HERE
+    probe = HERE
+    while True:
+        if (probe / ".git").exists():
+            repo_root = probe
+            break
+        if probe.parent == probe:
+            break
+        probe = probe.parent
+
+    html_doc = build_html(test_rows, cov_rows, repo_root)
+
+    date_folder = datetime.now().strftime("%Y-%m-%d")
+    out_dir = OUTPUT_ROOT / date_folder
+    try:
+        out_dir.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        # Fallback to local folder if permission denied
+        out_dir = HERE / "testclass_failure_report" / date_folder
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+    out_file = out_dir / "index.html"
+    out_file.write_text(html_doc, encoding="utf-8")
+
+    print(f"[OK] Report written to: {out_file}")
+    print(f"[HINT] Serve this path via web server if needed.")
+
+if __name__ == "__main__":
+    main()
