@@ -1,6 +1,7 @@
-[codedev@vlsj-deploybox SFDC]$ python3.9 geberate_testclass_fail_report.py
-  File "/data/code/GitHub_prod_validation/branches/2025-q4nov-release/SFDC/geberate_testclass_fail_report.py", line 355
-    cov_table = f"<div class='table-wrap'><table>{cov_table_head}<tbody>{''.join(cov_rows_html) if cov_rows_html else '<tr><td colspan=10 class=\"small\">No coverage issues found.</td></tr>'}</tbody></table></div>"
-                                                                                                                                                                                                                      ^
-SyntaxError: f-string expression part cannot include a backslash
-[codedev@vlsj-deploybox SFDC]$ vi geberate_testclass_fail_report.py
+# --- Test table body & wrapper ---
+test_body = ''.join(test_table_rows) if test_table_rows else '<tr><td colspan=10 class="small">No failures found.</td></tr>'
+test_table = f"<div class='table-wrap'><table>{test_table_head}<tbody>{test_body}</tbody></table></div>"
+
+# --- Coverage table body & wrapper ---
+cov_body = ''.join(cov_rows_html) if cov_rows_html else '<tr><td colspan=10 class="small">No coverage issues found.</td></tr>'
+cov_table = f"<div class='table-wrap'><table>{cov_table_head}<tbody>{cov_body}</tbody></table></div>"
