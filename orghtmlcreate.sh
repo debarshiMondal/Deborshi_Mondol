@@ -12,7 +12,7 @@ set -euo pipefail
 #     Original_Combined_PMD_Report.csv
 #     Original_Combined_PMD_Report_Classes.csv
 #     Original_Combined_PMD_Report_Triggers.csv
-# - Each row links to: <Name>_orgpm.html
+# - Each row links to: <Name>_orgpmd.html
 # --------------------------------------------------------------------
 
 ENV="${1:-}"
@@ -79,8 +79,8 @@ if [[ -d "${PMD_CLASSES_DIR}" ]]; then
     # Count PMD issues (line count)
     count="$(wc -l < "$fpath" | awk '{print $1}')"
 
-    # Per-item detail link must end with _orgpm.html
-    link="${display}_orgpm.html"
+    # Per-item detail link must end with _orgpmd.html
+    link="${display}_orgpmd.html"
 
     # HTML row
     printf '<tr><td class="name"><a href="%s">%s</a></td><td class="num">%s</td></tr>\n' \
@@ -114,8 +114,8 @@ if [[ -d "${PMD_TRIGGERS_DIR}" ]]; then
 
     count="$(wc -l < "$fpath" | awk '{print $1}')"
 
-    # Per-item detail link must end with _orgpm.html
-    link="${display}_orgpm.html"
+    # Per-item detail link must end with _orgpmd.html
+    link="${display}_orgpmd.html"
 
     printf '<tr><td class="name"><a href="%s">%s</a></td><td class="num">%s</td></tr>\n' \
       "$link" "$display" "$count" >> "${TRIGGERS_TMP}"
