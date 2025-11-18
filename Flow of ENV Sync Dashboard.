@@ -2,59 +2,69 @@ Flow
 
 
 ENV_SYNC Dashboard — Project Description
+
+
+
 1. What the Project Is
 
-A FastAPI-based internal dashboard for running, monitoring, and managing Salesforce metadata sync operations between:
+A FastAPI-based internal dashboard for running, monitoring, and managing Salesforce metadata sync operations.
+It performs Master vs PROD comparisons, folder restructuring, diffs, Beyond Compare execution, error detection, report prep and email notifications.
 
 Master GitHub Codebase — /data/code/GitHub_SFDC/Master/SFDC/src
 
-Production Metadata Dumps — /backup/PROD_DUMP
+Production Metadata Dumps — /backup/PROD_DUMP/
+Note: naming covension of prod dump.
 
-Output directory — /data/public/ENV_SYNC
 
-It performs Master vs PROD comparisons, folder restructuring, diffs, Beyond Compare execution, error detection, report prep and email notifications.
+Output directory — /data/public/ENV_SYNC/
+
+
 
 2. Core Pages
-
 /login
-Single-user login (conf/users.json). Cookies used for session.
+Single-user login (conf/users.json). Cookies used for session. FatApi based authentication.
 
-/main
-Shows KPIs, recent Master Sync runs.
+
 
 /master-sync
 Button: Start Master Sync
-Button: Schedule Master Sync (to be added)
+Button: Schedule Master Sync
 Table of previous runs
 Displays success / failure summary after every run
+Note: Failure details.
+
 
 /branch-sync
-Future module for branch-level comparisons.
-
-/branch-sync/history
-Shows historical runs.
+For branch-level comparisons.
+	Sub Page:-	/branch-sync/history
+		Shows historical runs.
 
 /run-reports
-Future module for code and profile comparisons, object dumps, author logs.
+Module for code and profile comparisons, object dumps, author logs.
 
 
 
-3. 
+3. /master-sync
+
+In side Button: Start Master Sync Report.
 
 Two Buttons. 
-Generate the Master Sync Report and Schedule the Master Sync Report.
+"Generate the Master Sync Report" and "Schedule the Master Sync Report."
 
 Master Sync Report – Exact Technical Flow
 Trigger
 
-User clicks Start Master Sync
+User clicks "Generate the Master Sync Report"
 → Modal: “Take production dump? Yes/No”
 
 If YES
 
 Run command from conf/master_sync.json:
-prod_dump_command: "/path/to/run_dump.sh"
+prod_dump_command: "python3.9 Export_SFDCMetadata_PosFix.py --dest /backup/PROD_DUMP/ --objects-dir force-app/main/default/objects/ prod"
 
+
+
+If No, do not take any prod dump.
 
 Folder Setup
 
@@ -65,7 +75,7 @@ mkdir -p /data/public/ENV_SYNC/MasterSync/{TS}
 Master Folder Preparation
 
 Copy and restructure:
-cd Master Path
+cd /data/code/GitHub_SFDC/Master/SFDC/
 cp -r src/ tmp/src
 mv run/src tmp/Master
 mv tmp/Master/env/prod/* tmp/Master/
@@ -73,34 +83,48 @@ rm -rf tmp/Master/env
 mv tmp/Master/customLabel tmp/Master/labels
 mv tmp/Master/customSettings tmp/Master/CustomSettingData
 
-unzip prod_xxx.zip tmp/prod_Dump
+unzip prod_xxx.zip tmp/prod_xxx
+Example prod dump is prod_62.0_5thNov2025_03:38:03.zip
+Note: Get the latest prod dump from the name of the file (time details is there) not the unix timestamp.
 
 Validate folders:
 If missing/extra folders compared to required_prod_folders, mark run failed.
-
+List of metadata in /software/codedev/misc_script/SFDC/BCompareScript/component_main.list should match with prod dumo metadata folder list.
 
 Diff Engine
-cd /data/public/ENV_SYNC/MasterSync/{TS}
+
+cd /data/public/ENV_SYNC/MasterSync/{Time Stamp}
+mv tmp/Master tmp/prod_xxx /data/public/ENV_SYNC/MasterSync/{Time Stamp}
+mv /data/public/ENV_SYNC/MasterSync/{Time Stamp}/prod_xxx /data/public/ENV_SYNC/MasterSync/{Time Stamp}/PROD_DUMP/
 Compare Master and Prod:
 Generate lists:
 
-Only in Prod ---> Files there in prod dump not in master
-Only in Master ---> Files there in Master not in Prod dump
-Modified Files in prod dump, which are there in Master.
+
+
+In the latest report section,
+From the UI prospective these are buttons. The button will be called as below:
+
+
+File Comparison: Production vs. Master -- > This is Header Header
+Duration: Last Execution date to Current Execution date.
+Files in Prod Dump, missing in Master.
+Files in Master, missing in Prod Dump.
+Common in Production & Master: Content different.
+Combined Changed and Missing (Note: Not in Master: means New files in Master and Combined Changed) Files (with Author and Date).
 
 These are DBs. Light weight SQL.
 
-Modified Files in prod dump, which are there in Master. This DB will contain the last modifying date and last modifoied by information from production. You will have to take sfdc cli help. I have sf cli installed already and prod is linked already.
-
+Combined Changed and Missing Files (with Author and Date). this DB will contain the "last modifying date" and last modifoied by information from production. You will have to take sf cli help. I have sf cli installed already and sfdc prod is linked with my sf cli already.
+By clicking on the links csv files will be downloaded.
 
 Code Compare
 Run Beyond Compare diff script:
 /data/public/ENV_SYNC/MasterSync/{TS}
-bash codecompare.posix2.sh -d -m oo -o Master -o prod_Dump
+bash /software/codedev/misc_script/SFDC/BCompareScript/codecompare.posix2.sh -d -m oo -o Master -o PROD_DUMP
 
-Paths come from config file.
+All Paths come from config file.
 
-
+Now code comparison link will be shown.
 
 Email Notification
 Send via mutt:
@@ -108,17 +132,78 @@ No attachments
 Only links to run folder
 Email addresses from config
 
+If everything is successfull then put the "Common in Production & Master: Content different" and "Files in Prod Dump, missing in Master" file list in a folder structure format Master has and put in a folder called /data/public/ENV_SYNC/MasterSync/{TS}/Master_Update_Files/.
+
+So the Start Master Sync Report page will have the follwoing things.
+
+Main Header (Middle)
+(LHS) Logo
+(RHS) Logout
+
+Then Two Buttons. 
+"Generate the Master Sync Report" and "Schedule the Master Sync Report."
+Then the latest report cards with below data:
+Duration: Last Execution date to Current Execution date.
+API Version.
+Files in Prod Dump, missing in Master.
+Files in Master, missing in Prod Dump.
+Common in Production & Master: Content different.
+Combined Changed and Missing Files (with Author and Date).
+Code Comparison Report
+Master Dump: {Last Execution date}
+Production Dump: {Production Dump date}
+
+Then /master-sync history table.
 
 4. Branch Sync:
-Fisrt List of the Live Branches. (I'll state how to know about it)
+Main Header (Middle)
+(LHS) Logo
+(RHS) Logout
 
-Start the Branch Sync button or page.
+List of Live Branches. (~/.bashrc file has all the paths. sbx, tst, and hfx alias paths are our deployment area. Now for example, alias sbx='cd /data/code/GitHub_SFDC/sfdc_deploySBX/2025-q4nov-release/SFDC/;pwd'  this sbx alias has the branch 2025-q4nov-release name in it)
+This lists will be GitHub link. GitHub branch link example: https://github.cadence.com/IT/SFDC/tree/2025-q4nov-release
+Other aliases
+alias tst='cd /data/code/GitHub_SFDC/sfdc_deployTST/2025-COS3.0_Dev-release/SFDC/;pwd'
+alias hfx='cd /data/code/GitHub_SFDC/sfdc_deployHFX/2026-lightningphase2-release/SFDC/;pwd'
 
-Branch Sync Report – Exact Technical Flow
+So, Live Branches are, 
+2025-COS3.0_Dev-release
+2026-lightningphase2-release
+2025-q4nov-release
 
-Only in Prod ---> Files there in prod dump not in master
-Modified Files in prod dump, which are there in Master.
+Means if someone clicks on 2025-q4nov-release listed branch in our UI, it will open the https://github.cadence.com/IT/SFDC/tree/2025-q4nov-release link.
 
-These two lists from Master should get compared with all the live branches.
+Then the,
+"Start the Branch Sync" button.
+When you click the button ---> Drop Down --> Live Branch List/All Branch
+Click the Branch name and then click on the Submit button.
 
-Live Branch A
+Branch Sync Report – Exact Technical Flow.
+
+File Comparison: Combined Changed and Missing from master sync data vs. Selected Live Branch
+
+Duration: Current Execution date.
+Files in Master, missing in Live Branch.
+Files in Live Branch, missing in Master.
+Common in Live Branch & Master: Content different.
+Combined Changed and Missing Files  (with Author and Date).  --- Note ---- Combine files from all the above file list.
+
+Then code comparison report.
+
+If someone click a single live branch only one card will be generated. If someone clicks on All branch then three card will be generated.
+
+Then Table of History of Branch Sync.
+
+
+
+
+/run-reports (I'll describe this later)
+
+Four sections:-
+Code Comparison Report
+Profile Comparison Report
+Object Dump Report
+Author Log
+
+
+Code Comparison Report/
