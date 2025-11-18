@@ -1,0 +1,124 @@
+Flow
+
+
+ENV_SYNC Dashboard — Project Description
+1. What the Project Is
+
+A FastAPI-based internal dashboard for running, monitoring, and managing Salesforce metadata sync operations between:
+
+Master GitHub Codebase — /data/code/GitHub_SFDC/Master/SFDC/src
+
+Production Metadata Dumps — /backup/PROD_DUMP
+
+Output directory — /data/public/ENV_SYNC
+
+It performs Master vs PROD comparisons, folder restructuring, diffs, Beyond Compare execution, error detection, report prep and email notifications.
+
+2. Core Pages
+
+/login
+Single-user login (conf/users.json). Cookies used for session.
+
+/main
+Shows KPIs, recent Master Sync runs.
+
+/master-sync
+Button: Start Master Sync
+Button: Schedule Master Sync (to be added)
+Table of previous runs
+Displays success / failure summary after every run
+
+/branch-sync
+Future module for branch-level comparisons.
+
+/branch-sync/history
+Shows historical runs.
+
+/run-reports
+Future module for code and profile comparisons, object dumps, author logs.
+
+
+
+3. 
+
+Two Buttons. 
+Generate the Master Sync Report and Schedule the Master Sync Report.
+
+Master Sync Report – Exact Technical Flow
+Trigger
+
+User clicks Start Master Sync
+→ Modal: “Take production dump? Yes/No”
+
+If YES
+
+Run command from conf/master_sync.json:
+prod_dump_command: "/path/to/run_dump.sh"
+
+
+Folder Setup
+
+Timestamp folder:
+mkdir -p /data/public/ENV_SYNC/MasterSync/{TS}
+
+
+Master Folder Preparation
+
+Copy and restructure:
+cd Master Path
+cp -r src/ tmp/src
+mv run/src tmp/Master
+mv tmp/Master/env/prod/* tmp/Master/
+rm -rf tmp/Master/env
+mv tmp/Master/customLabel tmp/Master/labels
+mv tmp/Master/customSettings tmp/Master/CustomSettingData
+
+unzip prod_xxx.zip tmp/prod_Dump
+
+Validate folders:
+If missing/extra folders compared to required_prod_folders, mark run failed.
+
+
+Diff Engine
+cd /data/public/ENV_SYNC/MasterSync/{TS}
+Compare Master and Prod:
+Generate lists:
+
+Only in Prod ---> Files there in prod dump not in master
+Only in Master ---> Files there in Master not in Prod dump
+Modified Files in prod dump, which are there in Master.
+
+These are DBs. Light weight SQL.
+
+Modified Files in prod dump, which are there in Master. This DB will contain the last modifying date and last modifoied by information from production. You will have to take sfdc cli help. I have sf cli installed already and prod is linked already.
+
+
+Code Compare
+Run Beyond Compare diff script:
+/data/public/ENV_SYNC/MasterSync/{TS}
+bash codecompare.posix2.sh -d -m oo -o Master -o prod_Dump
+
+Paths come from config file.
+
+
+
+Email Notification
+Send via mutt:
+No attachments
+Only links to run folder
+Email addresses from config
+
+
+4. Branch Sync:
+Fisrt List of the Live Branches. (I'll state how to know about it)
+
+Start the Branch Sync button or page.
+
+Branch Sync Report – Exact Technical Flow
+
+Only in Prod ---> Files there in prod dump not in master
+Modified Files in prod dump, which are there in Master.
+
+These two lists from Master should get compared with all the live branches.
+
+Live Branch A
