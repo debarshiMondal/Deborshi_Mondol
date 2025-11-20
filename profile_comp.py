@@ -17,13 +17,8 @@ What it does (per your requirement):
 6) Generate a professional HTML report:
    /data/public/Profile_Comp_Report/{Release_Name}/index.html
 7) Cleanup tmp workspace.
-
-Notes:
-- Handles Salesforce Profile XML namespace robustly.
-- If a dest profile or matching permission block is missing, values are shown as "—" and treated as mismatch.
 """
 
-import os
 import re
 import sys
 import json
@@ -41,7 +36,6 @@ def parse_conf(conf_path: str) -> dict:
     text = Path(conf_path).read_text(encoding="utf-8", errors="ignore")
     conf = {}
     for k in CONF_KEYS:
-        # accepts: key="value" or key='value' or key=value
         m = re.search(rf'^\s*{re.escape(k)}\s*=\s*["\']?(.*?)["\']?\s*$', text, re.M)
         if not m:
             raise ValueError(f"Missing '{k}' in {conf_path}")
@@ -54,13 +48,11 @@ def parse_conf(conf_path: str) -> dict:
 NS = {"sf": "http://soap.sforce.com/2006/04/metadata"}
 
 def local_name(tag: str) -> str:
-    """Remove namespace from tag."""
     if tag.startswith("{"):
         return tag.split("}", 1)[1]
     return tag
 
 def indent(elem, level=0):
-    """Pretty-print indentation (ElementTree)."""
     i = "\n" + level*"  "
     if len(elem):
         if not elem.text or not elem.text.strip():
@@ -73,7 +65,6 @@ def indent(elem, level=0):
         elem.tail = i
 
 def has_readable_editable(block: ET.Element) -> bool:
-    """Check if a block has both readable & editable children."""
     kids = {local_name(c.tag) for c in list(block)}
     return "readable" in kids and "editable" in kids
 
@@ -83,16 +74,13 @@ IDENTIFIER_TAG_ORDER = [
 ]
 
 def get_identifier(block: ET.Element) -> str:
-    """Find identifier child text to match src/dest blocks."""
     for t in IDENTIFIER_TAG_ORDER:
         node = block.find(f"sf:{t}", NS)
         if node is not None and (node.text or "").strip():
             return node.text.strip()
-        # safety if no namespace on child
         for c in list(block):
             if local_name(c.tag) == t and (c.text or "").strip():
                 return c.text.strip()
-    # fallback: stable string based on children text excluding readable/editable
     parts = []
     for c in list(block):
         ln = local_name(c.tag)
@@ -102,10 +90,10 @@ def get_identifier(block: ET.Element) -> str:
     return "|".join(parts) or "(unknown)"
 
 def get_bool_text(block: ET.Element, child_name: str):
-    """Return 'true'/'false' as bool or None if missing."""
+    if block is None:
+        return None
     node = block.find(f"sf:{child_name}", NS)
     if node is None:
-        # try without namespace
         for c in list(block):
             if local_name(c.tag) == child_name:
                 node = c
@@ -118,24 +106,14 @@ def get_bool_text(block: ET.Element, child_name: str):
     return None
 
 def reduce_profile(src_xml_path: Path, out_path: Path):
-    """
-    Reduce a source profile:
-    - detect labels that have readable+editable blocks
-    - keep only those labels
-    Returns:
-      allowed_labels: set[str]
-      blocks_by_label: dict[label][identifier] = block
-    """
     tree = ET.parse(src_xml_path)
     root = tree.getroot()
 
-    # Detect allowed labels (block types)
     allowed_labels = set()
     for child in list(root):
         if has_readable_editable(child):
             allowed_labels.add(local_name(child.tag))
 
-    # Prune everything else
     for child in list(root):
         if local_name(child.tag) not in allowed_labels:
             root.remove(child)
@@ -144,7 +122,6 @@ def reduce_profile(src_xml_path: Path, out_path: Path):
     out_path.parent.mkdir(parents=True, exist_ok=True)
     tree.write(out_path, encoding="UTF-8", xml_declaration=True)
 
-    # Build blocks map for comparison
     blocks_by_label = {}
     for child in list(root):
         label = local_name(child.tag)
@@ -154,12 +131,7 @@ def reduce_profile(src_xml_path: Path, out_path: Path):
     return allowed_labels, blocks_by_label
 
 def reduce_dest_profile(dest_xml_path: Path, out_path: Path, allowed_labels: set):
-    """
-    Reduce destination profile to only allowed_labels.
-    Returns blocks_by_label similar to reduce_profile.
-    """
     if not dest_xml_path.exists():
-        # Create an empty Profile root with namespace
         ET.register_namespace("", NS["sf"])
         root = ET.Element(f"{{{NS['sf']}}}Profile")
         tree = ET.ElementTree(root)
@@ -186,17 +158,26 @@ def reduce_dest_profile(dest_xml_path: Path, out_path: Path, allowed_labels: set
 # ----------------------------
 # Report generation
 # ----------------------------
+# FIX #2: use semi-transparent tints so light text stays readable
 PASTEL_COLORS = [
-    "#fff7d6", "#e9f7ef", "#eaf2ff", "#fce8ef", "#f3e8ff",
-    "#e8fafc", "#f7f0e8", "#e9f9f1", "#f2f6d0", "#e7eef9",
-    "#fdebd0", "#f9e7e7", "#eaf7d9", "#e8e8ff", "#f0fff0"
+    "rgba(255,247,214,0.20)",
+    "rgba(233,247,239,0.20)",
+    "rgba(234,242,255,0.20)",
+    "rgba(252,232,239,0.20)",
+    "rgba(243,232,255,0.20)",
+    "rgba(232,250,252,0.20)",
+    "rgba(247,240,232,0.20)",
+    "rgba(233,249,241,0.20)",
+    "rgba(242,246,208,0.20)",
+    "rgba(231,238,249,0.20)",
+    "rgba(253,235,208,0.20)",
+    "rgba(249,231,231,0.20)",
+    "rgba(234,247,217,0.20)",
+    "rgba(232,232,255,0.20)",
+    "rgba(240,255,240,0.20)"
 ]
 
 def mismatch_signature(rs, es, rp, ep):
-    """
-    Signature for mismatch categories.
-    Treat None as a distinct value 'na'.
-    """
     def norm(x):
         if x is None:
             return "na"
@@ -214,8 +195,8 @@ def build_rows(profile_name, src_blocks, dest_blocks, allowed_labels):
             es = get_bool_text(sblock, "editable")
 
             dblock = dest_map.get(ident)
-            rp = get_bool_text(dblock, "readable") if dblock is not None else None
-            ep = get_bool_text(dblock, "editable") if dblock is not None else None
+            rp = get_bool_text(dblock, "readable")
+            ep = get_bool_text(dblock, "editable")
 
             rows.append({
                 "profile": profile_name,
@@ -229,7 +210,6 @@ def build_rows(profile_name, src_blocks, dest_blocks, allowed_labels):
     return rows
 
 def generate_html(rows, release_name, out_html_path: Path):
-    # Determine mismatch categories and colors
     sig_to_color = {}
     for r in rows:
         sig = mismatch_signature(r["rs"], r["es"], r["rp"], r["ep"])
@@ -237,19 +217,13 @@ def generate_html(rows, release_name, out_html_path: Path):
             sig_to_color[sig] = PASTEL_COLORS[len(sig_to_color) % len(PASTEL_COLORS)]
         r["sig"] = sig
         r["color"] = sig_to_color[sig]
-        r["is_match"] = (r["rs"] == r["rp"]) and (r["es"] == r["ep"]) and (r["rs"] is not None) and (r["es"] is not None) and (r["rp"] is not None) and (r["ep"] is not None)
-
-    # Legend items excluding perfect matches
-    legend_items = [
-        {"sig": sig, "color": color}
-        for sig, color in sig_to_color.items()
-        if "na" in sig or not all(
-            part.split(":")[1] == sig.split("|")[0].split(":")[1]  # rough check not needed to be perfect
-            for part in sig.split("|")
+        r["is_match"] = (
+            r["rs"] == r["rp"] and r["es"] == r["ep"] and
+            r["rs"] is not None and r["es"] is not None and
+            r["rp"] is not None and r["ep"] is not None
         )
-    ]
 
-    # Permission labels list
+    legend_items = [{"sig": sig, "color": color} for sig, color in sig_to_color.items()]
     labels = sorted({r["label"] for r in rows})
 
     generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -272,64 +246,71 @@ def generate_html(rows, release_name, out_html_path: Path):
     --ink: #e6ecff;
     --muted: #9db0d1;
     --accent: #2d6cdf;
-    --accent-2:#00c2a8;
     --border: rgba(255,255,255,0.08);
-    --good: #00d18c;
-    --bad: #ffb703;
   }}
   * {{ box-sizing: border-box; }}
   body {{
-    margin:0; background: radial-gradient(1200px 700px at 10% -10%, #1e2a55 0%, transparent 60%), var(--bg);
-    color: var(--ink); font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    margin:0;
+    background: radial-gradient(1200px 700px at 10% -10%, #1e2a55 0%, transparent 60%), var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   }}
   header {{
     position: sticky; top:0; z-index: 5;
     display:flex; align-items:center; gap:14px;
-    padding:12px 16px; background: rgba(11,16,32,0.9); backdrop-filter: blur(8px);
+    padding:12px 16px;
+    background: rgba(11,16,32,0.9);
+    backdrop-filter: blur(8px);
     border-bottom:1px solid var(--border);
   }}
   .logo {{
     width:40px; height:40px; border-radius:10px;
     background: linear-gradient(145deg, #e6002d, #ff5c75);
-    display:grid; place-items:center; font-weight:800; color:white; letter-spacing:0.5px;
+    display:grid; place-items:center; font-weight:800; color:white;
   }}
   h1 {{ margin:0; font-size:20px; font-weight:700; }}
   .sub {{ font-size:12px; color: var(--muted); margin-top:2px; }}
 
   .wrap {{ padding:14px 16px 20px; max-width: 1400px; margin: 0 auto; }}
   .controls {{
-    display:grid; grid-template-columns: 1.3fr 1fr 1fr 1fr;
+    display:grid;
+    grid-template-columns: 1.3fr 1fr 1fr 1fr;
     gap:10px; margin-bottom:12px;
   }}
   .card {{
-    background: var(--panel); border:1px solid var(--border);
-    border-radius:14px; padding:10px 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px; padding:10px 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
   }}
   .control-label {{ font-size:12px; color:var(--muted); margin-bottom:6px; }}
   input[type="text"] {{
-    width:100%; padding:9px 10px; border-radius:10px; border:1px solid var(--border);
+    width:100%; padding:9px 10px; border-radius:10px;
+    border:1px solid var(--border);
     background: var(--panel-2); color:var(--ink);
     outline:none;
   }}
   select {{
-    width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border);
+    width:100%; padding:8px 10px; border-radius:10px;
+    border:1px solid var(--border);
     background: var(--panel-2); color:var(--ink);
   }}
   .labels-box {{
-    display:flex; flex-wrap:wrap; gap:6px; max-height:110px; overflow:auto; padding-top:4px;
+    display:flex; flex-wrap:wrap; gap:6px;
+    max-height:110px; overflow:auto; padding-top:4px;
   }}
   .chip {{
     font-size:12px; padding:6px 8px; border-radius:999px;
-    background:#0e2447; border:1px solid var(--border); cursor:pointer; user-select:none;
+    background:#0e2447; border:1px solid var(--border);
+    cursor:pointer; user-select:none;
   }}
   .chip.active {{ background: #1a3e78; border-color:#2a65c8; }}
 
-  .legend {{
-    display:flex; flex-wrap:wrap; gap:8px;
-  }}
+  .legend {{ display:flex; flex-wrap:wrap; gap:8px; }}
   .legend-item {{
     display:flex; align-items:center; gap:6px;
-    font-size:12px; background: var(--panel-2); border:1px solid var(--border);
+    font-size:12px; background: var(--panel-2);
+    border:1px solid var(--border);
     padding:6px 8px; border-radius:999px; cursor:pointer;
   }}
   .dot {{
@@ -338,33 +319,53 @@ def generate_html(rows, release_name, out_html_path: Path):
   }}
   .legend-item.active {{ outline: 2px solid var(--accent); }}
 
+  /* FIX #1: sticky header safe on desktop, disabled on mobile */
   table {{
-    width:100%; border-collapse:separate; border-spacing:0;
-    background: var(--panel); border:1px solid var(--border);
+    width:100%;
+    border-collapse:separate; border-spacing:0;
+    background: var(--panel);
+    border:1px solid var(--border);
     border-radius:14px; overflow:hidden;
+    position: relative; /* important for sticky context */
   }}
   thead th {{
-    position: sticky; top:70px;
-    background: #0b1530; color:#cfe0ff; font-size:12px; text-transform:uppercase; letter-spacing:0.06em;
+    position: sticky;
+    top: 72px;          /* below top header */
+    z-index: 5;         /* prevent overlap weirdness */
+    background: #0b1530; color:#cfe0ff;
+    font-size:12px; text-transform:uppercase; letter-spacing:0.06em;
     padding:10px 8px; border-bottom:1px solid var(--border);
   }}
+  @media (max-width: 900px) {{
+    thead th {{ position: static; }} /* stop mobile overwrite */
+    .controls {{ grid-template-columns: 1fr; }}
+  }}
+
   tbody td {{
-    font-size:13px; padding:8px 8px; border-bottom:1px solid var(--border);
+    font-size:13px; padding:8px 8px;
+    border-bottom:1px solid var(--border);
     color:#e8eeff;
   }}
   tbody tr:last-child td {{ border-bottom:none; }}
   tbody tr.match td {{ background: transparent; }}
-  tbody tr.mismatch td {{ background: var(--rowcolor); }}
+
+  /* FIX #2: mismatch rows get dark text for contrast */
+  tbody tr.mismatch td {{
+    background: var(--rowcolor);
+    color: #0b1020;
+  }}
 
   .bool {{
-    padding:2px 8px; border-radius:999px; font-weight:600; font-size:12px; display:inline-block;
+    padding:2px 8px; border-radius:999px; font-weight:600;
+    font-size:12px; display:inline-block;
   }}
-  .t {{ background: rgba(0,209,140,0.15); color:#7fffd4; border:1px solid rgba(0,209,140,0.4); }}
-  .f {{ background: rgba(255,255,255,0.06); color:#cfd8e8; border:1px solid var(--border); }}
-  .na {{ background: rgba(255,183,3,0.15); color:#ffd166; border:1px solid rgba(255,183,3,0.35); }}
+  .t {{ background: rgba(0,209,140,0.18); color:#0fe0a2; border:1px solid rgba(0,209,140,0.45); }}
+  .f {{ background: rgba(255,255,255,0.10); color:#ccd6ee; border:1px solid var(--border); }}
+  .na {{ background: rgba(255,183,3,0.20); color:#ffb703; border:1px solid rgba(255,183,3,0.45); }}
 
   footer {{
-    margin-top:14px; padding:10px; text-align:center; font-size:12px; color:var(--muted);
+    margin-top:14px; padding:10px; text-align:center;
+    font-size:12px; color:var(--muted);
   }}
   .muted {{ color:var(--muted); }}
   .count {{ font-weight:700; color:#fff; }}
@@ -391,7 +392,9 @@ def generate_html(rows, release_name, out_html_path: Path):
     <div class="card">
       <div class="control-label">Permission Labels</div>
       <div class="labels-box" id="labelsBox"></div>
-      <button id="clearLabels" style="margin-top:6px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--panel-2);color:var(--ink);cursor:pointer;">Clear Labels</button>
+      <button id="clearLabels"
+        style="margin-top:6px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);
+        background:var(--panel-2);color:var(--ink);cursor:pointer;">Clear Labels</button>
     </div>
 
     <div class="card">
@@ -427,7 +430,9 @@ def generate_html(rows, release_name, out_html_path: Path):
     <div class="card">
       <div class="control-label">Mismatch Colors (click to filter)</div>
       <div class="legend" id="legendBox"></div>
-      <button id="clearColors" style="margin-top:6px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--panel-2);color:var(--ink);cursor:pointer;">Clear Colors</button>
+      <button id="clearColors"
+        style="margin-top:6px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);
+        background:var(--panel-2);color:var(--ink);cursor:pointer;">Clear Colors</button>
     </div>
   </div>
 
@@ -544,10 +549,7 @@ function passesFilters(r) {{
   if (rpFilter.value !== "any" && rpFilter.value !== rp) return false;
   if (epFilter.value !== "any" && epFilter.value !== ep) return false;
 
-  if (activeColors.size) {{
-    if (!activeColors.has(r.sig)) return false;
-  }}
-
+  if (activeColors.size && !activeColors.has(r.sig)) return false;
   return true;
 }}
 
@@ -558,9 +560,10 @@ function render() {{
   ROWS.forEach(r => {{
     if (!passesFilters(r)) return;
     shown++;
-    const tr = document.createElement("tr");
 
+    const tr = document.createElement("tr");
     const isMatch = (r.rs===r.rp) && (r.es===r.ep) && r.rs!==null && r.es!==null && r.rp!==null && r.ep!==null;
+
     if (!isMatch) {{
       mism++;
       tr.className = "mismatch";
@@ -585,6 +588,7 @@ function render() {{
 }}
 
 [searchBox, rsFilter, esFilter, rpFilter, epFilter].forEach(el => el.addEventListener("input", render));
+
 document.getElementById("clearLabels").onclick = () => {{
   activeLabels.clear();
   document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
@@ -614,8 +618,7 @@ def main():
         print("Usage: python3 profile_comp.py Profile_Comp.conf")
         sys.exit(1)
 
-    conf_path = sys.argv[1]
-    conf = parse_conf(conf_path)
+    conf = parse_conf(sys.argv[1])
 
     source_path = Path(conf["source_path"]).expanduser().resolve()
     dest_path = Path(conf["destination_path"]).expanduser().resolve()
@@ -626,7 +629,6 @@ def main():
     if not dest_path.is_dir():
         raise SystemExit(f"destination_path not found: {dest_path}")
 
-    # Workspace under /tmp
     base_tmp = Path("/tmp") / f"Profile_Comp_Work_{release_name}"
     tmp_src = base_tmp / "source"
     tmp_dst = base_tmp / "dest"
@@ -638,9 +640,10 @@ def main():
     tmp_src.mkdir(parents=True, exist_ok=True)
     tmp_dst.mkdir(parents=True, exist_ok=True)
 
-    # Copy only profiles present in source
-    profile_files = sorted([p for p in source_path.iterdir() if p.is_file() and p.name.endswith(".profile-meta.xml")])
-
+    profile_files = sorted([
+        p for p in source_path.iterdir()
+        if p.is_file() and p.name.endswith(".profile-meta.xml")
+    ])
     if not profile_files:
         raise SystemExit(f"No .profile-meta.xml files found in source_path: {source_path}")
 
@@ -650,8 +653,11 @@ def main():
         if dp.exists():
             shutil.copy2(dp, tmp_dst / sp.name)
         else:
-            # still create placeholder in tmp_dst for missing dest
-            (tmp_dst / sp.name).write_text('<?xml version="1.0" encoding="UTF-8"?><Profile xmlns="http://soap.sforce.com/2006/04/metadata"/>', encoding="utf-8")
+            (tmp_dst / sp.name).write_text(
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                '<Profile xmlns="http://soap.sforce.com/2006/04/metadata"/>',
+                encoding="utf-8"
+            )
 
     all_rows = []
 
@@ -665,15 +671,12 @@ def main():
         allowed_labels, src_blocks = reduce_profile(src_tmp_file, cleaned_src_file)
         dest_blocks = reduce_dest_profile(dst_tmp_file, cleaned_dst_file, allowed_labels)
 
-        rows = build_rows(sp.name, src_blocks, dest_blocks, allowed_labels)
-        all_rows.extend(rows)
+        all_rows.extend(build_rows(sp.name, src_blocks, dest_blocks, allowed_labels))
 
-    # Output HTML
     out_dir = Path("/data/public/Profile_Comp_Report") / release_name
     out_html = out_dir / "index.html"
     generate_html(all_rows, release_name, out_html)
 
-    # Cleanup tmp
     shutil.rmtree(base_tmp, ignore_errors=True)
 
     print(f"Report generated: {out_html}")
