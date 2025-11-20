@@ -26,6 +26,7 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 import xml.etree.ElementTree as ET
+from itertools import product
 
 # ----------------------------
 # Config parsing
@@ -160,8 +161,7 @@ def reduce_dest_profile(dest_xml_path: Path, out_path: Path, allowed_labels: set
 # Report generation
 # ----------------------------
 
-# Distinct gentle-but-visible mismatch tints
-# (all slightly reddish family but still clearly different)
+# Distinct gentle-but-visible tints
 MISMATCH_COLORS = [
     "rgba(255, 107, 107, 0.30)",  # soft red
     "rgba(255, 159, 67, 0.30)",   # orange-red
@@ -177,7 +177,7 @@ MISMATCH_COLORS = [
     "rgba(255, 234, 167, 0.30)",  # pale gold
     "rgba(253, 121, 168, 0.28)",  # blush
     "rgba(129, 236, 236, 0.26)",  # aqua
-    "rgba(178, 190, 195, 0.30)",  # neutral gray (rare fallback)
+    "rgba(178, 190, 195, 0.30)",  # neutral gray fallback
 ]
 
 def mismatch_signature(rs, es, rp, ep):
@@ -231,16 +231,30 @@ def build_rows(profile_name, src_blocks, dest_blocks, allowed_labels):
     return rows
 
 def generate_html(rows, release_name, out_html_path: Path):
+    # ---- Build stable legend for ALL 16 true/false combos ----
+    base_values = ["true", "false"]
+    base_sigs = []
+    for rs, es, rp, ep in product(base_values, base_values, base_values, base_values):
+        base_sigs.append(f"RS:{rs}|ES:{es}|RP:{rp}|EP:{ep}")
+
     sig_to_color = {}
     sig_to_desc = {}
 
-    # assign colors by unique mismatch signature
+    for i, sig in enumerate(base_sigs):
+        sig_to_color[sig] = MISMATCH_COLORS[i % len(MISMATCH_COLORS)]
+        sig_to_desc[sig] = signature_description(sig)
+
+    # Assign colors for any NA signatures that appear in current data (future-proof)
     for r in rows:
         sig = mismatch_signature(r["rs"], r["es"], r["rp"], r["ep"])
         if sig not in sig_to_color:
-            sig_to_color[sig] = MISMATCH_COLORS[len(sig_to_color) % len(MISMATCH_COLORS)]
+            idx = len(sig_to_color) % len(MISMATCH_COLORS)
+            sig_to_color[sig] = MISMATCH_COLORS[idx]
             sig_to_desc[sig] = signature_description(sig)
 
+    # attach per-row color/signature
+    for r in rows:
+        sig = mismatch_signature(r["rs"], r["es"], r["rp"], r["ep"])
         r["sig"] = sig
         r["color"] = sig_to_color[sig]
         r["is_match"] = (
@@ -249,9 +263,30 @@ def generate_html(rows, release_name, out_html_path: Path):
             r["rp"] is not None and r["ep"] is not None
         )
 
-    # Only mismatch signatures in legend
-    mismatch_sigs = sorted({r["sig"] for r in rows if not r["is_match"]})
-    legend_items = [{"sig": s, "color": sig_to_color[s], "desc": sig_to_desc[s]} for s in mismatch_sigs]
+    # legend items:
+    # - No issue filter
+    # - All base true/false combos
+    legend_items = [{
+        "sig": "__NO_ISSUE__",
+        "color": "rgba(0, 209, 140, 0.30)",
+        "desc": "No Issue (All Match)"
+    }]
+    for sig in base_sigs:
+        legend_items.append({
+            "sig": sig,
+            "color": sig_to_color[sig],
+            "desc": sig_to_desc[sig]
+        })
+
+    # append NA combos if present
+    na_sigs_present = sorted({r["sig"] for r in rows if "na" in r["sig"]})
+    for sig in na_sigs_present:
+        if sig not in base_sigs:
+            legend_items.append({
+                "sig": sig,
+                "color": sig_to_color[sig],
+                "desc": sig_to_desc[sig]
+            })
 
     labels = sorted({r["label"] for r in rows})
     generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -275,7 +310,7 @@ def generate_html(rows, release_name, out_html_path: Path):
     --muted: #9db0d1;
     --accent: #2d6cdf;
     --border: rgba(255,255,255,0.08);
-    --danger-accent: rgba(255, 66, 66, 0.85);
+    --danger-accent: rgba(255, 66, 66, 0.90);
   }}
   * {{ box-sizing: border-box; }}
   body {{
@@ -337,20 +372,22 @@ def generate_html(rows, release_name, out_html_path: Path):
   }}
   .chip.active {{ background: #1a3e78; border-color:#2a65c8; }}
 
-  .legend {{ display:flex; flex-wrap:wrap; gap:8px; }}
+  .legend {{ display:flex; flex-wrap:wrap; gap:8px; max-height:150px; overflow:auto; }}
   .legend-item {{
     display:flex; align-items:center; gap:6px;
     font-size:12px; background: var(--panel-2);
     border:1px solid var(--border);
     padding:6px 8px; border-radius:999px; cursor:pointer;
+    white-space: nowrap;
   }}
   .dot {{
     width:10px; height:10px; border-radius:50%;
     border:1px solid rgba(0,0,0,0.25);
+    flex: 0 0 auto;
   }}
   .legend-item.active {{ outline: 2px solid var(--accent); }}
 
-  /* ===== FIX #1: Robust sticky header using scroll container ===== */
+  /* ===== Sticky header inside scroll container ===== */
   .table-card {{
     background: var(--panel);
     border:1px solid var(--border);
@@ -359,7 +396,9 @@ def generate_html(rows, release_name, out_html_path: Path):
     overflow: hidden;
   }}
   .table-wrap {{
-    max-height: calc(100vh - 300px);
+    height: 78vh;          /* BIG VIEW */
+    min-height: 980px;    /* ~30 rows */
+    max-height: 1200px;   /* don’t go crazy */
     overflow: auto;
   }}
 
@@ -389,13 +428,12 @@ def generate_html(rows, release_name, out_html_path: Path):
   tbody tr:last-child td {{ border-bottom:none; }}
   tbody tr.match td {{ background: transparent; }}
 
-  /* mismatch rows: use tint + red accent bar */
   tbody tr.mismatch {{
     box-shadow: inset 4px 0 0 var(--danger-accent);
   }}
   tbody tr.mismatch td {{
     background: var(--rowcolor);
-    color: #0b1020; /* readable on light tint */
+    color: #0b1020;
   }}
 
   .bool {{
@@ -415,7 +453,11 @@ def generate_html(rows, release_name, out_html_path: Path):
 
   @media (max-width: 900px) {{
     .controls {{ grid-template-columns: 1fr; }}
-    .table-wrap {{ max-height: calc(100vh - 240px); }}
+    .table-wrap {{
+      height: 62vh;
+      min-height: 520px;
+      max-height: none;
+    }}
   }}
 </style>
 </head>
@@ -525,6 +567,7 @@ const epFilter = document.getElementById("epFilter");
 
 let activeLabels = new Set();
 let activeColors = new Set();
+let activeNoIssue = false;
 
 function boolToText(b) {{
   if (b === null || b === undefined) return "—";
@@ -575,16 +618,25 @@ function buildLegend() {{
     el.appendChild(text);
 
     el.onclick = () => {{
-      const sig = item.sig;
-      if (activeColors.has(sig)) {{
-        activeColors.delete(sig); el.classList.remove("active");
+      if (item.sig === "__NO_ISSUE__") {{
+        activeNoIssue = !activeNoIssue;
+        el.classList.toggle("active", activeNoIssue);
       }} else {{
-        activeColors.add(sig); el.classList.add("active");
+        const sig = item.sig;
+        if (activeColors.has(sig)) {{
+          activeColors.delete(sig); el.classList.remove("active");
+        }} else {{
+          activeColors.add(sig); el.classList.add("active");
+        }}
       }}
       render();
     }};
     legendBox.appendChild(el);
   }});
+}}
+
+function isMatchRow(r) {{
+  return (r.rs===r.rp) && (r.es===r.ep) && r.rs!==null && r.es!==null && r.rp!==null && r.ep!==null;
 }}
 
 function passesFilters(r) {{
@@ -601,7 +653,10 @@ function passesFilters(r) {{
   if (rpFilter.value !== "any" && rpFilter.value !== rp) return false;
   if (epFilter.value !== "any" && epFilter.value !== ep) return false;
 
+  if (activeNoIssue && !isMatchRow(r)) return false;
+
   if (activeColors.size && !activeColors.has(r.sig)) return false;
+
   return true;
 }}
 
@@ -614,9 +669,8 @@ function render() {{
     shown++;
 
     const tr = document.createElement("tr");
-    const isMatch = (r.rs===r.rp) && (r.es===r.ep) && r.rs!==null && r.es!==null && r.rp!==null && r.ep!==null;
-
-    if (!isMatch) {{
+    const match = isMatchRow(r);
+    if (!match) {{
       mism++;
       tr.className = "mismatch";
       tr.style.setProperty("--rowcolor", r.color);
@@ -648,6 +702,7 @@ document.getElementById("clearLabels").onclick = () => {{
 }};
 document.getElementById("clearColors").onclick = () => {{
   activeColors.clear();
+  activeNoIssue = false;
   document.querySelectorAll(".legend-item").forEach(c => c.classList.remove("active"));
   render();
 }};
