@@ -5,18 +5,18 @@ Profile Comparison Automation
 Usage:
   python3 profile_comp.py Profile_Comp.conf
 
-What it does (per your requirement):
-1) Read source_path, destination_path, Release_Name from conf.
+Pipeline:
+1) Read source_path, destination_path, Release_Name.
 2) Copy profiles from source_path + matching ones from destination_path to /tmp.
-3) In each source profile:
-   - Detect element blocks containing BOTH <readable> and <editable>.
-   - Keep ONLY those block types (e.g., fieldPermissions, objectPermissions), delete others.
-4) In each destination profile:
-   - Keep ONLY the same block types that were found in the source version of that profile.
-5) Extract rows and compare readable/editable values between sandbox(source) and prod(dest).
-6) Generate a professional HTML report:
+3) Reduce source profiles:
+   - Find block labels that contain BOTH <readable> and <editable>
+   - Keep ONLY those labels in source.
+4) Reduce destination profiles:
+   - Keep ONLY the same labels as source for that profile.
+5) Compare readable/editable per block identifier.
+6) Generate HTML report:
    /data/public/Profile_Comp_Report/{Release_Name}/index.html
-7) Cleanup tmp workspace.
+7) Cleanup /tmp workspace.
 """
 
 import re
@@ -81,6 +81,7 @@ def get_identifier(block: ET.Element) -> str:
         for c in list(block):
             if local_name(c.tag) == t and (c.text or "").strip():
                 return c.text.strip()
+
     parts = []
     for c in list(block):
         ln = local_name(c.tag)
@@ -158,23 +159,25 @@ def reduce_dest_profile(dest_xml_path: Path, out_path: Path, allowed_labels: set
 # ----------------------------
 # Report generation
 # ----------------------------
-# FIX #2: use semi-transparent tints so light text stays readable
-PASTEL_COLORS = [
-    "rgba(255,247,214,0.20)",
-    "rgba(233,247,239,0.20)",
-    "rgba(234,242,255,0.20)",
-    "rgba(252,232,239,0.20)",
-    "rgba(243,232,255,0.20)",
-    "rgba(232,250,252,0.20)",
-    "rgba(247,240,232,0.20)",
-    "rgba(233,249,241,0.20)",
-    "rgba(242,246,208,0.20)",
-    "rgba(231,238,249,0.20)",
-    "rgba(253,235,208,0.20)",
-    "rgba(249,231,231,0.20)",
-    "rgba(234,247,217,0.20)",
-    "rgba(232,232,255,0.20)",
-    "rgba(240,255,240,0.20)"
+
+# Distinct gentle-but-visible mismatch tints
+# (all slightly reddish family but still clearly different)
+MISMATCH_COLORS = [
+    "rgba(255, 107, 107, 0.30)",  # soft red
+    "rgba(255, 159, 67, 0.30)",   # orange-red
+    "rgba(255, 209, 102, 0.30)",  # amber
+    "rgba(255, 118, 117, 0.30)",  # coral
+    "rgba(214, 48, 49, 0.22)",    # deep rose
+    "rgba(232, 67, 147, 0.24)",   # pink-red
+    "rgba(162, 155, 254, 0.26)",  # violet
+    "rgba(116, 185, 255, 0.26)",  # blue tint
+    "rgba(85, 239, 196, 0.26)",   # mint tint
+    "rgba(250, 177, 160, 0.30)",  # peach-red
+    "rgba(225, 112, 85, 0.30)",   # terra
+    "rgba(255, 234, 167, 0.30)",  # pale gold
+    "rgba(253, 121, 168, 0.28)",  # blush
+    "rgba(129, 236, 236, 0.26)",  # aqua
+    "rgba(178, 190, 195, 0.30)",  # neutral gray (rare fallback)
 ]
 
 def mismatch_signature(rs, es, rp, ep):
@@ -183,6 +186,24 @@ def mismatch_signature(rs, es, rp, ep):
             return "na"
         return "true" if x else "false"
     return f"RS:{norm(rs)}|ES:{norm(es)}|RP:{norm(rp)}|EP:{norm(ep)}"
+
+def signature_description(sig: str) -> str:
+    parts = dict(p.split(":") for p in sig.split("|"))
+    rs, es, rp, ep = parts["RS"], parts["ES"], parts["RP"], parts["EP"]
+
+    desc = []
+    if rs == "na" or es == "na":
+        desc.append("Missing in Sandbox")
+    if rp == "na" or ep == "na":
+        desc.append("Missing in Production")
+    if rs != rp:
+        desc.append("Readable mismatch (SBX vs PROD)")
+    if es != ep:
+        desc.append("Editable mismatch (SBX vs PROD)")
+
+    if not desc:
+        return "All 4 permissions match"
+    return " + ".join(desc)
 
 def build_rows(profile_name, src_blocks, dest_blocks, allowed_labels):
     rows = []
@@ -211,10 +232,15 @@ def build_rows(profile_name, src_blocks, dest_blocks, allowed_labels):
 
 def generate_html(rows, release_name, out_html_path: Path):
     sig_to_color = {}
+    sig_to_desc = {}
+
+    # assign colors by unique mismatch signature
     for r in rows:
         sig = mismatch_signature(r["rs"], r["es"], r["rp"], r["ep"])
         if sig not in sig_to_color:
-            sig_to_color[sig] = PASTEL_COLORS[len(sig_to_color) % len(PASTEL_COLORS)]
+            sig_to_color[sig] = MISMATCH_COLORS[len(sig_to_color) % len(MISMATCH_COLORS)]
+            sig_to_desc[sig] = signature_description(sig)
+
         r["sig"] = sig
         r["color"] = sig_to_color[sig]
         r["is_match"] = (
@@ -223,9 +249,11 @@ def generate_html(rows, release_name, out_html_path: Path):
             r["rp"] is not None and r["ep"] is not None
         )
 
-    legend_items = [{"sig": sig, "color": color} for sig, color in sig_to_color.items()]
-    labels = sorted({r["label"] for r in rows})
+    # Only mismatch signatures in legend
+    mismatch_sigs = sorted({r["sig"] for r in rows if not r["is_match"]})
+    legend_items = [{"sig": s, "color": sig_to_color[s], "desc": sig_to_desc[s]} for s in mismatch_sigs]
 
+    labels = sorted({r["label"] for r in rows})
     generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     data_json = json.dumps(rows, ensure_ascii=False)
@@ -247,6 +275,7 @@ def generate_html(rows, release_name, out_html_path: Path):
     --muted: #9db0d1;
     --accent: #2d6cdf;
     --border: rgba(255,255,255,0.08);
+    --danger-accent: rgba(255, 66, 66, 0.85);
   }}
   * {{ box-sizing: border-box; }}
   body {{
@@ -256,10 +285,10 @@ def generate_html(rows, release_name, out_html_path: Path):
     font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   }}
   header {{
-    position: sticky; top:0; z-index: 5;
+    position: sticky; top:0; z-index: 10;
     display:flex; align-items:center; gap:14px;
     padding:12px 16px;
-    background: rgba(11,16,32,0.9);
+    background: rgba(11,16,32,0.92);
     backdrop-filter: blur(8px);
     border-bottom:1px solid var(--border);
   }}
@@ -270,8 +299,10 @@ def generate_html(rows, release_name, out_html_path: Path):
   }}
   h1 {{ margin:0; font-size:20px; font-weight:700; }}
   .sub {{ font-size:12px; color: var(--muted); margin-top:2px; }}
+  .right {{ margin-left:auto; font-size:12px; color:var(--muted); }}
 
   .wrap {{ padding:14px 16px 20px; max-width: 1400px; margin: 0 auto; }}
+
   .controls {{
     display:grid;
     grid-template-columns: 1.3fr 1fr 1fr 1fr;
@@ -315,30 +346,39 @@ def generate_html(rows, release_name, out_html_path: Path):
   }}
   .dot {{
     width:10px; height:10px; border-radius:50%;
-    border:1px solid rgba(0,0,0,0.15);
+    border:1px solid rgba(0,0,0,0.25);
   }}
   .legend-item.active {{ outline: 2px solid var(--accent); }}
 
-  /* FIX #1: sticky header safe on desktop, disabled on mobile */
+  /* ===== FIX #1: Robust sticky header using scroll container ===== */
+  .table-card {{
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    overflow: hidden;
+  }}
+  .table-wrap {{
+    max-height: calc(100vh - 300px);
+    overflow: auto;
+  }}
+
   table {{
     width:100%;
     border-collapse:separate; border-spacing:0;
     background: var(--panel);
-    border:1px solid var(--border);
-    border-radius:14px; overflow:hidden;
-    position: relative; /* important for sticky context */
   }}
   thead th {{
     position: sticky;
-    top: 72px;          /* below top header */
-    z-index: 5;         /* prevent overlap weirdness */
-    background: #0b1530; color:#cfe0ff;
-    font-size:12px; text-transform:uppercase; letter-spacing:0.06em;
-    padding:10px 8px; border-bottom:1px solid var(--border);
-  }}
-  @media (max-width: 900px) {{
-    thead th {{ position: static; }} /* stop mobile overwrite */
-    .controls {{ grid-template-columns: 1fr; }}
+    top: 0;
+    z-index: 5;
+    background: #0b1530;
+    color:#cfe0ff;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    padding:10px 8px;
+    border-bottom:1px solid var(--border);
   }}
 
   tbody td {{
@@ -349,19 +389,22 @@ def generate_html(rows, release_name, out_html_path: Path):
   tbody tr:last-child td {{ border-bottom:none; }}
   tbody tr.match td {{ background: transparent; }}
 
-  /* FIX #2: mismatch rows get dark text for contrast */
+  /* mismatch rows: use tint + red accent bar */
+  tbody tr.mismatch {{
+    box-shadow: inset 4px 0 0 var(--danger-accent);
+  }}
   tbody tr.mismatch td {{
     background: var(--rowcolor);
-    color: #0b1020;
+    color: #0b1020; /* readable on light tint */
   }}
 
   .bool {{
-    padding:2px 8px; border-radius:999px; font-weight:600;
+    padding:2px 8px; border-radius:999px; font-weight:700;
     font-size:12px; display:inline-block;
   }}
   .t {{ background: rgba(0,209,140,0.18); color:#0fe0a2; border:1px solid rgba(0,209,140,0.45); }}
   .f {{ background: rgba(255,255,255,0.10); color:#ccd6ee; border:1px solid var(--border); }}
-  .na {{ background: rgba(255,183,3,0.20); color:#ffb703; border:1px solid rgba(255,183,3,0.45); }}
+  .na {{ background: rgba(255,183,3,0.25); color:#ffb703; border:1px solid rgba(255,183,3,0.55); }}
 
   footer {{
     margin-top:14px; padding:10px; text-align:center;
@@ -369,7 +412,11 @@ def generate_html(rows, release_name, out_html_path: Path):
   }}
   .muted {{ color:var(--muted); }}
   .count {{ font-weight:700; color:#fff; }}
-  .right {{ margin-left:auto; font-size:12px; color:var(--muted); }}
+
+  @media (max-width: 900px) {{
+    .controls {{ grid-template-columns: 1fr; }}
+    .table-wrap {{ max-height: calc(100vh - 240px); }}
+  }}
 </style>
 </head>
 <body>
@@ -436,20 +483,24 @@ def generate_html(rows, release_name, out_html_path: Path):
     </div>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Full Name of Profile</th>
-        <th>Permission Label</th>
-        <th>Field Name</th>
-        <th>Readable Sandbox</th>
-        <th>Editable Sandbox</th>
-        <th>Readable Production</th>
-        <th>Editable Production</th>
-      </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
+  <div class="table-card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Full Name of Profile</th>
+            <th>Permission Label</th>
+            <th>Field Name</th>
+            <th>Readable Sandbox</th>
+            <th>Editable Sandbox</th>
+            <th>Readable Production</th>
+            <th>Editable Production</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
 
   <footer>
     Cadence Report Generated by Automation | SFDC_DevOps | devops_team@cadence.com |
@@ -505,6 +556,7 @@ function buildLabelChips() {{
     labelsBox.appendChild(chip);
   }});
 }}
+
 function buildLegend() {{
   legendBox.innerHTML = "";
   LEGEND.forEach(item => {{
@@ -517,7 +569,7 @@ function buildLegend() {{
     dot.style.background = item.color;
 
     const text = document.createElement("div");
-    text.textContent = item.sig.replaceAll("|", "  ");
+    text.textContent = item.desc;
 
     el.appendChild(dot);
     el.appendChild(text);
