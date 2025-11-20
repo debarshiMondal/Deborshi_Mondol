@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Profile xmlns="http://soap.sforce.com/2006/04/metadata">
+<fieldPermissions>
+        <editable>false</editable>
+        <field>Article__c.Course_Deep_Link__c</field>
+        <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+        <editable>false</editable>
+        <field>Article__c.Course_Product_Number__c</field>
+        <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+        <editable>false</editable>
+        <field>Article__c.Course_Title__c</field>
+        <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+        <editable>false</editable>
+        <field>Article__c.Course_Version_Number__c</field>
+        <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+        <editable>false</editable>
+        <field>Survey_Submission__c.survey_submission_source__c</field>
+        <readable>true</readable>
+</fieldPermissions>
+</Profile>
