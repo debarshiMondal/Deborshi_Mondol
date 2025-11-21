@@ -1,1832 +1,1153 @@
-─ applications
-│   ├── Apttus_Approval__ApttusApprovalsManagement.app-meta.xml
-│   ├── Apttus_Approval__ApttusApprovalsSetup.app-meta.xml
-│   ├── Apttus__ApttusContractManagement.app-meta.xml
-│   ├── Apttus__ApttusContractManagement_Lightning.app-meta.xml
-│   ├── Apttus_XApps__XAuthorExcel.app-meta.xml
-│   ├── APXT_BPM__Conga_Conductor.app-meta.xml
-│   ├── Cadence_Customer_Master_Lightning.app-meta.xml
-│   ├── Cadence_IT_Administration.app-meta.xml
-│   ├── Cadence_IT_Administration_Lightning.app-meta.xml
-│   ├── Cadence_Marketing.app-meta.xml
-│   ├── Cadence_Marketing_Lightning.app-meta.xml
-│   ├── Cadence_OF_OM_Lightning.app-meta.xml
-│   ├── Cadence_Sales_Cloud.app-meta.xml
-│   ├── Cadence_Sales_Cloud_Lightning.app-meta.xml
-│   ├── General_User_App.app-meta.xml
-│   └── standard__LightningSales.app-meta.xml
-├── aura
-│   ├── clmApttusTwrHost
-│   │   ├── clmApttusTwrHost.cmp
-│   │   ├── clmApttusTwrHost.cmp-meta.xml
-│   │   ├── clmApttusTwrHostController.js
-│   │   └── clmApttusTwrHostHelper.js
-│   └── Create_Opportunity_New
-│       ├── Create_Opportunity_New.cmp
-│       ├── Create_Opportunity_New.cmp-meta.xml
-│       └── Create_Opportunity_NewController.js
-├── classes
-│   ├── AccountAgreementListPage_AC.cls
-│   ├── AccountAgreementListPage_AC.cls-meta.xml
-│   ├── AccountAgreementListPage_Test.cls
-│   ├── AccountAgreementListPage_Test.cls-meta.xml
-│   ├── AccountContentTabController_AC.cls
-│   ├── AccountContentTabController_AC.cls-meta.xml
-│   ├── AEAcknowledgementDetailPageController.cls
-│   ├── AEAcknowledgementDetailPageController.cls-meta.xml
-│   ├── AEAcknowledgementTest.cls
-│   ├── AEAcknowledgementTest.cls-meta.xml
-│   ├── AgreementActivateControllerNew.cls
-│   ├── AgreementActivateControllerNew.cls-meta.xml
-│   ├── AgreementActivateControllerNew_Test.cls
-│   ├── AgreementActivateControllerNew_Test.cls-meta.xml
-│   ├── AgreementDetailController.cls
-│   ├── AgreementDetailController.cls-meta.xml
-│   ├── AgreementDetailControllerTest.cls
-│   ├── AgreementDetailControllerTest.cls-meta.xml
-│   ├── AgreementLineItems.cls
-│   ├── AgreementLineItems.cls-meta.xml
-│   ├── AgreementLineItemsTest.cls
-│   ├── AgreementLineItemsTest.cls-meta.xml
-│   ├── APTPS_AuthorizedEmployeesTrigger_Test.cls
-│   ├── APTPS_AuthorizedEmployeesTrigger_Test.cls-meta.xml
-│   ├── APTPS_Edit.cls
-│   ├── APTPS_Edit.cls-meta.xml
-│   ├── APTPS_Edit_Tst.cls
-│   ├── APTPS_Edit_Tst.cls-meta.xml
-│   ├── Aptps_LegacyNumbers.cls
-│   ├── Aptps_LegacyNumbers.cls-meta.xml
-│   ├── Aptps_LegacyNumbers_Test.cls
-│   ├── Aptps_LegacyNumbers_Test.cls-meta.xml
-│   ├── APTPSNDA_CadenceEmployees.cls
-│   ├── APTPSNDA_CadenceEmployees.cls-meta.xml
-│   ├── APTPS_NDA_DocumentUpload.cls
-│   ├── APTPS_NDA_DocumentUpload.cls-meta.xml
-│   ├── APTPS_NDA_TestClass.cls
-│   ├── APTPS_NDA_TestClass.cls-meta.xml
-│   ├── APTPS_SoftwarePage.cls
-│   ├── APTPS_SoftwarePage.cls-meta.xml
-│   ├── APTPS_SoftwarePage_Partial_Test.cls
-│   ├── APTPS_SoftwarePage_Partial_Test.cls-meta.xml
-│   ├── APTPS_SoftwarePage_TempKey.cls
-│   ├── APTPS_SoftwarePage_TempKey.cls-meta.xml
-│   ├── APTPSSUBMITREQUEST.cls
-│   ├── APTPSSUBMITREQUEST.cls-meta.xml
-│   ├── APTPSSUBMITREQUEST_Test.cls
-│   ├── APTPSSUBMITREQUEST_Test.cls-meta.xml
-│   ├── APTPS_TWR_LWC.cls
-│   ├── APTPS_TWR_LWC.cls-meta.xml
-│   ├── APTPS_TWR_LWCTest.cls
-│   ├── APTPS_TWR_LWCTest.cls-meta.xml
-│   ├── APTS_AcceptOrder.cls
-│   ├── APTS_AcceptOrder.cls-meta.xml
-│   ├── APTS_AcceptOrderTest.cls
-│   ├── APTS_AcceptOrderTest.cls-meta.xml
-│   ├── AptsAgmtLineItemSubmitController.cls
-│   ├── AptsAgmtLineItemSubmitController.cls-meta.xml
-│   ├── AptsAgmtLineItemSubmitControllerTest.cls
-│   ├── AptsAgmtLineItemSubmitControllerTest.cls-meta.xml
-│   ├── APTS_ApprovalHelper.cls
-│   ├── APTS_ApprovalHelper.cls-meta.xml
-│   ├── APTS_ApprovalHelperTest.cls
-│   ├── APTS_ApprovalHelperTest.cls-meta.xml
-│   ├── APTS_ApprovalRequestDataShowController.cls
-│   ├── APTS_ApprovalRequestDataShowController.cls-meta.xml
-│   ├── APTS_ApprovalRequestDataShowCtrlTest.cls
-│   ├── APTS_ApprovalRequestDataShowCtrlTest.cls-meta.xml
-│   ├── APTS_AttachmentService.cls
-│   ├── APTS_AttachmentService.cls-meta.xml
-│   ├── APTS_AttachmentServiceTest.cls
-│   ├── APTS_AttachmentServiceTest.cls-meta.xml
-│   ├── APTS_CheckTransactionType.cls
-│   ├── APTS_CheckTransactionType.cls-meta.xml
-│   ├── Apts_CLLA.cls
-│   ├── Apts_CLLA.cls-meta.xml
-│   ├── Apts_CLLA_Test.cls
-│   ├── Apts_CLLA_Test.cls-meta.xml
-│   ├── APTS_CloudProductPageCntrl.cls
-│   ├── APTS_CloudProductPageCntrl.cls-meta.xml
-│   ├── APTS_CloudServiceProductTriggerTest.cls
-│   ├── APTS_CloudServiceProductTriggerTest.cls-meta.xml
-│   ├── APTS_ContentDocLinkTriggerHandler_Test.cls
-│   ├── APTS_ContentDocLinkTriggerHandler_Test.cls-meta.xml
-│   ├── APTS_ContentDocumentDeletionUtil.cls
-│   ├── APTS_ContentDocumentDeletionUtil.cls-meta.xml
-│   ├── APTS_ContentDocumentLinkTriggerHandler.cls
-│   ├── APTS_ContentDocumentLinkTriggerHandler.cls-meta.xml
-│   ├── APTS_ContentDocumentLinkTriggerTest.cls
-│   ├── APTS_ContentDocumentLinkTriggerTest.cls-meta.xml
-│   ├── APTS_ContentDocumentTriggerHandler.cls
-│   ├── APTS_ContentDocumentTriggerHandler.cls-meta.xml
-│   ├── APTS_ContentDocumenttriggertest.cls
-│   ├── APTS_ContentDocumenttriggertest.cls-meta.xml
-│   ├── APTS_CreateRampOnQuoteCtrl.cls
-│   ├── APTS_CreateRampOnQuoteCtrl.cls-meta.xml
-│   ├── APTS_CreateRampOnQuoteCtrlTest.cls
-│   ├── APTS_CreateRampOnQuoteCtrlTest.cls-meta.xml
-│   ├── APTS_CustomDHLookupController.cls
-│   ├── APTS_CustomDHLookupController.cls-meta.xml
-│   ├── APTS_CustomDHLookupControllerTest.cls
-│   ├── APTS_CustomDHLookupControllerTest.cls-meta.xml
-│   ├── APTS_CustomProducttLookupController.cls
-│   ├── APTS_CustomProducttLookupController.cls-meta.xml
-│   ├── APTS_CustomProducttLookupControllerTest.cls
-│   ├── APTS_CustomProducttLookupControllerTest.cls-meta.xml
-│   ├── APTS_CustomQuoteLifecycleCallbackHelper.cls
-│   ├── APTS_CustomQuoteLifecycleCallbackHelper.cls-meta.xml
-│   ├── APTS_CustomQuoteLifecycleCallbackTest.cls
-│   ├── APTS_CustomQuoteLifecycleCallbackTest.cls-meta.xml
-│   ├── APTS_DiscountHierarchyController.cls
-│   ├── APTS_DiscountHierarchyController.cls-meta.xml
-│   ├── APTS_DiscountHierarchyControllerTest.cls
-│   ├── APTS_DiscountHierarchyControllerTest.cls-meta.xml
-│   ├── APTS_DQMDashBoardController.cls
-│   ├── APTS_DQMDashBoardController.cls-meta.xml
-│   ├── APTS_DQMDashBoardControllerTest.cls
-│   ├── APTS_DQMDashBoardControllerTest.cls-meta.xml
-│   ├── Apts_Edit_CLLA.cls
-│   ├── Apts_Edit_CLLA.cls-meta.xml
-│   ├── Apts_Edit_CLLA_Test.cls
-│   ├── Apts_Edit_CLLA_Test.cls-meta.xml
-│   ├── APTS_EditHostIDLineItem.cls
-│   ├── APTS_EditHostIDLineItem.cls-meta.xml
-│   ├── APTS_EditHostIDLineItemTest.cls
-│   ├── APTS_EditHostIDLineItemTest.cls-meta.xml
-│   ├── AptsFileUploader.cls
-│   ├── AptsFileUploader.cls-meta.xml
-│   ├── APTS_GenerateDocumentQueueable.cls
-│   ├── APTS_GenerateDocumentQueueable.cls-meta.xml
-│   ├── APTS_GenerateDocumentQueueableTest.cls
-│   ├── APTS_GenerateDocumentQueueableTest.cls-meta.xml
-│   ├── APTS_GenerateSignBlocksUtilityTest.cls
-│   ├── APTS_GenerateSignBlocksUtilityTest.cls-meta.xml
-│   ├── APTS_GeoInstallHandler.cls
-│   ├── APTS_GeoInstallHandler.cls-meta.xml
-│   ├── APTS_GeoInstallHandlerTest.cls
-│   ├── APTS_GeoInstallHandlerTest.cls-meta.xml
-│   ├── APTS_MultiRegionWANTriggerHandler.cls
-│   ├── APTS_MultiRegionWANTriggerHandler.cls-meta.xml
-│   ├── APTS_MultiRegionWANTriggerTest.cls
-│   ├── APTS_MultiRegionWANTriggerTest.cls-meta.xml
-│   ├── Apts_NDA.cls
-│   ├── Apts_NDA.cls-meta.xml
-│   ├── APTS_PricingCallbackTest.cls
-│   ├── APTS_PricingCallbackTest.cls-meta.xml
-│   ├── APTS_ProductAvailabilityCtrl.cls
-│   ├── APTS_ProductAvailabilityCtrl.cls-meta.xml
-│   ├── APTS_ProductAvailabilityCtrlTest.cls
-│   ├── APTS_ProductAvailabilityCtrlTest.cls-meta.xml
-│   ├── APTS_ProposalUtility.cls
-│   ├── APTS_ProposalUtility.cls-meta.xml
-│   ├── APTS_QuoteExportBatch.cls
-│   ├── APTS_QuoteExportBatch.cls-meta.xml
-│   ├── APTS_QuoteExportBatchTest.cls
-│   ├── APTS_QuoteExportBatchTest.cls-meta.xml
-│   ├── APTS_QuoteExportTest.cls
-│   ├── APTS_QuoteExportTest.cls-meta.xml
-│   ├── APTS_QuoteRateTableController.cls
-│   ├── APTS_QuoteRateTableController.cls-meta.xml
-│   ├── APTS_QuoteRateTableControllerTest.cls
-│   ├── APTS_QuoteRateTableControllerTest.cls-meta.xml
-│   ├── APTS_QuoteTriggerhandler.cls
-│   ├── APTS_QuoteTriggerhandler.cls-meta.xml
-│   ├── APTS_QuoteTriggerTest.cls
-│   ├── APTS_QuoteTriggerTest.cls-meta.xml
-│   ├── APTS_RecallSignaturesController.cls
-│   ├── APTS_RecallSignaturesController.cls-meta.xml
-│   ├── APTS_RecallSignaturesControllerTest.cls
-│   ├── APTS_RecallSignaturesControllerTest.cls-meta.xml
-│   ├── APTS_RequestAddClauseExt.cls
-│   ├── APTS_RequestAddClauseExt.cls-meta.xml
-│   ├── APTS_RequestAddClauseExtTest.cls
-│   ├── APTS_RequestAddClauseExtTest.cls-meta.xml
-│   ├── APTS_SelectTransactionTypeCtrl.cls
-│   ├── APTS_SelectTransactionTypeCtrl.cls-meta.xml
-│   ├── APTS_SelectTransactionTypeCtrlTest.cls
-│   ├── APTS_SelectTransactionTypeCtrlTest.cls-meta.xml
-│   ├── APTS_SendforeSignatureController.cls
-│   ├── APTS_SendforeSignatureController.cls-meta.xml
-│   ├── APTS_SendforeSignatureControllerTest.cls
-│   ├── APTS_SendforeSignatureControllerTest.cls-meta.xml
-│   ├── APTS_SubmitforPricingDQMController.cls
-│   ├── APTS_SubmitforPricingDQMController.cls-meta.xml
-│   ├── APTS_SubmitforPricingDQMControllerTest.cls
-│   ├── APTS_SubmitforPricingDQMControllerTest.cls-meta.xml
-│   ├── APTS_ViewDiscountHierarchy.cls
-│   ├── APTS_ViewDiscountHierarchy.cls-meta.xml
-│   ├── APTS_ViewDiscountHierarchyControllerTest.cls
-│   ├── APTS_ViewDiscountHierarchyControllerTest.cls-meta.xml
-│   ├── Apttus_Agreement_Attachments_Test.cls
-│   ├── Apttus_Agreement_Attachments_Test.cls-meta.xml
-│   ├── Apttus_Agreement_BeforeUpdateTest.cls
-│   ├── Apttus_Agreement_BeforeUpdateTest.cls-meta.xml
-│   ├── Apttus_Agreement_File_AC.cls
-│   ├── Apttus_Agreement_File_AC.cls-meta.xml
-│   ├── Apttus_Agreement_File_Test.cls
-│   ├── Apttus_Agreement_File_Test.cls-meta.xml
-│   ├── Apttus_Cancel_Request.cls
-│   ├── Apttus_Cancel_Request.cls-meta.xml
-│   ├── Apttus_Cancel_Request_Test.cls
-│   ├── Apttus_Cancel_Request_Test.cls-meta.xml
-│   ├── Apttus_DocuSign_EnvelopeTriggerHandler.cls
-│   ├── Apttus_DocuSign_EnvelopeTriggerHandler.cls-meta.xml
-│   ├── ApttusDocuSignEnvelopeTriggerHandlerTest.cls
-│   ├── ApttusDocuSignEnvelopeTriggerHandlerTest.cls-meta.xml
-│   ├── ApttusUserSetup.cls
-│   ├── ApttusUserSetup.cls-meta.xml
-│   ├── ApttusUserSetupController.cls
-│   ├── ApttusUserSetupController.cls-meta.xml
-│   ├── ApttusUserSetupController_Test.cls
-│   ├── ApttusUserSetupController_Test.cls-meta.xml
-│   ├── ApttusUserSetupTest.cls
-│   ├── ApttusUserSetupTest.cls-meta.xml
-│   ├── BaseDuplicateChecker.cls
-│   ├── BaseDuplicateChecker.cls-meta.xml
-│   ├── BatchEsignForGoalLetters.cls
-│   ├── BatchEsignForGoalLetters.cls-meta.xml
-│   ├── BatchEsignForGoalLettersTest.cls
-│   ├── BatchEsignForGoalLettersTest.cls-meta.xml
-│   ├── BatchEsignForUniversityRequests.cls
-│   ├── BatchEsignForUniversityRequests.cls-meta.xml
-│   ├── BatchEsignForUniversityRequestsTest.cls
-│   ├── BatchEsignForUniversityRequestsTest.cls-meta.xml
-│   ├── bookingPackageContentTab_Controller_AC.cls
-│   ├── bookingPackageContentTab_Controller_AC.cls-meta.xml
-│   ├── BookingPackageTriggerHandler.cls
-│   ├── BookingPackageTriggerHandler.cls-meta.xml
-│   ├── CadenceApplicationhostrefScreenCtrl.cls
-│   ├── CadenceApplicationhostrefScreenCtrl.cls-meta.xml
-│   ├── CadenceAssociateEntitlementController.cls
-│   ├── CadenceAssociateEntitlementController.cls-meta.xml
-│   ├── CadenceLoginHostidRefkeyController.cls
-│   ├── CadenceLoginHostidRefkeyController.cls-meta.xml
-│   ├── ChangeOppOwnerExt_AC.cls
-│   ├── ChangeOppOwnerExt_AC.cls-meta.xml
-│   ├── ClmNDAFileHandler.cls
-│   ├── ClmNDAFileHandler.cls-meta.xml
-│   ├── ClmNDAFileHandlerTest.cls
-│   ├── ClmNDAFileHandlerTest.cls-meta.xml
-│   ├── CloudProductDeleteController.cls
-│   ├── CloudProductDeleteController.cls-meta.xml
-│   ├── CloudProductDeleteControllerTest.cls
-│   ├── CloudProductDeleteControllerTest.cls-meta.xml
-│   ├── ContentDocumentTriggerHandler_AC.cls
-│   ├── ContentDocumentTriggerHandler_AC.cls-meta.xml
-│   ├── ContentRecordController.cls
-│   ├── ContentRecordController.cls-meta.xml
-│   ├── ContentVersionUtility.cls
-│   ├── ContentVersionUtility.cls-meta.xml
-│   ├── ContentVersionUtilityTest.cls
-│   ├── ContentVersionUtilityTest.cls-meta.xml
-│   ├── CreateLegalCommitmentController.cls
-│   ├── CreateLegalCommitmentController.cls-meta.xml
-│   ├── cs_ContentDocumentLinkTriggerTest.cls
-│   ├── cs_ContentDocumentLinkTriggerTest.cls-meta.xml
-│   ├── CustomEmailTemplate.cls
-│   ├── CustomEmailTemplate.cls-meta.xml
-│   ├── CustomEmailTemplateforRef.cls
-│   ├── CustomEmailTemplateforRef.cls-meta.xml
-│   ├── CustomEmailTemplateForRefTest.cls
-│   ├── CustomEmailTemplateForRefTest.cls-meta.xml
-│   ├── CustomEmailTemplateTest.cls
-│   ├── CustomEmailTemplateTest.cls-meta.xml
-│   ├── DocuSign_SendEnvelope_Queueable.cls
-│   ├── DocuSign_SendEnvelope_Queueable.cls-meta.xml
-│   ├── DocuSign_SendEnvelope_QueueableTest.cls
-│   ├── DocuSign_SendEnvelope_QueueableTest.cls-meta.xml
-│   ├── DocuSign_Service.cls
-│   ├── DocuSign_Service.cls-meta.xml
-│   ├── DocuSign_ServiceTest.cls
-│   ├── DocuSign_ServiceTest.cls-meta.xml
-│   ├── DocuSign_Utility.cls
-│   ├── DocuSign_Utility.cls-meta.xml
-│   ├── DocuSign_UtilityTest.cls
-│   ├── DocuSign_UtilityTest.cls-meta.xml
-│   ├── EditLegalCommitmentController.cls
-│   ├── EditLegalCommitmentController.cls-meta.xml
-│   ├── EorEligibilityService.cls
-│   ├── EorEligibilityService.cls-meta.xml
-│   ├── EorEligibilityServiceTest.cls
-│   ├── EorEligibilityServiceTest.cls-meta.xml
-│   ├── ER_AddNamesFlow.cls
-│   ├── ER_AddNamesFlow.cls-meta.xml
-│   ├── ER_AddNamesFlowTest.cls
-│   ├── ER_AddNamesFlowTest.cls-meta.xml
-│   ├── ER_DocumentUpload.cls
-│   ├── ER_DocumentUpload.cls-meta.xml
-│   ├── ER_DocumentUploadTest.cls
-│   ├── ER_DocumentUploadTest.cls-meta.xml
-│   ├── ER_Employee_TriggerTest.cls
-│   ├── ER_Employee_TriggerTest.cls-meta.xml
-│   ├── ErRequestFlowAccess.cls
-│   ├── ErRequestFlowAccess.cls-meta.xml
-│   ├── ErRequestFlowAccessTest.cls
-│   ├── ErRequestFlowAccessTest.cls-meta.xml
-│   ├── ER_RequestFlow.cls
-│   ├── ER_RequestFlow.cls-meta.xml
-│   ├── ER_RequestFlowTest.cls
-│   ├── ER_RequestFlowTest.cls-meta.xml
-│   ├── ExternalFamilyToCountryAccessTest.cls
-│   ├── ExternalFamilyToCountryAccessTest.cls-meta.xml
-│   ├── GenerateLicenseExceptionUserList.cls
-│   ├── GenerateLicenseExceptionUserList.cls-meta.xml
-│   ├── GenerateLicenseExceptionUserListTest.cls
-│   ├── GenerateLicenseExceptionUserListTest.cls-meta.xml
-│   ├── GNDAActions.cls
-│   ├── GNDAActions.cls-meta.xml
-│   ├── GNDAActions_Tst.cls
-│   ├── GNDAActions_Tst.cls-meta.xml
-│   ├── GNDA_Noteandattachmentsclass.cls
-│   ├── GNDA_Noteandattachmentsclass.cls-meta.xml
-│   ├── GNDA_Noteandattachmentsclass_Tst.cls
-│   ├── GNDA_Noteandattachmentsclass_Tst.cls-meta.xml
-│   ├── GNDA_Purpose.cls
-│   ├── GNDA_Purpose.cls-meta.xml
-│   ├── GNDA_Purpose_Tst.cls
-│   ├── GNDA_Purpose_Tst.cls-meta.xml
-│   ├── GoalLetterAuthenticationController.cls
-│   ├── GoalLetterAuthenticationController.cls-meta.xml
-│   ├── GoalLetterAuthenticationControllerTest.cls
-│   ├── GoalLetterAuthenticationControllerTest.cls-meta.xml
-│   ├── GoalLetterDetailController.cls
-│   ├── GoalLetterDetailController.cls-meta.xml
-│   ├── GoalLetterDetailControllerTest.cls
-│   ├── GoalLetterDetailControllerTest.cls-meta.xml
-│   ├── GoalLetterListController.cls
-│   ├── GoalLetterListController.cls-meta.xml
-│   ├── GoalLetterSearchController.cls
-│   ├── GoalLetterSearchController.cls-meta.xml
-│   ├── GoalLetterSearchControllerTest.cls
-│   ├── GoalLetterSearchControllerTest.cls-meta.xml
-│   ├── InLineVF_ProductGroup_Controller_AC.cls
-│   ├── InLineVF_ProductGroup_Controller_AC.cls-meta.xml
-│   ├── Intel_Runda_30_Day_Email.cls
-│   ├── Intel_Runda_30_Day_Email.cls-meta.xml
-│   ├── Intel_Runda_30_Day_Email_Tst.cls
-│   ├── Intel_Runda_30_Day_Email_Tst.cls-meta.xml
-│   ├── IntelRundaReport_AC.cls
-│   ├── IntelRundaReport_AC.cls-meta.xml
-│   ├── IntelRundaReport_Test.cls
-│   ├── IntelRundaReport_Test.cls-meta.xml
-│   ├── LegalCommitmentHelper.cls
-│   ├── LegalCommitmentHelper.cls-meta.xml
-│   ├── LightningUtility.cls
-│   ├── LightningUtility.cls-meta.xml
-│   ├── LightningUtilityTest.cls
-│   ├── LightningUtilityTest.cls-meta.xml
-│   ├── listHostID.cls
-│   ├── listHostID.cls-meta.xml
-│   ├── listhostID_Test.cls
-│   ├── listhostID_Test.cls-meta.xml
-│   ├── LWRext.cls
-│   ├── LWRext.cls-meta.xml
-│   ├── LWRext_Test.cls
-│   ├── LWRext_Test.cls-meta.xml
-│   ├── ManageDQMVersionController.cls
-│   ├── ManageDQMVersionController.cls-meta.xml
-│   ├── MigrateNotesAndAttachmentsBatch.cls
-│   ├── MigrateNotesAndAttachmentsBatch.cls-meta.xml
-│   ├── MigrateNotesAndAttachmentsBatchTest.cls
-│   ├── MigrateNotesAndAttachmentsBatchTest.cls-meta.xml
-│   ├── MigrateNotesAndAttachmentsController.cls
-│   ├── MigrateNotesAndAttachmentsController.cls-meta.xml
-│   ├── MigrateNotesAndAttachmentsControllerTest.cls
-│   ├── MigrateNotesAndAttachmentsControllerTest.cls-meta.xml
-│   ├── NDA_SearchController.cls
-│   ├── NDA_SearchController.cls-meta.xml
-│   ├── NDA_Search_TestClass.cls
-│   ├── NDA_Search_TestClass.cls-meta.xml
-│   ├── NewOpptyIntermediateExtension_AC.cls
-│   ├── NewOpptyIntermediateExtension_AC.cls-meta.xml
-│   ├── Opportunities.cls
-│   ├── Opportunities.cls-meta.xml
-│   ├── OpportunitiesTriggerTest.cls
-│   ├── OpportunitiesTriggerTest.cls-meta.xml
-│   ├── OpptyContentRecordController.cls
-│   ├── OpptyContentRecordController.cls-meta.xml
-│   ├── ParentAccountTeamPage_AC.cls
-│   ├── ParentAccountTeamPage_AC.cls-meta.xml
-│   ├── productGroupConfig_Controller_AC.cls
-│   ├── productGroupConfig_Controller_AC.cls-meta.xml
-│   ├── QueueableRetryDMLClass.cls
-│   ├── QueueableRetryDMLClass.cls-meta.xml
-│   ├── QueueableRetryDMLClassTest.cls
-│   ├── QueueableRetryDMLClassTest.cls-meta.xml
-│   ├── QuoteHeaderMessageExtTest.cls
-│   ├── QuoteHeaderMessageExtTest.cls-meta.xml
-│   ├── ReferenceKeySelector.cls
-│   ├── ReferenceKeySelector.cls-meta.xml
-│   ├── ReferenceKeySelectorTest.cls
-│   ├── ReferenceKeySelectorTest.cls-meta.xml
-│   ├── ReferenceKeyService.cls
-│   ├── ReferenceKeyService.cls-meta.xml
-│   ├── ReferenceKeyServiceTest.cls
-│   ├── ReferenceKeyServiceTest.cls-meta.xml
-│   ├── Refrigeration_Process.cls
-│   ├── Refrigeration_Process.cls-meta.xml
-│   ├── Refrigeration_Process_Test.cls
-│   ├── Refrigeration_Process_Test.cls-meta.xml
-│   ├── RequestPaymentTermController.cls
-│   ├── RequestPaymentTermController.cls-meta.xml
-│   ├── RestrictedEmployeeForm.cls
-│   ├── RestrictedEmployeeForm.cls-meta.xml
-│   ├── RestrictedEmployeeFormTest.cls
-│   ├── RestrictedEmployeeFormTest.cls-meta.xml
-│   ├── RundaHistoryClass.cls
-│   ├── RundaHistoryClass.cls-meta.xml
-│   ├── RundaNoteAttach_cls.cls
-│   ├── RundaNoteAttach_cls.cls-meta.xml
-│   ├── RundaNoteAttach_clstst.cls
-│   ├── RundaNoteAttach_clstst.cls-meta.xml
-│   ├── RundaSigned.cls
-│   ├── RundaSigned.cls-meta.xml
-│   ├── SendEmailPreProcessController.cls
-│   ├── SendEmailPreProcessController.cls-meta.xml
-│   ├── SendEmailPreProcessControllerTest.cls
-│   ├── SendEmailPreProcessControllerTest.cls-meta.xml
-│   ├── Send_GL_ForEsign_Controller.cls
-│   ├── Send_GL_ForEsign_Controller.cls-meta.xml
-│   ├── SendMailForAcknowledgementController.cls
-│   ├── SendMailForAcknowledgementController.cls-meta.xml
-│   ├── SendMailForAcknowledgementControllerTest.cls
-│   ├── SendMailForAcknowledgementControllerTest.cls-meta.xml
-│   ├── SNPS_Access_End_Flow_Test.cls
-│   ├── SNPS_Access_End_Flow_Test.cls-meta.xml
-│   ├── SNPS_End_Flow.cls
-│   ├── SNPS_End_Flow.cls-meta.xml
-│   ├── Termination.cls
-│   ├── Termination.cls-meta.xml
-│   ├── Termination_tst.cls
-│   ├── Termination_tst.cls-meta.xml
-│   ├── TestAccountContentTabController.cls
-│   ├── TestAccountContentTabController.cls-meta.xml
-│   ├── TEST_APTPSNDA_CadenceEmployees.cls
-│   ├── TEST_APTPSNDA_CadenceEmployees.cls-meta.xml
-│   ├── TEST_APTPS_NDA.cls
-│   ├── TEST_APTPS_NDA.cls-meta.xml
-│   ├── TEST_APTPS_NDA_DocumentUpload.cls
-│   ├── TEST_APTPS_NDA_DocumentUpload.cls-meta.xml
-│   ├── TestbookingPackageContentTab_AC.cls
-│   ├── TestbookingPackageContentTab_AC.cls-meta.xml
-│   ├── TestBookingPackageTrigger.cls
-│   ├── TestBookingPackageTrigger.cls-meta.xml
-│   ├── TestCadenceApplicationhostrefScreenCtrl.cls
-│   ├── TestCadenceApplicationhostrefScreenCtrl.cls-meta.xml
-│   ├── TestCadenceAssEntitlementController.cls
-│   ├── TestCadenceAssEntitlementController.cls-meta.xml
-│   ├── TestCadenceLoginHostidRefkeyController.cls
-│   ├── TestCadenceLoginHostidRefkeyController.cls-meta.xml
-│   ├── TestChangeOppOwnerExt_AC.cls
-│   ├── TestChangeOppOwnerExt_AC.cls-meta.xml
-│   ├── TestContentDocumentLink.cls
-│   ├── TestContentDocumentLink.cls-meta.xml
-│   ├── TestContentDocumentTrigger.cls
-│   ├── TestContentDocumentTrigger.cls-meta.xml
-│   ├── TestContentDocumentUtility_AC.cls
-│   ├── TestContentDocumentUtility_AC.cls-meta.xml
-│   ├── TestContentRecordController.cls
-│   ├── TestContentRecordController.cls-meta.xml
-│   ├── TestCreateLegalCommitmentController.cls
-│   ├── TestCreateLegalCommitmentController.cls-meta.xml
-│   ├── TestEditLegalCommitmentController.cls
-│   ├── TestEditLegalCommitmentController.cls-meta.xml
-│   ├── Test_FileUploader.cls
-│   ├── Test_FileUploader.cls-meta.xml
-│   ├── TestInLineVF_ProductGroup_Controller_AC.cls
-│   ├── TestInLineVF_ProductGroup_Controller_AC.cls-meta.xml
-│   ├── TestLegalCommitmentHelper.cls
-│   ├── TestLegalCommitmentHelper.cls-meta.xml
-│   ├── TestManageDQMVersionController.cls
-│   ├── TestManageDQMVersionController.cls-meta.xml
-│   ├── TestNewOpptyIntermediate.cls
-│   ├── TestNewOpptyIntermediate.cls-meta.xml
-│   ├── TestOpptyContentRecordController.cls
-│   ├── TestOpptyContentRecordController.cls-meta.xml
-│   ├── TestParentAccountTeamPage.cls
-│   ├── TestParentAccountTeamPage.cls-meta.xml
-│   ├── TestplatformPage.cls
-│   ├── TestplatformPage.cls-meta.xml
-│   ├── TestproductGroupConfig_Controller_AC.cls
-│   ├── TestproductGroupConfig_Controller_AC.cls-meta.xml
-│   ├── TestRequestPaymentTermController.cls
-│   ├── TestRequestPaymentTermController.cls-meta.xml
-│   ├── Test_RundaHistory.cls
-│   ├── Test_RundaHistory.cls-meta.xml
-│   ├── Test_RundaSigned.cls
-│   ├── Test_RundaSigned.cls-meta.xml
-│   ├── TestSend_GL_ForEsign_Controller.cls
-│   ├── TestSend_GL_ForEsign_Controller.cls-meta.xml
-│   ├── Test_Software.cls
-│   ├── Test_Software.cls-meta.xml
-│   ├── TestSurveyInvitationController.cls
-│   ├── TestSurveyInvitationController.cls-meta.xml
-│   ├── Test_UniversityRequestEditController.cls
-│   ├── Test_UniversityRequestEditController.cls-meta.xml
-│   ├── TestUrlRewriterClass.cls
-│   ├── TestUrlRewriterClass.cls-meta.xml
-│   ├── TestUtility_global_var.cls
-│   ├── TestUtility_global_var.cls-meta.xml
-│   ├── TestVarProfilePromoAccess.cls
-│   ├── TestVarProfilePromoAccess.cls-meta.xml
-│   ├── TSMCController.cls
-│   ├── TSMCController.cls-meta.xml
-│   ├── TSMCController_Tst.cls
-│   ├── TSMCController_Tst.cls-meta.xml
-│   ├── TSMC_PreventESignAgreementDelete_Tst.cls
-│   ├── TSMC_PreventESignAgreementDelete_Tst.cls-meta.xml
-│   ├── TSMC_Trigger_Handler.cls
-│   ├── TSMC_Trigger_Handler.cls-meta.xml
-│   ├── TSMC_Trigger_Test.cls
-│   ├── TSMC_Trigger_Test.cls-meta.xml
-│   ├── TWRActions.cls
-│   ├── TWRActions.cls-meta.xml
-│   ├── TWRActions_Tst.cls
-│   ├── TWRActions_Tst.cls-meta.xml
-│   ├── TWRComponent_Tst.cls
-│   ├── TWRComponent_Tst.cls-meta.xml
-│   ├── TWR_Error.cls
-│   ├── TWR_Error.cls-meta.xml
-│   ├── TWR_Error_Tst.cls
-│   ├── TWR_Error_Tst.cls-meta.xml
-│   ├── TWRNoteAtt_cls.cls
-│   ├── TWRNoteAtt_cls.cls-meta.xml
-│   ├── TWRNoteAtt_tst.cls
-│   ├── TWRNoteAtt_tst.cls-meta.xml
-│   ├── TWR_Review.cls
-│   ├── TWR_Review.cls-meta.xml
-│   ├── TWRReview_Tst.cls
-│   ├── TWRReview_Tst.cls-meta.xml
-│   ├── UniversityRequestEditController.cls
-│   ├── UniversityRequestEditController.cls-meta.xml
-│   ├── UploadNDAController.cls
-│   ├── UploadNDAController.cls-meta.xml
-│   ├── UploadNDAController_Tst.cls
-│   ├── UploadNDAController_Tst.cls-meta.xml
-│   ├── UrlRewriterClass.cls
-│   ├── UrlRewriterClass.cls-meta.xml
-│   ├── Utility_global_var.cls
-│   ├── Utility_global_var.cls-meta.xml
-│   ├── VarCountrySplitControllerTest.cls
-│   ├── VarCountrySplitControllerTest.cls-meta.xml
-│   ├── VarCustomLookupCtrl.cls
-│   ├── VarCustomLookupCtrl.cls-meta.xml
-│   ├── VarCustomLookupCtrlTest.cls
-│   ├── VarCustomLookupCtrlTest.cls-meta.xml
-│   ├── VarPaymentScheduleControllerTest.cls
-│   ├── VarPaymentScheduleControllerTest.cls-meta.xml
-│   ├── VarPortalControllerTest.cls
-│   ├── VarPortalControllerTest.cls-meta.xml
-│   ├── VarPortalOrderActionTest.cls
-│   ├── VarPortalOrderActionTest.cls-meta.xml
-│   ├── VarPortalProductPage.cls
-│   ├── VarPortalProductPage.cls-meta.xml
-│   ├── VarPortalProductPageTest.cls
-│   ├── VarPortalProductPageTest.cls-meta.xml
-│   ├── VarPortalUpgradeProductPageTest.cls
-│   ├── VarPortalUpgradeProductPageTest.cls-meta.xml
-│   ├── VarProfileDiscountTriggerHandlerTest.cls
-│   ├── VarProfileDiscountTriggerHandlerTest.cls-meta.xml
-│   ├── VarProfileMarginTriggerHandlerTest.cls
-│   ├── VarProfileMarginTriggerHandlerTest.cls-meta.xml
-│   ├── VarProfileProdAccessTriggerHandlerTest.cls
-│   ├── VarProfileProdAccessTriggerHandlerTest.cls-meta.xml
-│   ├── VarProfileTriggerHandlerTest.cls
-│   ├── VarProfileTriggerHandlerTest.cls-meta.xml
-│   ├── VarProfileUtility.cls
-│   ├── VarProfileUtility.cls-meta.xml
-│   ├── VarProfileUtilityTest.cls
-│   ├── VarProfileUtilityTest.cls-meta.xml
-│   ├── VarPromoProductsTest.cls
-│   ├── VarPromoProductsTest.cls-meta.xml
-│   ├── VarWrapper.cls
-│   └── VarWrapper.cls-meta.xml
-├── components
-│   ├── APTS_WarningPopupsComp.component
-│   ├── APTS_WarningPopupsComp.component-meta.xml
-│   ├── Coveo_CommunitySearch.component
-│   ├── Coveo_CommunitySearch.component-meta.xml
-│   ├── NDA_Search.component
-│   └── NDA_Search.component-meta.xml
-├── customMetadata
-│   ├── APTS_OA_TCV_Threshold.MS_TBLAsiaPacific.md-meta.xml
-│   ├── APTS_OA_TCV_Threshold.MS_TBLEMEA.md-meta.xml
-│   ├── APTS_OA_TCV_Threshold.MS_TBLIndia.md-meta.xml
-│   ├── APTS_OA_TCV_Threshold.MS_TBLJapan.md-meta.xml
-│   ├── APTS_OA_TCV_Threshold.MS_TBLKorea.md-meta.xml
-│   ├── APTS_OA_TCV_Threshold.MS_TBLNorth_America.md-meta.xml
-│   ├── APTS_OA_TCV_Threshold.TBLAsiaPacific.md-meta.xml
-│   ├── APTS_OA_TCV_Threshold.TBLEMEA.md-meta.xml
-│   ├── APTS_OA_TCV_Threshold.TBLIndia.md-meta.xml
-│   ├── APTS_OA_TCV_Threshold.TBLJapan.md-meta.xml
-│   ├── APTS_OA_TCV_Threshold.TBLKorea.md-meta.xml
-│   ├── APTS_OA_TCV_Threshold.TBLNorth_America.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule1.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule2.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule3.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule4.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule5.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule6.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule7.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule8.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.TBLRule1.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.TBLRule2.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.TBLRule3.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.TBLRule4.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.TBLRule5.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.TBLRule6.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.TBLRule7.md-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules.TBLRule8.md-meta.xml
-│   ├── APTS_String_Constants.APTS_OA_Result_No_Match.md-meta.xml
-│   ├── APTS_String_Constants.APTS_Order_Out_for_Acceptance.md-meta.xml
-│   ├── APTS_String_Constants.APTS_Order_PO_Evaluation_Complete.md-meta.xml
-│   ├── APTS_String_Constants.APTS_Order_Template_Completed_PDF.md-meta.xml
-│   ├── APTS_String_Constants.APTS_Order_Template_MSTBL.md-meta.xml
-│   ├── APTS_String_Constants.APTS_Order_Template_TBL.md-meta.xml
-│   ├── APTS_String_Constants.APTS_PO_PDF.md-meta.xml
-│   ├── APTS_String_Constants.APTS_POPQ_NoMatch_Template.md-meta.xml
-│   ├── APTS_String_Constants.OM_Email_Group.md-meta.xml
-│   ├── APTS_String_Constants.PO_PQ_Comparison_EndPoint.md-meta.xml
-│   ├── APTS_String_Constants.PO_PQ_Comparison_Token.md-meta.xml
-│   ├── APTS_String_Constants.ReportParam_LEX.md
-│   ├── COS_Config.Tensilica_Neo_NPUHW5.md-meta.xml
-│   ├── COS_Field_Display_Property.COSFieldDisplayProperty_27.md-meta.xml
-│   ├── Univ_GL_Docusign_Reminder.GL_Env_Expiry.md-meta.xml
-│   ├── Univ_GL_Docusign_Reminder.GL_Env_Expiry_Reminder.md-meta.xml
-│   ├── Univ_GL_Docusign_Reminder.GL_Notification_Reminder_Bwn_Days.md-meta.xml
-│   ├── Univ_GL_Docusign_Reminder.GL_Notification_Reminder.md-meta.xml
-│   ├── Univ_GL_Docusign_Reminder.Univ_Env_Expiry.md-meta.xml
-│   ├── Univ_GL_Docusign_Reminder.Univ_Env_Expiry_Reminder.md-meta.xml
-│   ├── Univ_GL_Docusign_Reminder.Univ_Notification_Reminder_Bwn_Days.md-meta.xml
-│   ├── Univ_GL_Docusign_Reminder.Univ_Notification_Reminder.md-meta.xml
-│   ├── UserExceptionQuery.Query_45.md-meta.xml
-│   ├── UserProvision_Config.APTTUS_PROFILES.md-meta.xml
-│   ├── UserProvision_Config.EXCEPTION_PROFILES.md-meta.xml
-│   ├── UserProvision_Config.NON_SFDC_PROFILES.md-meta.xml
-│   ├── Var_Portal_Constant.AddProductOrExternalFamLabel.md-meta.xml
-│   ├── Var_Portal_Constant.BusinessModelErrLabel.md-meta.xml
-│   ├── Var_Portal_Constant.CustomLookupAllowedObj1.md-meta.xml
-│   ├── Var_Portal_Constant.DiscountLabel.md-meta.xml
-│   ├── Var_Portal_Constant.DupRecordWithSameExternalFam.md-meta.xml
-│   ├── Var_Portal_Constant.DupRecordWithSameProduct.md-meta.xml
-│   ├── Var_Portal_Constant.EnterExFamOrProdLabel.md-meta.xml
-│   ├── Var_Portal_Constant.ExFamANDProdDefinedOnAccessTypeNew.md-meta.xml
-│   ├── Var_Portal_Constant.ExFamANDProdDefinedOnAccessTypeOld.md-meta.xml
-│   ├── Var_Portal_Constant.ExternalFamErrLabel.md-meta.xml
-│   ├── Var_Portal_Constant.HostIdInvalidErrMsg.md-meta.xml
-│   ├── Var_Portal_Constant.HostIdRegExPattern.md-meta.xml
-│   ├── Var_Portal_Constant.HRCOpptyStatusClosed.md-meta.xml
-│   ├── Var_Portal_Constant.HRCOpptyStatusOpen.md-meta.xml
-│   ├── Var_Portal_Constant.InvalidBusinessModelLabel.md-meta.xml
-│   ├── Var_Portal_Constant.InvalidDiscountLabel.md-meta.xml
-│   ├── Var_Portal_Constant.InvalidExternalFamilyLabel.md-meta.xml
-│   ├── Var_Portal_Constant.InvalidMarginTypeLabel.md-meta.xml
-│   ├── Var_Portal_Constant.InvalidMarginValueMsg.md-meta.xml
-│   ├── Var_Portal_Constant.MarginLabel.md-meta.xml
-│   ├── Var_Portal_Constant.MarginTypeErrLabel.md-meta.xml
-│   ├── Var_Portal_Constant.MustEnterExFamOrProdOld.md-meta.xml
-│   ├── Var_Portal_Constant.OpportunityStatusInactive.md-meta.xml
-│   ├── Var_Portal_Constant.OpportunityStatusLost.md-meta.xml
-│   ├── Var_Portal_Constant.OpptyAllowedContExcpVal1.md-meta.xml
-│   ├── Var_Portal_Constant.OpptyAllowedContExcpVal2.md-meta.xml
-│   ├── Var_Portal_Constant.OpptyAllowedContExcpVal3.md-meta.xml
-│   ├── Var_Portal_Constant.OpptyAllowedContExcpVal4.md-meta.xml
-│   ├── Var_Portal_Constant.OpptyAllowedContExcpVal5.md-meta.xml
-│   ├── Var_Portal_Constant.OpptyAllowedContExcpVal6.md-meta.xml
-│   ├── Var_Portal_Constant.OpptyAllowedContExcpVal7.md-meta.xml
-│   └── Var_Portal_Constant.SelectProductOrExternalFamLabel.md-meta.xml
-├── customPermissions
-│   ├── ApttusUserSetup.customPermission-meta.xml
-│   ├── DQM_Home_Page_Link.customPermission-meta.xml
-│   ├── TSMCEsignAccess.customPermission-meta.xml
-│   └── TWRAccessAuth.customPermission-meta.xml
-├── email
-│   ├── Apttus__ApttusEmailTemplates
-│   │   ├── APTS_Approval_Assignment_Template.email
-│   │   ├── APTS_Approval_Assignment_Template.email-meta.xml
-│   │   ├── APTS_Approval_ReassignmentTemplate.email
-│   │   ├── APTS_Approval_ReassignmentTemplate.email-meta.xml
-│   │   ├── APTS_Approval_Recall_template.email
-│   │   ├── APTS_Approval_Recall_template.email-meta.xml
-│   │   ├── APTS_Approval_Rejection_template_DQM.email
-│   │   ├── APTS_Approval_Rejection_template_DQM.email-meta.xml
-│   │   ├── APTS_Approval_Rejection_template.email
-│   │   ├── APTS_Approval_Rejection_template.email-meta.xml
-│   │   ├── APTS_Approved_Email_Template_DQM.email
-│   │   ├── APTS_Approved_Email_Template_DQM.email-meta.xml
-│   │   ├── APTS_Approved_Email_Template.email
-│   │   ├── APTS_Approved_Email_Template.email-meta.xml
-│   │   ├── APTS_PDQM_Auto_Approved_Email_VFTemplate.email
-│   │   ├── APTS_PDQM_Auto_Approved_Email_VFTemplate.email-meta.xml
-│   │   ├── NDA_Apttus_NWR_Email_New.email
-│   │   ├── NDA_Apttus_NWR_Email_New.email-meta.xml
-│   │   ├── NDA_Apttus_NWR_Email_Requester.email
-│   │   ├── NDA_Apttus_NWR_Email_Requester.email-meta.xml
-│   │   ├── POPQ_NoMatch_Template.email
-│   │   └── POPQ_NoMatch_Template.email-meta.xml
-│   ├── Apttus_Config2__ApttusCPQEmailTemplates
-│   │   ├── APTS_Quote_Document_Generation_Notification.email
-│   │   └── APTS_Quote_Document_Generation_Notification.email-meta.xml
-│   └── Surveys
-│       ├── SurveyReSendingVF.email
-│       ├── SurveyReSendingVF.email-meta.xml
-│       ├── SurveySendingVF.email
-│       └── SurveySendingVF.email-meta.xml
-├── flexipages
-│   ├── Account_Lightning_Record_Page.flexipage-meta.xml
-│   ├── AE_Ack_Flow_Record_Page.flexipage-meta.xml
-│   ├── Agreement_Account_Sites_Record_Page.flexipage-meta.xml
-│   ├── APTPS_TWR.flexipage-meta.xml
-│   ├── APTS_Agreement_LegacyAgreementNumbers_Lightning.flexipage-meta.xml
-│   ├── APTS_Agreement_Lightning_CIC_OF.flexipage-meta.xml
-│   ├── APTS_Agreement_Lightning_CLLA_Legal.flexipage-meta.xml
-│   ├── APTS_Agreement_Lightning_CLLA_OF.flexipage-meta.xml
-│   ├── APTS_Agreement_Lightning_CLLA_Requester.flexipage-meta.xml
-│   ├── APTS_Agreement_Lightning_CustomClause.flexipage-meta.xml
-│   ├── APTS_Agreement_Lightning_GeneralNDA.flexipage-meta.xml
-│   ├── APTS_Agreement_Lightning_GeneralNDA_Requester.flexipage-meta.xml
-│   ├── APTS_Agreement_Lightning_NDA.flexipage-meta.xml
-│   ├── APTS_Agreement_Lightning_NDA_Requester.flexipage-meta.xml
-│   ├── APTS_Agreement_LWR_Lightning.flexipage-meta.xml
-│   ├── APTS_Agreement_TWR_Lightning.flexipage-meta.xml
-│   ├── Apttus_Release_Approver_Record_Page.flexipage-meta.xml
-│   ├── ApttusUserSetupPage.flexipage-meta.xml
-│   ├── ARM_Employee_Agreement_Relationship_Record_Page.flexipage-meta.xml
-│   ├── ARM_TRS_Employee_Agreement_Relationship_Record_Page.flexipage-meta.xml
-│   ├── Authorized_User_Agreement_Record_Page.flexipage-meta.xml
-│   ├── Booking_Package_Lightning_Page.flexipage-meta.xml
-│   ├── Cadence_Documents_Record_Page.flexipage-meta.xml
-│   ├── Category_Hierarchy_Record_Page.flexipage-meta.xml
-│   ├── Category_Record_Page.flexipage-meta.xml
-│   ├── CC_Emails_Record_Page.flexipage-meta.xml
-│   ├── Cloud_SaaS_Product_Record_Page.flexipage-meta.xml
-│   ├── Contact_Lightning_Record_Page.flexipage-meta.xml
-│   ├── Country_Usage_Record_Page.flexipage-meta.xml
-│   ├── Cycle_Time_Field_Record_Page.flexipage-meta.xml
-│   ├── Default_Home_Page.flexipage-meta.xml
-│   ├── DQMAudit_Record_Page.flexipage-meta.xml
-│   ├── GeoInstall_Record_Page.flexipage-meta.xml
-│   ├── Intel_Owner_Info_Record_Page.flexipage-meta.xml
-│   ├── Intel_Runda_30_Day_Email_Log_Record_Page.flexipage-meta.xml
-│   ├── Intel_Signed_Document_Record_Page.flexipage-meta.xml
-│   ├── Legal_Apttus_Home_Page.flexipage-meta.xml
-│   ├── Line_Item_Record_Page.flexipage-meta.xml
-│   ├── NDA_ARM_Cadence_Authorized_Employees_Record_Page.flexipage-meta.xml
-│   ├── NDA_ARM_TRS_Cadence_Authorized_Employees_Record_Page.flexipage-meta.xml
-│   ├── NDA_Cadence_Authorized_Employees_Record_Page.flexipage-meta.xml
-│   ├── NDA_RUNDA_Cadence_Authorized_Employees_Record_Page2.flexipage-meta.xml
-│   ├── NDA_RUNDA_Cadence_Employees_Refrigerated_Record_Page1.flexipage-meta.xml
-│   ├── NDA_User_Source_Code_Access_Record_Page.flexipage-meta.xml
-│   ├── Opportunity_Record_Page.flexipage-meta.xml
-│   ├── Order_Managment_Home_Page.flexipage-meta.xml
-│   ├── Order_Record_Page.flexipage-meta.xml
-│   ├── Price_Dimension_Record_Page.flexipage-meta.xml
-│   ├── Price_List_Item_Record_Page.flexipage-meta.xml
-│   ├── Price_List_Record_Page.flexipage-meta.xml
-│   ├── Product_Configuration_Record_Page.flexipage-meta.xml
-│   ├── Product_Exception_Record_Page.flexipage-meta.xml
-│   ├── Product_Filter_View_Record_Page.flexipage-meta.xml
-│   ├── Proposal_Line_Item_Record_Page.flexipage-meta.xml
-│   ├── Quote_Proposal_Record_Page.flexipage-meta.xml
-│   ├── Quote_Rate_Table_Record_Page.flexipage-meta.xml
-│   ├── R_D_Marketing_TFO_Home_Page.flexipage-meta.xml
-│   ├── Restricted_Employee_Form_Record_Page.flexipage-meta.xml
-│   ├── Sales_Finance_Corp_WFO_Home_Page.flexipage-meta.xml
-│   ├── Sales_Managment_Home_Page.flexipage-meta.xml
-│   ├── Summary_Group_Record_Page.flexipage-meta.xml
-│   ├── Template_Record_Page.flexipage-meta.xml
-│   ├── TSMC_Detail_Lightning_Admin.flexipage-meta.xml
-│   ├── TSMC_Detail_Lightning_Detail.flexipage-meta.xml
-│   ├── University_Program_Online_Application_Record_Page1.flexipage-meta.xml
-│   ├── University_Program_Online_Application_Record_Page.flexipage-meta.xml
-│   └── Var_Profile_Record_Page.flexipage-meta.xml
-├── flows
-│   ├── Account_After_Create_Update_Event.flow-meta.xml
-│   ├── Account_Before_Create_Update_Event.flow-meta.xml
-│   ├── AsyncApex_Exception_After_Create_Event.flow-meta.xml
-│   ├── Category_Hierarchy_Before_Create_Update_Event.flow-meta.xml
-│   ├── Change_Integration_on_Opportunity_Update.flow-meta.xml
-│   ├── Change_Last_Notification_Date.flow-meta.xml
-│   ├── Docusign_Status_After_Create_Update_Event.flow-meta.xml
-│   ├── Expected_Close_Quarter_After_Create_Update_Event.flow-meta.xml
-│   ├── Forecast_After_Create_Update_Event.flow-meta.xml
-│   ├── Forecast_Target_After_Create_Event.flow-meta.xml
-│   ├── Goal_Letter_Before_Delete_Event.flow-meta.xml
-│   ├── GSS_Index_Before_Create_Update_Event.flow-meta.xml
-│   ├── Lead_After_Create_Update_Event.flow-meta.xml
-│   ├── LineItem_Before_Create_Update_Event.flow-meta.xml
-│   ├── Opportunity_After_Create_Update_Event.flow-meta.xml
-│   ├── Opportunity_Before_Create_Update_Event.flow-meta.xml
-│   ├── PO_PQ_Comparison_Result_After_Create_Update_Event.flow-meta.xml
-│   ├── Quote_After_Create_Update.flow-meta.xml
-│   ├── Quote_Before_Create_Update.flow-meta.xml
-│   ├── Quote_Line_Item_Before_Create_Update_Event.flow-meta.xml
-│   ├── Quote_Proposal_After_Create_Update_Event.flow-meta.xml
-│   ├── Quote_Proposal_Before_Create_Update_Event.flow-meta.xml
-│   └── State_Region_After_Create_Update_Event.flow-meta.xml
-├── labels
-│   └── CustomLabels.labels-meta.xml
-├── layouts
-│   ├── Account-Account Layout.layout-meta.xml
-│   ├── Account-Account-OrderFulfillment.layout-meta.xml
-│   ├── Account-Account-Sales.layout-meta.xml
-│   ├── Account-Account-Sales-WithAcctOwner.layout-meta.xml
-│   ├── Account-PAccount-Customer Master.layout-meta.xml
-│   ├── Account-PAccount-OrderFulfillment.layout-meta.xml
-│   ├── Account-PAccount-Sales.layout-meta.xml
-│   ├── Account-PAccount-Sales-withAccOwner.layout-meta.xml
-│   ├── Account-X-Account Admin.layout-meta.xml
-│   ├── AE_Acknowledgement_Flow__c-AE Acknowledgement Flow Layout.layout-meta.xml
-│   ├── APTPS_Agreement_Account_Sites__c-Agreement Account Sites Layout.layout-meta.xml
-│   ├── APTPS_NDA_User_Source_Code_Access__c-NDA User Source Code Access Layout.layout-meta.xml
-│   ├── APTS_Authorized_User_Agreement__c-Authorized User %28Agreement%29 Layout.layout-meta.xml
-│   ├── APTS_Authorized_User__c-Authorized User Layout.layout-meta.xml
-│   ├── APTS_CC_Email__c-CC Emails Layout.layout-meta.xml
-│   ├── APTS_Cloud_Service_Product__c-Cloud Service Product Layout.layout-meta.xml
-│   ├── APTS_DiscountHierarchy_BG_PG_Master_Data__c-Discount Hierarchy BG PG Master Data Layout.layout-meta.xml
-│   ├── APTS_Discount_Hierarchy__c-Discount Hierarchy Layout.layout-meta.xml
-│   ├── APTS_Discount_Hierarchy_Header__c-Discount Hierarchy Header Layout.layout-meta.xml
-│   ├── APTS_Discount_Hierarchy_template__c-Discount Hierarchy template Layout.layout-meta.xml
-│   ├── APTS_GeoInstall__c-GeoInstall Layout.layout-meta.xml
-│   ├── APTS_Multi_Region_WAN__c-Multi-Region WAN Layout.layout-meta.xml
-│   ├── APTS_OA_TCV_Threshold__mdt-APTS OA TCV Thresholds Layout.layout-meta.xml
-│   ├── APTS_OpportunityQuoteMapping__c-OpportunityQuoteMapping Layout.layout-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules__mdt-APTS Order Acceptance Fulfilment Rules Layout.layout-meta.xml
-│   ├── APTS_Package_Addendum_Table__c-Package Addendum Table Layout.layout-meta.xml
-│   ├── APTS_PL_DiscountHierarchy_Mapping__c-Discount Hierarchy Mapping Layout.layout-meta.xml
-│   ├── APTS_PQ_Table_Agreement__c-PQ Table %28Agreement%29 Layout.layout-meta.xml
-│   ├── APTS_Quote_Ramp__c-Quote Ramp Layout.layout-meta.xml
-│   ├── APTS_Quote_Rate_Table_Agreement__c-Quote Rate Table %28Agreement%29 Layout.layout-meta.xml
-│   ├── APTS_Related_Opportunity__c-Related Opportunity Layout.layout-meta.xml
-│   ├── APTS_Sub_Family_Master__c-Sub Family Master Layout.layout-meta.xml
-│   ├── Apttus__Agreement_Clause__c-Apttus__Agreement Clause Layout.layout-meta.xml
-│   ├── Apttus__Agreement_Document__c-Apttus__Agreement Document Layout.layout-meta.xml
-│   ├── Apttus__Agreement_Protection__c-Apttus__Agreement Protection Layout.layout-meta.xml
-│   ├── Apttus_Approval__Approval_Request__c-Apttus_Approval__Approval Request Layout.layout-meta.xml
-│   ├── Apttus_Approval__Approval_Request_History__c-Apttus_Approval__Approval Request History Layout.layout-meta.xml
-│   ├── Apttus__APTS_Admin__c-Apttus__Admin Layout.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-CIC OF Layout.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-CIC Requestor Layout.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-CLLA Legacy Agreement Numbers.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-CLLA OF Layout.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-CLLA OF Layout Legal.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-CLLA Requester Layout.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-CLLA Special OF Layout.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-Custom Clause - AX.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-Custom Clause.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-General NDA Legal.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-General NDA non Legal.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-LWR  Agreement Layout.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-LWR Requester Layout.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-NDA Legal User.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-NDA Requester.layout-meta.xml
-│   ├── Apttus__APTS_Agreement__c-TWR.layout-meta.xml
-│   ├── Apttus_Base2__UIComponentProvider__c-Apttus_Base2__Apttus UI Component Provider Layout.layout-meta.xml
-│   ├── Apttus_Config2__BatchJob__c-Apttus_Config2__Batch Job Layout.layout-meta.xml
-│   ├── Apttus_Config2__ClassificationHierarchy__c-Apttus_Config2__Category Hierarchy Layout.layout-meta.xml
-│   ├── Apttus_Config2__ClassificationName__c-Apttus_Config2__Category Layout.layout-meta.xml
-│   ├── Apttus_Config2__LegalEntity__c-Legal Entity Layout.layout
-│   ├── Apttus_Config2__LineItem__c-Apttus_Config2__Line Item Layout.layout-meta.xml
-│   ├── Apttus_Config2__PriceDimension__c-Apttus_Config2__Price Dimension Layout.layout-meta.xml
-│   ├── Apttus_Config2__PriceList__c-Apttus_Config2__Price List Layout.layout-meta.xml
-│   ├── Apttus_Config2__PriceListCategory__c-Apttus_Config2__Price List Category Layout.layout-meta.xml
-│   ├── Apttus_Config2__PriceListItem__c-Apttus_Config2__Price List Item Layout.layout-meta.xml
-│   ├── Apttus_Config2__ProductClassification__c-Apttus_Config2__Product Classification Layout.layout-meta.xml
-│   ├── Apttus_Config2__ProductConfiguration__c-Apttus_Config2__Product Configuration Layout.layout-meta.xml
-│   ├── Apttus_Config2__ProductFilterView__c-Apttus_Config2__Product Filter View Layout.layout-meta.xml
-│   ├── Apttus_Config2__ProductHierarchyView__c-Apttus_Config2__Product Hierarchy View Layout.layout-meta.xml
-│   ├── Apttus_Config2__SummaryGroup__c-Apttus_Config2__Summary Group Layout.layout-meta.xml
-│   ├── Apttus_Config2__UserView__c-Apttus_Config2__User View Layout.layout-meta.xml
-│   ├── Apttus__CycleTimeField__c-Apttus__Cycle Time Field Layout.layout-meta.xml
-│   ├── Apttus_DocuApi__DocuSignEnvelope__c-Apttus_DocuApi__DocuSignEnvelope Layout.layout
-│   ├── Apttus_Proposal__Proposal__c-eDA Card %2F VIP %2F MSSAC Layout Debug.layout-meta.xml
-│   ├── Apttus_Proposal__Proposal__c-eDA Card %2F VIP Proposal Layout.layout-meta.xml
-│   ├── Apttus_Proposal__Proposal__c-MS-SAC Layout.layout-meta.xml
-│   ├── Apttus_Proposal__Proposal__c-MS-TBL Layout.layout-meta.xml
-│   ├── Apttus_Proposal__Proposal__c-No Cost Amendment Layout.layout-meta.xml
-│   ├── Apttus_Proposal__Proposal__c-Proposal %2F MSTBL Layout Debug.layout-meta.xml
-│   ├── Apttus_Proposal__Proposal__c-TBL%2FSAM Layout.layout-meta.xml
-│   ├── Apttus_Proposal__Proposal__c-Term Layout Debug.layout-meta.xml
-│   ├── Apttus_Proposal__Proposal__c-Term Layout.layout-meta.xml
-│   ├── Apttus_Proposal__Proposal_Document_Output_Format__c-Apttus_Proposal__Proposal Document Output Format Layout.layout-meta.xml
-│   ├── Apttus_Proposal__Proposal_Line_Item__c-Apttus_Proposal__Proposal Line Item Layout.layout-meta.xml
-│   ├── Apttus_Release_Approver__c-Apttus Release Approver Layout.layout-meta.xml
-│   ├── Apttus__TemplateClauseReferenceVersion__c-Apttus__Template Clause Reference Version Layout.layout-meta.xml
-│   ├── Apttus__TemplateDynamicSection__c-Apttus__Template Dynamic Section Layout.layout-meta.xml
-│   ├── Apttus__TemplateDynamicSectionVersion__c-Apttus__Template Dynamic Section Version Layout.layout-meta.xml
-│   ├── Apttus__TempObject__c-Apttus__Temp Object Layout.layout-meta.xml
-│   ├── APXT_CMQM__QuickMerge_Link__c-APXT_CMQM__MassMerge Layout.layout-meta.xml
-│   ├── APXT_CMQM__QuickMerge_Link__c-APXT_CMQM__PointMerge Layout.layout-meta.xml
-│   ├── APXTConga4__Conga_Template__c-APXTConga4__Conga Template Layout.layout-meta.xml
-│   ├── ARM_Employee_Agreement_Relationship__c-ARM Employee Agreement Relationship Layout.layout-meta.xml
-│   ├── ARM_TRS_Employee_Agreement_Relationship__c-ARM TRS Employee Agreement Relationship Layout.layout-meta.xml
-│   ├── Booking_Package__c-Booking Package Layout.layout-meta.xml
-│   ├── Booking_Package__c-Prov Request Layout.layout-meta.xml
-│   ├── Cadence_Documents__c-Cadence Documents Layout.layout-meta.xml
-│   ├── Contact-Contact Layout.layout-meta.xml
-│   ├── Contact-Contact Layout Sales OF.layout-meta.xml
-│   ├── dfsle__EnvelopeStatus__c-dfsle__DocuSign Envelope Status Layout.layout-meta.xml
-│   ├── DQMAudit__c-DQMAudit Layout.layout-meta.xml
-│   ├── DQM_Product_SSP__c-DQM Product SSP Layout.layout-meta.xml
-│   ├── ER_Agreement__c-Restricted Employee Form Layout.layout-meta.xml
-│   ├── Goal_Letter__c-Goal Letter Layout.layout-meta.xml
-│   ├── Goal_Letter__c-MBO Layout.layout-meta.xml
-│   ├── Goal_Letter_Participant__c-Goal Letter Participant Layout.layout-meta.xml
-│   ├── Intel_Runda_30_Day_Email_Log__c-Intel Runda 30 Day Email Log Layout.layout-meta.xml
-│   ├── Intel_Signed_Document__c-Intel Signed Document Layout.layout-meta.xml
-│   ├── NDA_ARM_Cadence_Authorized_Employees__c-NDA ARM Cadence Authorized Employees Layout.layout-meta.xml
-│   ├── NDA_ARM_TRS_Cadence_Authorized_Employees__c-NDA ARM TRS Cadence Authorized Employees Layout.layout-meta.xml
-│   ├── NDA_RUNDA_Cadence_Authorized_Employees__c-NDA RUNDA Cadence Authorized Employees Layout.layout-meta.xml
-│   ├── NDA_RUNDA_Cadence_Employees_Refrigerated__c-NDA RUNDA Cadence Employees Refrigerated Layout.layout-meta.xml
-│   ├── NDA_SNPS_Cadence_Authorized_Employees__c-NDA SNPS Cadence Authorized Employees Layout.layout-meta.xml
-│   ├── Opportunity-Opportunity IP.layout-meta.xml
-│   ├── Opportunity-Opportunity Main.layout-meta.xml
-│   ├── Opportunity-Opportunity OrCAD Internal Layout.layout-meta.xml
-│   ├── Order-Order Layout.layout-meta.xml
-│   ├── Owner_Info__c-Intel Owner Info Layout.layout-meta.xml
-│   ├── Product_Exclusion__c-Product Exception Layout.layout-meta.xml
-│   ├── Product_Price_Type__c-Product Price Type Layout.layout-meta.xml
-│   ├── SNPS_Employee_Agreement_Relationship__c-SNPS Employee Agreement Relationship Layout.layout-meta.xml
-│   ├── TSMC_Agreement__c-Admin.layout-meta.xml
-│   ├── TSMC_Agreement__c-Detail.layout-meta.xml
-│   ├── TSMC_Agreement__c-TSMC Agreement Layout.layout-meta.xml
-│   ├── TWR_Assignment__c-TWR Assignment Layout.layout-meta.xml
-│   ├── University_Request__c-Onboarding Request Layout.layout-meta.xml
-│   ├── University_Request__c-Renewal Request Layout.layout-meta.xml
-│   ├── University_Request__c-Special Request Layout.layout-meta.xml
-│   └── Univ_GL_Docusign_Reminder__mdt-Univ GL Docusign Reminder Layout.layout-meta.xml
-├── lwc
-│   ├── approval_RecordUnlocker
-│   │   ├── approval_RecordUnlocker.css
-│   │   ├── approval_RecordUnlocker.html
-│   │   ├── approval_RecordUnlocker.js
-│   │   └── approval_RecordUnlocker.js-meta.xml
-│   ├── chevronStyleLoader
-│   │   ├── chevronStyleLoader.html
-│   │   ├── chevronStyleLoader.js
-│   │   └── chevronStyleLoader.js-meta.xml
-│   ├── clm_AgreementAddComment
-│   │   ├── clm_AgreementAddComment.html
-│   │   ├── clm_AgreementAddComment.js
-│   │   └── clm_AgreementAddComment.js-meta.xml
-│   ├── clm_apttusTwr
-│   │   ├── clm_apttusTwr.css
-│   │   ├── clm_apttusTwr.html
-│   │   ├── clm_apttusTwr.js
-│   │   └── clm_apttusTwr.js-meta.xml
-│   ├── clm_apttusUserSetupPage
-│   │   ├── clm_apttusUserSetupPage.css
-│   │   ├── clm_apttusUserSetupPage.html
-│   │   ├── clm_apttusUserSetupPage.js
-│   │   └── clm_apttusUserSetupPage.js-meta.xml
-│   ├── clm_CicSubmit
-│   │   ├── clm_CicSubmit.html
-│   │   ├── clm_CicSubmit.js
-│   │   └── clm_CicSubmit.js-meta.xml
-│   ├── clm_ErAgreementEdit
-│   │   ├── clm_ErAgreementEdit.html
-│   │   ├── clm_ErAgreementEdit.js
-│   │   └── clm_ErAgreementEdit.js-meta.xml
-│   ├── clm_GNDANotesAttachment
-│   │   ├── clm_GNDANotesAttachment.css
-│   │   ├── clm_GNDANotesAttachment.html
-│   │   ├── clm_GNDANotesAttachment.js
-│   │   └── clm_GNDANotesAttachment.js-meta.xml
-│   ├── clm_NdaEdit
-│   │   ├── clm_NdaEdit.html
-│   │   ├── clm_NdaEdit.js
-│   │   └── clm_NdaEdit.js-meta.xml
-│   ├── clm_RestrictEmployeesLink
-│   │   ├── clm_RestrictEmployeesLink.html
-│   │   ├── clm_RestrictEmployeesLink.js
-│   │   └── clm_RestrictEmployeesLink.js-meta.xml
-│   ├── cloudProductDelete
-│   │   ├── cloudProductDelete.html
-│   │   ├── cloudProductDelete.js
-│   │   └── cloudProductDelete.js-meta.xml
-│   ├── cpq_DQMVersionManagerLink
-│   │   ├── cpq_DQMVersionManagerLink.html
-│   │   ├── cpq_DQMVersionManagerLink.js
-│   │   └── cpq_DQMVersionManagerLink.js-meta.xml
-│   ├── createOpportunity
-│   │   ├── createOpportunity.html
-│   │   ├── createOpportunity.js
-│   │   └── createOpportunity.js-meta.xml
-│   ├── cs_Aes_FrequentLinks
-│   │   ├── cs_Aes_FrequentLinks.html
-│   │   ├── cs_Aes_FrequentLinks.js
-│   │   └── cs_Aes_FrequentLinks.js-meta.xml
-│   ├── cs_AesLegal
-│   │   ├── cs_AesLegal.html
-│   │   ├── cs_AesLegal.js
-│   │   └── cs_AesLegal.js-meta.xml
-│   ├── requestPaymentTerm_LWC
-│   │   ├── requestPaymentTerm_LWC.html
-│   │   ├── requestPaymentTerm_LWC.js
-│   │   └── requestPaymentTerm_LWC.js-meta.xml
-│   ├── sales_UsefulLinks
-│   │   ├── sales_UsefulLinks.html
-│   │   ├── sales_UsefulLinks.js
-│   │   └── sales_UsefulLinks.js-meta.xml
-│   ├── seedOpportunity
-│   │   ├── seedOpportunity.html
-│   │   ├── seedOpportunity.js
-│   │   └── seedOpportunity.js-meta.xml
-│   ├── transferAndShareOppty
-│   │   ├── transferAndShareOppty.html
-│   │   ├── transferAndShareOppty.js
-│   │   └── transferAndShareOppty.js-meta.xml
-│   ├── tsmcCompleteAgreement
-│   │   ├── tsmcCompleteAgreement.html
-│   │   ├── tsmcCompleteAgreement.js
-│   │   └── tsmcCompleteAgreement.js-meta.xml
-│   ├── univ_UniversityRequestEditPage
-│   │   ├── univ_UniversityRequestEditPage.css
-│   │   ├── univ_UniversityRequestEditPage.html
-│   │   ├── univ_UniversityRequestEditPage.js
-│   │   └── univ_UniversityRequestEditPage.js-meta.xml
-│   └── var_MassUpload
-│       ├── var_MassUpload.html
-│       ├── var_MassUpload.js
-│       └── var_MassUpload.js-meta.xml
-├── objects
-│   ├── Account
-│   │   ├── listViews
-│   │   │   └── Org_Account_Hierarchy.listView-meta.xml
-│   │   └── validationRules
-│   │       ├── Account_Name_Length_Not_Be_GtrTh_35_Char.validationRule-meta.xml
-│   │       ├── Address_3_Length_Not_Be_GtrTh_40_Char.validationRule-meta.xml
-│   │       ├── Address_4_Length_Not_Be_GtrTh_40_Char.validationRule-meta.xml
-│   │       ├── Cannot_Inactive_a_non_Active_Account.validationRule-meta.xml
-│   │       ├── ChinaTaxIDAllowedForSoldToOrProspect.validationRule-meta.xml
-│   │       ├── China_Tax_ID_Field_Validation.validationRule-meta.xml
-│   │       ├── China_Tax_ID_Reqd_for_China_PartnersOnly.validationRule-meta.xml
-│   │       ├── City_Name_Length_Not_Be_GtrTh_35_Char.validationRule-meta.xml
-│   │       ├── Customer_Name_req_for_Active_Sold_To.validationRule-meta.xml
-│   │       ├── Division_Length_Not_Be_GtrTh_40_Char.validationRule-meta.xml
-│   │       ├── SAPRequiredCountry.validationRule-meta.xml
-│   │       ├── SoldToAccount_MUST_Be_Active.validationRule-meta.xml
-│   │       └── Street_Not_Be_GtrTh_35_Char.validationRule-meta.xml
-│   ├── APTPS_Agreement_Account_Sites__c
-│   │   └── APTPS_Agreement_Account_Sites__c.object-meta.xml
-│   ├── APTPS_NDA_User_Source_Code_Access__c
-│   │   └── APTPS_NDA_User_Source_Code_Access__c.object-meta.xml
-│   ├── APTS_Authorized_User_Agreement__c
-│   │   └── APTS_Authorized_User_Agreement__c.object-meta.xml
-│   ├── APTS_CC_Email__c
-│   │   └── APTS_CC_Email__c.object-meta.xml
-│   ├── APTS_GeoInstall__c
-│   │   └── APTS_GeoInstall__c.object-meta.xml
-│   ├── APTS_Multi_Region_WAN__c
-│   │   └── APTS_Multi_Region_WAN__c.object-meta.xml
-│   ├── APTS_OA_TCV_Threshold__mdt
-│   │   ├── APTS_OA_TCV_Threshold__mdt.object-meta.xml
-│   │   └── fields
-│   │       ├── Non_STD_TCV_Threshold__c.field-meta.xml
-│   │       ├── Region_Country__c.field-meta.xml
-│   │       ├── TCV_Threshold__c.field-meta.xml
-│   │       └── Transaction_Type__c.field-meta.xml
-│   ├── APTS_Order_Acceptance_Fullfilment_Rules__mdt
-│   │   ├── APTS_Order_Acceptance_Fullfilment_Rules__mdt.object-meta.xml
-│   │   └── fields
-│   │       ├── Apts_Active__c.field-meta.xml
-│   │       ├── APTS_Breach_Reason__c.field-meta.xml
-│   │       ├── APTS_Expected_Value__c.field-meta.xml
-│   │       ├── APTS_Proposal_Field_API__c.field-meta.xml
-│   │       ├── APTS_Rule_No__c.field-meta.xml
-│   │       └── Transaction_Type__c.field-meta.xml
-│   ├── APTS_PO_PQ_Comparison_Result__c
-│   │   ├── APTS_PO_PQ_Comparison_Result__c.object-meta.xml
-│   │   └── fields
-│   │       ├── Differences_Result__c.field-meta.xml
-│   │       ├── JSON_Output__c.field-meta.xml
-│   │       ├── Order_Acceptance_Result__c.field-meta.xml
-│   │       └── Proposal_Id__c.field-meta.xml
-│   ├── Apttus__APTS_Agreement__c
-│   │   ├── Apttus__APTS_Agreement__c.object-meta.xml
-│   │   ├── fields
-│   │   │   ├── APTPS_Agreement_Type__c.field-meta.xml
-│   │   │   ├── APTPS_CLLA_Requesters_Rep_VP__c.field-meta.xml
-│   │   │   ├── APTPS_Generate__c.field-meta.xml
-│   │   │   ├── APTPS_License_Fulfillment_Owner__c.field-meta.xml
-│   │   │   ├── APTPS_Regenerate__c.field-meta.xml
-│   │   │   ├── ARM_Request_Type__c.field-meta.xml
-│   │   │   ├── COD_Activation_Date__c.field-meta.xml
-│   │   │   ├── Employee_Name_in_SFDC__c.field-meta.xml
-│   │   │   ├── NDA_APTPS_Generate__c.field-meta.xml
-│   │   │   ├── NDA_APTPS_Preview_Button__c.field-meta.xml
-│   │   │   ├── NDA_APTPS_Regenerate__c.field-meta.xml
-│   │   │   └── TRS_Owner__c.field-meta.xml
-│   │   ├── recordTypes
-│   │   │   ├── CIC.recordType-meta.xml
-│   │   │   ├── CLLA.recordType-meta.xml
-│   │   │   ├── Custom_Clause.recordType-meta.xml
-│   │   │   ├── General_NDA.recordType-meta.xml
-│   │   │   ├── Legacy_Agreement_Numbers.recordType-meta.xml
-│   │   │   ├── NDA.recordType-meta.xml
-│   │   │   └── TWR.recordType-meta.xml
-│   │   ├── validationRules
-│   │   │   └── APTS_RestrictExtUserRequestorSelection.validationRule-meta.xml
-│   │   └── webLinks
-│   │       ├── Clone_LEX.webLink-meta.xml
-│   │       ├── Edit_Saved_Request_CIC.webLink-meta.xml
-│   │       ├── Edit_Saved_Request_LEX.webLink-meta.xml
-│   │       └── Submit_For_Approval_LEX.webLink-meta.xml
-│   ├── Apttus_Config2__ClassificationHierarchy__c
-│   │   └── Apttus_Config2__ClassificationHierarchy__c.object-meta.xml
-│   ├── Apttus_Config2__ClassificationName__c
-│   │   └── Apttus_Config2__ClassificationName__c.object-meta.xml
-│   ├── Apttus_Config2__LineItem__c
-│   │   └── Apttus_Config2__LineItem__c.object-meta.xml
-│   ├── Apttus_Config2__PriceDimension__c
-│   │   ├── Apttus_Config2__PriceDimension__c.object-meta.xml
-│   │   └── webLinks
-│   │       └── Edit.webLink-meta.xml
-│   ├── Apttus_Config2__PriceList__c
-│   │   └── Apttus_Config2__PriceList__c.object-meta.xml
-│   ├── Apttus_Config2__PriceListItem__c
-│   │   └── Apttus_Config2__PriceListItem__c.object-meta.xml
-│   ├── Apttus_Config2__ProductConfiguration__c
-│   │   └── Apttus_Config2__ProductConfiguration__c.object-meta.xml
-│   ├── Apttus_Config2__ProductFilterView__c
-│   │   └── Apttus_Config2__ProductFilterView__c.object-meta.xml
-│   ├── Apttus__CycleTimeField__c
-│   │   └── Apttus__CycleTimeField__c.object-meta.xml
-│   ├── Apttus_Proposal__Proposal__c
-│   │   ├── Apttus_Proposal__Proposal__c.object-meta.xml
-│   │   ├── fields
-│   │   │   ├── APTS_Accept_Order__c.field-meta.xml
-│   │   │   ├── APTS_Check_eSignature_Status__c.field-meta.xml
-│   │   │   ├── APTS_Generate__c.field-meta.xml
-│   │   │   ├── APTS_Is_Manual_PQ_For_OA__c.field-meta.xml
-│   │   │   ├── APTS_IsShipToMatchAnyCntryUsage__c.field-meta.xml
-│   │   │   ├── APTS_OA_Breach_Reason__c.field-meta.xml
-│   │   │   ├── APTS_OA_Fulfillment__c.field-meta.xml
-│   │   │   ├── APTS_Order_Acceptance_Result__c.field-meta.xml
-│   │   │   ├── APTS_Order_Acceptance_Status__c.field-meta.xml
-│   │   │   ├── APTS_Recall_Order_Acceptance__c.field-meta.xml
-│   │   │   ├── Is_NONSTD_TCV_Threshold_Met__c.field-meta.xml
-│   │   │   └── Is_OA_TCV_Threshold_Met__c.field-meta.xml
-│   │   ├── fieldSets
-│   │   │   └── APTS_Cloning_FieldSet.fieldSet-meta.xml
-│   │   ├── validationRules
-│   │   │   ├── APTS_Currency_Blank_Validation.validationRule-meta.xml
-│   │   │   └── APTS_EducationServicesCannotBeNegative.validationRule-meta.xml
-│   │   └── webLinks
-│   │       ├── APTS_View_Deal_Quality_Matrix.webLink-meta.xml
-│   │       └── APTS_View_Quote_Rate_Table.webLink-meta.xml
-│   ├── Apttus_Proposal__Proposal_Line_Item__c
-│   │   ├── Apttus_Proposal__Proposal_Line_Item__c.object-meta.xml
-│   │   └── fields
-│   │       ├── SequenceLine__c.field-meta.xml
-│   │       └── SequenceOption__c.field-meta.xml
-│   ├── Apttus_Release_Approver__c
-│   │   └── Apttus_Release_Approver__c.object-meta.xml
-│   ├── ARM_Employee_Agreement_Relationship__c
-│   │   └── ARM_Employee_Agreement_Relationship__c.object-meta.xml
-│   ├── ARM_TRS_Employee_Agreement_Relationship__c
-│   │   └── ARM_TRS_Employee_Agreement_Relationship__c.object-meta.xml
-│   ├── ArticleRelatedConfig__c
-│   │   └── fields
-│   │       └── FieldValue__c.field-meta.xml
-│   ├── Booking_Package__c
-│   │   └── fields
-│   │       └── APTS_Order_Acceptance_Result__c.field-meta.xml
-│   ├── Cadence_Documents__c
-│   │   └── Cadence_Documents__c.object-meta.xml
-│   ├── Contact
-│   │   └── validationRules
-│   │       └── Phone_Field_Validation.validationRule-meta.xml
-│   ├── dfsle__EnvelopeStatus__c
-│   │   ├── dfsle__EnvelopeStatus__c.object-meta.xml
-│   │   ├── fields
-│   │   │   ├── dfsle__Account__c.field-meta.xml
-│   │   │   ├── dfsle__Case__c.field-meta.xml
-│   │   │   ├── dfsle__Completed__c.field-meta.xml
-│   │   │   ├── dfsle__Contact__c.field-meta.xml
-│   │   │   ├── dfsle__Contract__c.field-meta.xml
-│   │   │   ├── dfsle__DocuSignId__c.field-meta.xml
-│   │   │   ├── dfsle__EmailSubject__c.field-meta.xml
-│   │   │   ├── dfsle__Expires__c.field-meta.xml
-│   │   │   ├── dfsle__LastStatusUpdate__c.field-meta.xml
-│   │   │   ├── dfsle__Lead__c.field-meta.xml
-│   │   │   ├── dfsle__Opportunity__c.field-meta.xml
-│   │   │   ├── dfsle__Reason__c.field-meta.xml
-│   │   │   ├── dfsle__SenderEmail__c.field-meta.xml
-│   │   │   ├── dfsle__SenderName__c.field-meta.xml
-│   │   │   ├── dfsle__Sent__c.field-meta.xml
-│   │   │   ├── dfsle__SourceId__c.field-meta.xml
-│   │   │   ├── dfsle__Status__c.field-meta.xml
-│   │   │   ├── dfsle__TimeToComplete__c.field-meta.xml
-│   │   │   ├── Goal_Letter__c.field-meta.xml
-│   │   │   ├── TSMC_Request__c.field-meta.xml
-│   │   │   └── University_Program_Online_Application__c.field-meta.xml
-│   │   ├── listViews
-│   │   │   ├── dfsle__AllCompleted.listView-meta.xml
-│   │   │   ├── dfsle__AllEnvelopes.listView-meta.xml
-│   │   │   └── dfsle__All.listView-meta.xml
-│   │   └── webLinks
-│   │       └── dfsle__ViewEnvelope.webLink-meta.xml
-│   ├── ER_Agreement__c
-│   │   ├── ER_Agreement__c.object-meta.xml
-│   │   ├── fields
-│   │   │   ├── Backup_Requestor__c.field-meta.xml
-│   │   │   ├── Employee_Name_in_SFDC__c.field-meta.xml
-│   │   │   └── URL_Link_To_Request__c.field-meta.xml
-│   │   └── webLinks
-│   │       └── Edit_Saved_Agreement.webLink-meta.xml
-│   ├── Goal_Letter__c
-│   │   └── fields
-│   ├── Intel_Runda_30_Day_Email_Log__c
-│   │   └── Intel_Runda_30_Day_Email_Log__c.object-meta.xml
-│   ├── NDA_ARM_Cadence_Authorized_Employees__c
-│   │   └── fields
-│   │       └── End_Flow_URL__c.field-meta.xml
-│   ├── NDA_RUNDA_Cadence_Authorized_Employees__c
-│   │   └── webLinks
-│   │       └── Email_Employees_Mgt.webLink-meta.xml
-│   ├── NDA_RUNDA_Cadence_Employees_Refrigerated__c
-│   │   └── webLinks
-│   │       └── Email_Employees_Mgt.webLink-meta.xml
-│   ├── NDA_SNPS_Cadence_Authorized_Employees__c
-│   │   └── fields
-│   │       └── End_Flow_URL__c.field-meta.xml
-│   ├── Opportunity
-│   │   ├── fields
-│   │   │   ├── HRC_Opportunity_Status__c.field-meta.xml
-│   │   │   ├── IP_Product_Category__c.field-meta.xml
-│   │   │   ├── Probability__c.field-meta.xml
-│   │   │   └── Territory__c.field-meta.xml
-│   │   ├── Opportunity.object-meta.xml
-│   │   └── recordTypes
-│   │       ├── IP.recordType-meta.xml
-│   │       ├── OrCAD.recordType-meta.xml
-│   │       └── SW_HW.recordType-meta.xml
-│   ├── Order
-│   │   ├── Order.object-meta.xml
-│   │   └── webLinks
-│   │       └── View_Order_Details_Lightning.webLink-meta.xml
-│   ├── Owner_Info__c
-│   │   └── Owner_Info__c.object-meta.xml
-│   ├── Product_Exclusion__c
-│   │   └── Product_Exclusion__c.object-meta.xml
-│   ├── Quote
-│   │   └── webLinks
-│   │       └── TIP_Terms.webLink-meta.xml
-│   ├── SVMXC__Service_Order__c
-│   │   └── validationRules
-│   │       └── FS_Validation_For_Account.validationRule-meta.xml
-│   ├── TSMC_Agreement__c
-│   │   ├── fields
-│   │   │   ├── Are_you_from_Foundation_IP_Team__c.field-meta.xml
-│   │   │   ├── Office_Site__c.field-meta.xml
-│   │   │   ├── Process_Node__c.field-meta.xml
-│   │   │   ├── Requestor__c.field-meta.xml
-│   │   │   └── User__c.field-meta.xml
-│   │   ├── recordTypes
-│   │   │   └── Detail.recordType-meta.xml
-│   │   ├── TSMC_Agreement__c.object-meta.xml
-│   │   ├── validationRules
-│   │   │   ├── Are_from_Foundation_IP_Team.validationRule-meta.xml
-│   │   │   ├── Sales_AE_Field_EDA.validationRule-meta.xml
-│   │   │   ├── Sales_AE_Field_IP.validationRule-meta.xml
-│   │   │   └── Validate_Foundation_IP_Team_Purpose.validationRule-meta.xml
-│   │   └── webLinks
-│   │       ├── Approve_List_Lightning.webLink-meta.xml
-│   │       └── Bulk_Complete.webLink-meta.xml
-│   └── Univ_GL_Docusign_Reminder__mdt
-│       ├── fields
-│       │   └── Value__c.field-meta.xml
-│       └── Univ_GL_Docusign_Reminder__mdt.object-meta.xml
-├── package.xml
-├── pages
-│   ├── AccountAgreementList_VP.page
-│   ├── AccountAgreementList_VP.page-meta.xml
-│   ├── AccountContentTab.page
-│   ├── AccountContentTab.page-meta.xml
-│   ├── AEAcknowledgementDetailPage.page
-│   ├── AEAcknowledgementDetailPage.page-meta.xml
-│   ├── AEAckUploadPage.page
-│   ├── AEAckUploadPage.page-meta.xml
-│   ├── AgreementActivateNew.page
-│   ├── AgreementActivateNew.page-meta.xml
-│   ├── Agreement_Add_Comments.page
-│   ├── Agreement_Add_Comments.page-meta.xml
-│   ├── Agreement_Detail.page
-│   ├── Agreement_Detail.page-meta.xml
-│   ├── AprReqList.page
-│   ├── AprReqList.page-meta.xml
-│   ├── AprReqts.page
-│   ├── AprReqts.page-meta.xml
-│   ├── Aptps_AgreementTypeSelection.page
-│   ├── Aptps_AgreementTypeSelection.page-meta.xml
-│   ├── APTPSCLLA.page
-│   ├── APTPSCLLA.page-meta.xml
-│   ├── APTPSEDITCLLA.page
-│   ├── APTPSEDITCLLA.page-meta.xml
-│   ├── APTPS_EDIT.page
-│   ├── APTPS_EDIT.page-meta.xml
-│   ├── Aptps_LegacyNumbers.page
-│   ├── Aptps_LegacyNumbers.page-meta.xml
-│   ├── APTPSNDA_CadenceEmployees.page
-│   ├── APTPSNDA_CadenceEmployees.page-meta.xml
-│   ├── APTPS_NDA_DocumentUpload.page
-│   ├── APTPS_NDA_DocumentUpload.page-meta.xml
-│   ├── APTPS_NDA.page
-│   ├── APTPS_NDA.page-meta.xml
-│   ├── APTPSSUBMITREQUEST.page
-│   ├── APTPSSUBMITREQUEST.page-meta.xml
-│   ├── APTPS_TWR.page
-│   ├── APTPS_TWR.page-meta.xml
-│   ├── APTS_AcceptOrder.page
-│   ├── APTS_AcceptOrder.page-meta.xml
-│   ├── AptsAgmtLineItemSubmit.page
-│   ├── AptsAgmtLineItemSubmit.page-meta.xml
-│   ├── APTS_CloudProductDelete.page
-│   ├── APTS_CloudProductDelete.page-meta.xml
-│   ├── APTS_CloudProductFilter.page
-│   ├── APTS_CloudProductFilter.page-meta.xml
-│   ├── APTS_CloudProductPage.page
-│   ├── APTS_CloudProductPage.page-meta.xml
-│   ├── APTS_CreateRampOnQuoteVF.page
-│   ├── APTS_CreateRampOnQuoteVF.page-meta.xml
-│   ├── Apts_CustomAgreementNumbersLookup.page
-│   ├── Apts_CustomAgreementNumbersLookup.page-meta.xml
-│   ├── APTS_CustomDHLookup.page
-│   ├── APTS_CustomDHLookup.page-meta.xml
-│   ├── APTS_CustomGenerate.page
-│   ├── APTS_CustomGenerate.page-meta.xml
-│   ├── Apts_CustomOpportunityLookup.page
-│   ├── Apts_CustomOpportunityLookup.page-meta.xml
-│   ├── APTS_CustomProducttLookup.page
-│   ├── APTS_CustomProducttLookup.page-meta.xml
-│   ├── APTS_DiscountHierarchy.page
-│   ├── APTS_DiscountHierarchy.page-meta.xml
-│   ├── APTS_DQMDashBoard.page
-│   ├── APTS_DQMDashBoard.page-meta.xml
-│   ├── APTS_EditHostId.page
-│   ├── APTS_EditHostId.page-meta.xml
-│   ├── APTS_EditInExcelPage.page
-│   ├── APTS_EditInExcelPage.page-meta.xml
-│   ├── Apts_FileUploader.page
-│   ├── Apts_FileUploader.page-meta.xml
-│   ├── APTS_ImportFromExcel.page
-│   ├── APTS_ImportFromExcel.page-meta.xml
-│   ├── APTS_MakePrimaryPage.page
-│   ├── APTS_MakePrimaryPage.page-meta.xml
-│   ├── APTS_MarkQuoteSignedPage.page
-│   ├── APTS_MarkQuoteSignedPage.page-meta.xml
-│   ├── APTS_PaymentSchedulePage.page
-│   ├── APTS_PaymentSchedulePage.page-meta.xml
-│   ├── APTS_PresentPage.page
-│   ├── APTS_PresentPage.page-meta.xml
-│   ├── APTS_ProductAvailabilityVF.page
-│   ├── APTS_ProductAvailabilityVF.page-meta.xml
-│   ├── APTS_PullQuoteDataOnAgreement.page
-│   ├── APTS_PullQuoteDataOnAgreement.page-meta.xml
-│   ├── APTS_QuoteAprReqsPage.page
-│   ├── APTS_QuoteAprReqsPage.page-meta.xml
-│   ├── APTS_QuoteConfigurePage.page
-│   ├── APTS_QuoteConfigurePage.page-meta.xml
-│   ├── APTS_QuoteExportPage.page
-│   ├── APTS_QuoteExportPage.page-meta.xml
-│   ├── APTS_QuotePricingAprReqsPage.page
-│   ├── APTS_QuotePricingAprReqsPage.page-meta.xml
-│   ├── APTS_QuoteRateTable.page
-│   ├── APTS_QuoteRateTable.page-meta.xml
-│   ├── APTS_QuoteReOpenPage.page
-│   ├── APTS_QuoteReOpenPage.page-meta.xml
-│   ├── APTS_QuoteToEOTContractExportPage.page
-│   ├── APTS_QuoteToEOTContractExportPage.page-meta.xml
-│   ├── APTS_RecallFullySigned.page
-│   ├── APTS_RecallFullySigned.page-meta.xml
-│   ├── APTS_RecallPricingDQMApproval_VF.page
-│   ├── APTS_RecallPricingDQMApproval_VF.page-meta.xml
-│   ├── APTS_RecallSignaturesPage.page
-│   ├── APTS_RecallSignaturesPage.page-meta.xml
-│   ├── APTS_RecallSubmitforSFReviewPage.page
-│   ├── APTS_RecallSubmitforSFReviewPage.page-meta.xml
-│   ├── APTS_RecallTsAndCsApproval_VF.page
-│   ├── APTS_RecallTsAndCsApproval_VF.page-meta.xml
-│   ├── APTS_RelatedProposalsPage.page
-│   ├── APTS_RelatedProposalsPage.page-meta.xml
-│   ├── APTS_RequestAdditionClause.page
-│   ├── APTS_RequestAdditionClause.page-meta.xml
-│   ├── APTS_RequestBaseAgreementPage.page
-│   ├── APTS_RequestBaseAgreementPage.page-meta.xml
-│   ├── APTS_RunOnDemandBatchJobs.page
-│   ├── APTS_RunOnDemandBatchJobs.page-meta.xml
-│   ├── APTS_SelectTransactionTypeVF.page
-│   ├── APTS_SelectTransactionTypeVF.page-meta.xml
-│   ├── APTS_SendforeSignaturePage.page
-│   ├── APTS_SendforeSignaturePage.page-meta.xml
-│   ├── APTSSoftwareHardware.page
-│   ├── APTSSoftwareHardware.page-meta.xml
-│   ├── APTSSoftwareHardwareTempKey.page
-│   ├── APTSSoftwareHardwareTempKey.page-meta.xml
-│   ├── APTS_SubmitforPricingDQMPage.page
-│   ├── APTS_SubmitforPricingDQMPage.page-meta.xml
-│   ├── APTS_SubmitforSFReview.page
-│   ├── APTS_SubmitforSFReview.page-meta.xml
-│   ├── APTS_SubmitTnCApprovalNCA.page
-│   ├── APTS_SubmitTnCApprovalNCA.page-meta.xml
-│   ├── APTS_Synchronize_with_QuoteDQM.page
-│   ├── APTS_Synchronize_with_QuoteDQM.page-meta.xml
-│   ├── APTS_SyncWithOpportunity.page
-│   ├── APTS_SyncWithOpportunity.page-meta.xml
-│   ├── APTS_UpdateParentProposalVF.page
-│   ├── APTS_UpdateParentProposalVF.page-meta.xml
-│   ├── APTS_ViewDiscountHierarchy.page
-│   ├── APTS_ViewDiscountHierarchy.page-meta.xml
-│   ├── APTS_ViewReadOnlyConfigVFPage.page
-│   ├── APTS_ViewReadOnlyConfigVFPage.page-meta.xml
-│   ├── Apttus_cancel_request.page
-│   ├── Apttus_cancel_request.page-meta.xml
-│   ├── ApttusUserSetupPage.page
-│   ├── ApttusUserSetupPage.page-meta.xml
-│   ├── ARM_Access_End_Flow.page
-│   ├── ARM_Access_End_Flow.page-meta.xml
-│   ├── ARM_TRS_End_Flow.page
-│   ├── ARM_TRS_End_Flow.page-meta.xml
-│   ├── ArticlesAdditionalDetailsPage.page
-│   ├── ArticlesAdditionalDetailsPage.page-meta.xml
-│   ├── Authorized_Employee_HelpText.page
-│   ├── Authorized_Employee_HelpText.page-meta.xml
-│   ├── Booking_Package_Content_Tab.page
-│   ├── Booking_Package_Content_Tab.page-meta.xml
-│   ├── cadenceLoginHostidRefkeyScreen.page
-│   ├── cadenceLoginHostidRefkeyScreen.page-meta.xml
-│   ├── ChangeOppOwner_VP.page
-│   ├── ChangeOppOwner_VP.page-meta.xml
-│   ├── ContactRelatedEntitlementList_VF.page
-│   ├── ContactRelatedEntitlementList_VF.page-meta.xml
-│   ├── COSCaseCreatePage.page
-│   ├── COSCaseCreatePage.page-meta.xml
-│   ├── Coveo_CommunitySearch.page
-│   ├── Coveo_CommunitySearch.page-meta.xml
-│   ├── CreateContentRecord.page
-│   ├── CreateContentRecord.page-meta.xml
-│   ├── CreateLegalCommitment.page
-│   ├── CreateLegalCommitment.page-meta.xml
-│   ├── CustApvl_HandleSubmitForApprovalVF.page
-│   ├── CustApvl_HandleSubmitForApprovalVF.page-meta.xml
-│   ├── CustApvl_InlineApprovalInformationVF.page
-│   ├── CustApvl_InlineApprovalInformationVF.page-meta.xml
-│   ├── CustomEmailTemplateForRef.page
-│   ├── CustomEmailTemplateForRef.page-meta.xml
-│   ├── CustomEmailTemplate.page
-│   ├── CustomEmailTemplate.page-meta.xml
-│   ├── CustomLineItemsList.page
-│   ├── CustomLineItemsList.page-meta.xml
-│   ├── CustomLineItems.page
-│   ├── CustomLineItems.page-meta.xml
-│   ├── DeleteNDAAuthorizedEmployee.page
-│   ├── DeleteNDAAuthorizedEmployee.page-meta.xml
-│   ├── DeleteNDARefrigeratedEmployee.page
-│   ├── DeleteNDARefrigeratedEmployee.page-meta.xml
-│   ├── EditLegalCommitment.page
-│   ├── EditLegalCommitment.page-meta.xml
-│   ├── ER_AddNamesFlow.page
-│   ├── ER_AddNamesFlow.page-meta.xml
-│   ├── ER_DocumentUpload.page
-│   ├── ER_DocumentUpload.page-meta.xml
-│   ├── ER_RequestFlow.page
-│   ├── ER_RequestFlow.page-meta.xml
-│   ├── ExhibitDTLA.page
-│   ├── ExhibitDTLA.page-meta.xml
-│   ├── FastTrackApproval_VP.page
-│   ├── FastTrackApproval_VP.page-meta.xml
-│   ├── generateIntelRundaExcelReport.page
-│   ├── generateIntelRundaExcelReport.page-meta.xml
-│   ├── generateIntelRundaReport.page
-│   ├── generateIntelRundaReport.page-meta.xml
-│   ├── GNDA_Actions.page
-│   ├── GNDA_Actions.page-meta.xml
-│   ├── GNDA_Family.page
-│   ├── GNDA_Family.page-meta.xml
-│   ├── GNDA_Notesandattachments.page
-│   ├── GNDA_Notesandattachments.page-meta.xml
-│   ├── GNDA_Purpose.page
-│   ├── GNDA_Purpose.page-meta.xml
-│   ├── GoalLetterDetailLink.page
-│   ├── GoalLetterDetailLink.page-meta.xml
-│   ├── GoalLetterDetail.page
-│   ├── GoalLetterDetail.page-meta.xml
-│   ├── GoalLetterEditButton.page
-│   ├── GoalLetterEditButton.page-meta.xml
-│   ├── GoalLetterList.page
-│   ├── GoalLetterList.page-meta.xml
-│   ├── GoalLetterManagerSearch.page
-│   ├── GoalLetterManagerSearch.page-meta.xml
-│   ├── Goal_Letter.page
-│   ├── Goal_Letter.page-meta.xml
-│   ├── GoalLetterSearch.page
-│   ├── GoalLetterSearch.page-meta.xml
-│   ├── GoalLetterUploadPage.page
-│   ├── GoalLetterUploadPage.page-meta.xml
-│   ├── InLineVF_ProductGroup.page
-│   ├── InLineVF_ProductGroup.page-meta.xml
-│   ├── IntelRundaReport_VF.page
-│   ├── IntelRundaReport_VF.page-meta.xml
-│   ├── LegalCommitmentAccountView.page
-│   ├── LegalCommitmentAccountView.page-meta.xml
-│   ├── LegalCommitmentOpportunityView.page
-│   ├── LegalCommitmentOpportunityView.page-meta.xml
-│   ├── ListDA.page
-│   ├── ListDA.page-meta.xml
-│   ├── ListHostID.page
-│   ├── ListHostID.page-meta.xml
-│   ├── LWR.page
-│   ├── LWR.page-meta.xml
-│   ├── ManageDQM.page
-│   ├── ManageDQM.page-meta.xml
-│   ├── MyCustomTaskListPage.page
-│   ├── MyCustomTaskListPage.page-meta.xml
-│   ├── NDANotification.page
-│   ├── NDANotification.page-meta.xml
-│   ├── NDASearch.page
-│   ├── NDASearch.page-meta.xml
-│   ├── NDAUpload.page
-│   ├── NDAUpload.page-meta.xml
-│   ├── NewMessagePage.page
-│   ├── NewMessagePage.page-meta.xml
-│   ├── OpportunityContentTab.page
-│   ├── OpportunityContentTab.page-meta.xml
-│   ├── ParentAccountTeamPage_VP.page
-│   ├── ParentAccountTeamPage_VP.page-meta.xml
-│   ├── productGroupConfiguration.page
-│   ├── productGroupConfiguration.page-meta.xml
-│   ├── QuoteHeaderMessagePage.page
-│   ├── QuoteHeaderMessagePage.page-meta.xml
-│   ├── Refrigerated_Employee_HelpText.page
-│   ├── Refrigerated_Employee_HelpText.page-meta.xml
-│   ├── RestrictedEmployeeForm.page
-│   ├── RestrictedEmployeeForm.page-meta.xml
-│   ├── Royalty.page
-│   ├── Royalty.page-meta.xml
-│   ├── RundaHistory.page
-│   ├── RundaHistory.page-meta.xml
-│   ├── RundaNoteAttach.page
-│   ├── RundaNoteAttach.page-meta.xml
-│   ├── RundaSignedPage.page
-│   ├── RundaSignedPage.page-meta.xml
-│   ├── secure_store_owner_help_text.page
-│   ├── secure_store_owner_help_text.page-meta.xml
-│   ├── SendEmailPreProcess.page
-│   ├── SendEmailPreProcess.page-meta.xml
-│   ├── SendMailForAcknowledgementPage.page
-│   ├── SendMailForAcknowledgementPage.page-meta.xml
-│   ├── SNPS_End_Flow.page
-│   ├── SNPS_End_Flow.page-meta.xml
-│   ├── SNPS_Information_Inline.page
-│   ├── SNPS_Information_Inline.page-meta.xml
-│   ├── SubmitSolutionInternal.page
-│   ├── SubmitSolutionInternal.page-meta.xml
-│   ├── TSMC_BulkApproveVF.page
-│   ├── TSMC_BulkApproveVF.page-meta.xml
-│   ├── TSMC_BulkCompleteVF.page
-│   ├── TSMC_BulkCompleteVF.page-meta.xml
-│   ├── TSMC_Detail.page
-│   ├── TSMC_Detail.page-meta.xml
-│   ├── TSMC_Edit.page
-│   ├── TSMC_Edit.page-meta.xml
-│   ├── TSMCError.page
-│   ├── TSMCError.page-meta.xml
-│   ├── TSMC_Note.page
-│   ├── TSMC_Note.page-meta.xml
-│   ├── TWR_Actions.page
-│   ├── TWR_Actions.page-meta.xml
-│   ├── TWR_Error.page
-│   ├── TWR_Error.page-meta.xml
-│   ├── TWR_LMT.page
-│   ├── TWR_LMT.page-meta.xml
-│   ├── TWRNoteAtt.page
-│   ├── TWRNoteAtt.page-meta.xml
-│   ├── TWRreview.page
-│   ├── TWRreview.page-meta.xml
-│   ├── UploadNDA.page
-│   └── UploadNDA.page-meta.xml
-├── permissionsets
-│   ├── Apttus_requester_PS.permissionset-meta.xml
-│   ├── Apttus_User_Setup_Page_PS.permissionset-meta.xml
-│   ├── Betacae_objects.permissionset-meta.xml
-│   ├── Cadence_Account_Executive.permissionset-meta.xml
-│   ├── Cadence_CPQ_Read_Only_PS.permissionset-meta.xml
-│   ├── Cadence_DQM_Data_Master_Admin.permissionset-meta.xml
-│   ├── Cadence_Field_Order_Reps.permissionset-meta.xml
-│   ├── Cadence_Legal_User.permissionset-meta.xml
-│   ├── Cadence_Partner_Access.permissionset-meta.xml
-│   ├── Cadence_Sales_Finance_User_New.permissionset-meta.xml
-│   ├── Cadence_Sales_Ops_and_IT_Admin_User.permissionset-meta.xml
-│   ├── Conga_CLM_Lightning_Access.permissionset-meta.xml
-│   ├── Contract_Exception.permissionset-meta.xml
-│   ├── DashboardCreateViewAllData.permissionset-meta.xml
-│   ├── DIP_Mrktng.permissionset-meta.xml
-│   ├── DQP_Edit_Right.permissionset-meta.xml
-│   ├── GDPR_Admin.permissionset-meta.xml
-│   ├── Goal_Letter_PS.permissionset-meta.xml
-│   ├── Inside_Sales_Team.permissionset-meta.xml
-│   ├── ITProdSupportModifyAll.permissionset-meta.xml
-│   ├── IT_Schedule_Anonymous_Execute.permissionset-meta.xml
-│   ├── LoginAsOtherUserPS.permissionset-meta.xml
-│   ├── ManageConnectedApps.permissionset-meta.xml
-│   ├── Manage_DQM_App_Permission.permissionset-meta.xml
-│   ├── Manage_Products_For_Support.permissionset-meta.xml
-│   ├── Marketing_Admin_PS.permissionset-meta.xml
-│   ├── Modify_All_Cloned.permissionset-meta.xml
-│   ├── Modify_All.permissionset-meta.xml
-│   ├── Okta_Production_Support.permissionset-meta.xml
-│   ├── Opportunity_Att_RU.permissionset-meta.xml
-│   ├── Opportunity_CRU_SF.permissionset-meta.xml
-│   ├── Opportunity_DMS_Admin_Override_Section_RW.permissionset-meta.xml
-│   ├── Opportunity_DMS_HQ_Override_Sections_RW.permissionset-meta.xml
-│   ├── Opportunity_DMS_Region_Override_Sections_RW.permissionset-meta.xml
-│   ├── Opportunity_ModifyAll_ForLegal.permissionset-meta.xml
-│   ├── Opportunity_Read_Only.permissionset-meta.xml
-│   ├── Opportunity_Royalty_Target_Floor_Edit.permissionset-meta.xml
-│   ├── Opportunity_View_All_Access.permissionset-meta.xml
-│   ├── Partner_Portal_Access.permissionset-meta.xml
-│   ├── Partner_PRM_Access.permissionset-meta.xml
-│   ├── Quotes_CRU.permissionset-meta.xml
-│   ├── Quote_View_All.permissionset-meta.xml
-│   ├── Regional_Inside_Sales_Team.permissionset-meta.xml
-│   ├── sfdcInternalInt__sfdc_a360_sfcrm_data_extract.permissionset-meta.xml
-│   ├── System_Sales_Team.permissionset-meta.xml
-│   ├── Technical_Campaign_RW_access.permissionset-meta.xml
-│   ├── TSMC_Access.permissionset-meta.xml
-│   ├── TSMC_Admin.permissionset-meta.xml
-│   ├── TWR_PS.permissionset-meta.xml
-│   ├── University_Access_Permission_Set.permissionset-meta.xml
-│   ├── VAR_Managers.permissionset-meta.xml
-│   └── View_Event_Log_PS.permissionset-meta.xml
-├── profiles
-│   ├── 2_1 - Inside Sales.profile-meta.xml
-│   ├── 2_1 - Inside Sales - Sales Insight.profile-meta.xml
-│   ├── 2_2 - AX_Clone.profile-meta.xml
-│   ├── 2_2 - AX.profile-meta.xml
-│   ├── 2_2 - AX - Sales Insight.profile-meta.xml
-│   ├── 2_3 - Account Directors.profile-meta.xml
-│   ├── 2_3 - Account Directors Sales Insight.profile-meta.xml
-│   ├── 2_4 - Regional Sales VPsClone.profile-meta.xml
-│   ├── 2_4 - Regional Sales VPs.profile-meta.xml
-│   ├── 2_5 - Sales OperationsClone.profile-meta.xml
-│   ├── 2_5 - Sales Operations.profile-meta.xml
-│   ├── 2_6 - AMT.profile-meta.xml
-│   ├── 2_6 - AMT Sales Insight.profile-meta.xml
-│   ├── 3_1 - Order Fulfillment - ManagerClone.profile-meta.xml
-│   ├── 3_2 %E2%80%93 Order Management Apttus SuperUser.profile-meta.xml
-│   ├── 3_2 - Order Fulfillment - User.profile-meta.xml
-│   ├── 3_3 AND 5_3-Order Fulfillmnet-AP PLUS AE.profile-meta.xml
-│   ├── 3_3 - Order Fulfillment - AP.profile-meta.xml
-│   ├── 3_4 - Order Management - AP.profile-meta.xml
-│   ├── 3_5 - Order Management Clone.profile-meta.xml
-│   ├── 3_5 - Order Management.profile-meta.xml
-│   ├── 4_1 - Sales Finance _Forecast_.profile-meta.xml
-│   ├── 4_2 - WFO.profile-meta.xml
-│   ├── 4_3 - Sales Finance.profile-meta.xml
-│   ├── 4_4 - Apttus Lightning.profile-meta.xml
-│   ├── 4_4 - Apttus Platform Profile.profile-meta.xml
-│   ├── 4_4 - Apttus Salesforce Profile.profile-meta.xml
-│   ├── 4_4 - LegalApttusClone.profile-meta.xml
-│   ├── 4_4 - Legal_Apttus.profile-meta.xml
-│   ├── 4_4 - Legal.profile-meta.xml
-│   ├── 4_5 - Credit.profile-meta.xml
-│   ├── 4_6 - Revenue Accounting.profile-meta.xml
-│   ├── 4_7 - BP Approvers.profile-meta.xml
-│   ├── 4_8 - WFO Nerve Center.profile-meta.xml
-│   ├── 4_8 - WFO Operations2.profile-meta.xml
-│   ├── 4_8 - WFO Operations.profile-meta.xml
-│   ├── 4_9 - Corp.profile-meta.xml
-│   ├── 5_1 - Data Steward.profile-meta.xml
-│   ├── 5_2_Support Administrator_NO_SSO.profile-meta.xml
-│   ├── 5_2_Support Administrator.profile-meta.xml
-│   ├── 5_3_Support Manager%2FAE Lightning.profile-meta.xml
-│   ├── 5_3_Support Manager%2FAE.profile-meta.xml
-│   ├── 5_4_Support TFO AE.profile-meta.xml
-│   ├── 5_4_Support TIP FAE.profile-meta.xml
-│   ├── 5_5_Support SSG Agent.profile-meta.xml
-│   ├── 6%2E1 - Marketing Administrator.profile-meta.xml
-│   ├── 7%2E0 %E2%80%93 R%26D.profile-meta.xml
-│   ├── 8%2E0 - TFO.profile-meta.xml
-│   ├── Admin.profile-meta.xml
-│   ├── Analytics Cloud Integration User.profile-meta.xml
-│   ├── Analytics Cloud Security User.profile-meta.xml
-│   ├── BP-CRUD-only.profile-meta.xml
-│   ├── Cadence COS Integration Profile.profile-meta.xml
-│   ├── Cadence CosLite Integration Profile.profile-meta.xml
-│   ├── Cadence Data Sync Integration Profile.profile-meta.xml
-│   ├── Cadence Echosign Integration Profile.profile-meta.xml
-│   ├── Cadence Leandata Integration.profile-meta.xml
-│   ├── Cadence Readonly Integration Profile.profile-meta.xml
-│   ├── Cadence Splunk Integration Profile.profile-meta.xml
-│   ├── Cadence VIP Integration Profile.profile-meta.xml
-│   ├── CDNReadOnly.profile-meta.xml
-│   ├── CDS Info Profile.profile-meta.xml
-│   ├── ContractManager.profile-meta.xml
-│   ├── COS Community Profile.profile-meta.xml
-│   ├── CoveoLink.profile-meta.xml
-│   ├── Customer Community Custom.profile-meta.xml
-│   ├── General RPA Salesforce.profile-meta.xml
-│   ├── Gold Partner User.profile-meta.xml
-│   ├── Impartner PRM.profile-meta.xml
-│   ├── Integration.profile-meta.xml
-│   ├── MarketingProfile.profile-meta.xml
-│   ├── Partner Community User Custom.profile-meta.xml
-│   ├── Partner Community User.profile-meta.xml
-│   ├── Read Only.profile-meta.xml
-│   ├── ReadOnly.profile-meta.xml
-│   ├── SalesforceIQ Integration User.profile-meta.xml
-│   ├── Sales Insights Integration User.profile-meta.xml
-│   ├── Sales - PRM.profile-meta.xml
-│   ├── ServiceMax Admin.profile-meta.xml
-│   ├── ServiceMax Production Manager.profile-meta.xml
-│   ├── ServiceMax Repair Manager.profile-meta.xml
-│   ├── ServiceMax Service User.profile-meta.xml
-│   ├── SolutionManager.profile-meta.xml
-│   ├── Standard.profile-meta.xml
-│   ├── SVMX Customer Community Plus.profile-meta.xml
-│   ├── System Administrator Custom.profile-meta.xml
-│   └── www Profile.profile-meta.xml
-├── quickActions
-│   ├── APTS_Cloud_Service_Product__c.Delete_Product.quickAction-meta.xml
-│   ├── Apttus__APTS_Agreement__c.Add_Comments_LEX.quickAction-meta.xml
-│   ├── Apttus__APTS_Agreement__c.Edit_Saved_NDA_LEX.quickAction-meta.xml
-│   ├── Apttus__APTS_Agreement__c.Submit_Request_CIC.quickAction-meta.xml
-│   ├── ER_Agreement__c.Edit_LEX.quickAction-meta.xml
-│   ├── Opportunity.Request_Payment_Term_Lex.quickAction-meta.xml
-│   ├── Opportunity.Seed_LEX.quickAction-meta.xml
-│   ├── Opportunity.Transfer_and_Share_LEX.quickAction-meta.xml
-│   ├── TSMC_Agreement__c.Complete_LEX.quickAction-meta.xml
-│   └── TSMC_Agreement__c.Edit_lightning_VF.quickAction-meta.xml
-├── reports
-│   ├── CPQ
-│   └── unfiled$public
-│       └── X3rdParty_Employee_RESTRICTIONS.report-meta.xml
-├── reportTypes
-│   ├── Account_Details_With_Agreement.reportType-meta.xml
-│   ├── Agreement_Activity_History.reportType-meta.xml
-│   ├── Agreement_with_Agreement_Line_Items.reportType-meta.xml
-│   ├── Agreement_with_custom_names.reportType-meta.xml
-│   ├── Intel_RUNDA_DA_Expiration.reportType-meta.xml
-│   ├── NDA_RUNDA_Cadence_Authorized_Employees_with_Agmt.reportType-meta.xml
-│   ├── Opportunities_with_Agreements.reportType-meta.xml
-│   ├── Opportunity_with_without_Agreements.reportType-meta.xml
-│   ├── TKR_Report_Line_Item_Report.reportType-meta.xml
-│   ├── TSMC_Request.reportType-meta.xml
-│   └── Users_with_Agreement_and_Lineitems.reportType-meta.xml
-├── staticresources
-│   ├── APTPS_Common.resource
-│   ├── APTPS_Common.resource-meta.xml
-│   ├── APTS_AcceptOrder_Button.resource
-│   ├── APTS_AcceptOrder_Button.resource-meta.xml
-│   ├── APTS_CadenceCustomCSS.resource
-│   ├── APTS_CadenceCustomCSS.resource-meta.xml
-│   ├── APTS_Recall_OrderAcceptance_Button.resource
-│   ├── APTS_Recall_OrderAcceptance_Button.resource-meta.xml
-│   ├── Cadence_Coveo_UI.resource
-│   ├── Cadence_Coveo_UI.resource-meta.xml
-│   ├── customLookupIcon.resource
-│   ├── customLookupIcon.resource-meta.xml
-│   ├── LightningExpJS.resource
-│   └── LightningExpJS.resource-meta.xml
-├── tabs
-│   └── ApttusUserSetupPage.tab-meta.xml
-├── translations
-├── triggers
-│   ├── AgreementApexSharing.trigger
-│   ├── AgreementApexSharing.trigger-meta.xml
-│   ├── APTPS_AuthorizedEmployeesTrigger.trigger
-│   ├── APTPS_AuthorizedEmployeesTrigger.trigger-meta.xml
-│   ├── APTS_ContentDocumentLinkTrigger.trigger
-│   ├── APTS_ContentDocumentLinkTrigger.trigger-meta.xml
-│   ├── APTS_MultiRegionWANTrigger.trigger
-│   ├── APTS_MultiRegionWANTrigger.trigger-meta.xml
-│   ├── Apttus_Agreement_BeforeUpdate.trigger
-│   ├── Apttus_Agreement_BeforeUpdate.trigger-meta.xml
-│   ├── Apttus_DocuSign_EnvelopeTrigger.trigger
-│   ├── Apttus_DocuSign_EnvelopeTrigger.trigger-meta.xml
-│   ├── ContentDocumentLink_AT.trigger
-│   ├── ContentDocumentLink_AT.trigger-meta.xml
-│   ├── ContentVersionTrigger_AT.trigger
-│   ├── ContentVersionTrigger_AT.trigger-meta.xml
-│   ├── cs_ContentDocumentLinkTrigger.trigger
-│   └── cs_ContentDocumentLinkTrigger.trigger-meta.xml
-└── workflows
-    ├── Account.workflow-meta.xml
-    ├── Apttus_Approval__Backup_Approver__c.workflow-meta.xml
-    ├── Apttus__APTS_Agreement__c.workflow-meta.xml
-    ├── Apttus__APTS_Template__c.workflow-meta.xml
-    ├── Apttus_Proposal__Proposal__c.workflow-meta.xml
-    ├── Expected_Close_Quarter__c.workflow-meta.xml
-    ├── Forecast__c.workflow-meta.xml
-    ├── Forecast_Target__c.workflow-meta.xml
-    ├── GSS_Index__c.workflow-meta.xml
-    ├── GSS_Split__c.workflow-meta.xml
-    ├── NDA_ARM_Cadence_Authorized_Employees__c.workflow-meta.xml
-    ├── NDA_RUNDA_Cadence_Authorized_Employees__c.workflow-meta.xml
-    ├── NDA_SNPS_Cadence_Authorized_Employees__c.workflow-meta.xml
-    ├── OpportunityLineItem.workflow-meta.xml
-    ├── Opportunity.workflow-meta.xml
-    ├── QuoteLineItem.workflow-meta.xml
-    ├── Quote.workflow-meta.xml
-    ├── State__c.workflow-meta.xml
-    └── TSMC_Agreement__c.workflow-meta.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+
+    <!-- Custom Applications -->
+    <types>
+        <members>Apttus_Approval__ApttusApprovalsManagement</members>
+        <members>Apttus_Approval__ApttusApprovalsSetup</members>
+        <members>Apttus__ApttusContractManagement</members>
+        <members>Apttus__ApttusContractManagement_Lightning</members>
+        <members>Apttus_XApps__XAuthorExcel</members>
+        <members>APXT_BPM__Conga_Conductor</members>
+        <members>Cadence_Customer_Master_Lightning</members>
+        <members>Cadence_IT_Administration</members>
+        <members>Cadence_IT_Administration_Lightning</members>
+        <members>Cadence_Marketing</members>
+        <members>Cadence_Marketing_Lightning</members>
+        <members>Cadence_OF_OM_Lightning</members>
+        <members>Cadence_Sales_Cloud</members>
+        <members>Cadence_Sales_Cloud_Lightning</members>
+        <members>General_User_App</members>
+        <members>standard__LightningSales</members>
+        <name>CustomApplication</name>
+    </types>
+
+    <!-- Aura Components (bundles) -->
+    <types>
+        <members>clmApttusTwrHost</members>
+        <members>Create_Opportunity_New</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
+
+    <!-- Apex Classes -->
+    <types>
+        <members>AccountAgreementListPage_AC</members>
+        <members>AccountAgreementListPage_Test</members>
+        <members>AccountContentTabController_AC</members>
+        <members>AEAcknowledgementDetailPageController</members>
+        <members>AEAcknowledgementTest</members>
+        <members>AgreementActivateControllerNew</members>
+        <members>AgreementActivateControllerNew_Test</members>
+        <members>AgreementDetailController</members>
+        <members>AgreementDetailControllerTest</members>
+        <members>AgreementLineItems</members>
+        <members>AgreementLineItemsTest</members>
+        <members>APTPS_AuthorizedEmployeesTrigger_Test</members>
+        <members>APTPS_Edit</members>
+        <members>APTPS_Edit_Tst</members>
+        <members>Aptps_LegacyNumbers</members>
+        <members>Aptps_LegacyNumbers_Test</members>
+        <members>APTPSNDA_CadenceEmployees</members>
+        <members>APTPS_NDA_DocumentUpload</members>
+        <members>APTPS_NDA_TestClass</members>
+        <members>APTPS_SoftwarePage</members>
+        <members>APTPS_SoftwarePage_Partial_Test</members>
+        <members>APTPS_SoftwarePage_TempKey</members>
+        <members>APTPSSUBMITREQUEST</members>
+        <members>APTPSSUBMITREQUEST_Test</members>
+        <members>APTPS_TWR_LWC</members>
+        <members>APTPS_TWR_LWCTest</members>
+        <members>APTS_AcceptOrder</members>
+        <members>APTS_AcceptOrderTest</members>
+        <members>AptsAgmtLineItemSubmitController</members>
+        <members>AptsAgmtLineItemSubmitControllerTest</members>
+        <members>APTS_ApprovalHelper</members>
+        <members>APTS_ApprovalHelperTest</members>
+        <members>APTS_ApprovalRequestDataShowController</members>
+        <members>APTS_ApprovalRequestDataShowCtrlTest</members>
+        <members>APTS_AttachmentService</members>
+        <members>APTS_AttachmentServiceTest</members>
+        <members>APTS_CheckTransactionType</members>
+        <members>Apts_CLLA</members>
+        <members>Apts_CLLA_Test</members>
+        <members>APTS_CloudProductPageCntrl</members>
+        <members>APTS_CloudServiceProductTriggerTest</members>
+        <members>APTS_ContentDocLinkTriggerHandler_Test</members>
+        <members>APTS_ContentDocumentDeletionUtil</members>
+        <members>APTS_ContentDocumentLinkTriggerHandler</members>
+        <members>APTS_ContentDocumentLinkTriggerTest</members>
+        <members>APTS_ContentDocumentTriggerHandler</members>
+        <members>APTS_ContentDocumenttriggertest</members>
+        <members>APTS_CreateRampOnQuoteCtrl</members>
+        <members>APTS_CreateRampOnQuoteCtrlTest</members>
+        <members>APTS_CustomDHLookupController</members>
+        <members>APTS_CustomDHLookupControllerTest</members>
+        <members>APTS_CustomProducttLookupController</members>
+        <members>APTS_CustomProducttLookupControllerTest</members>
+        <members>APTS_CustomQuoteLifecycleCallbackHelper</members>
+        <members>APTS_CustomQuoteLifecycleCallbackTest</members>
+        <members>APTS_DiscountHierarchyController</members>
+        <members>APTS_DiscountHierarchyControllerTest</members>
+        <members>APTS_DQMDashBoardController</members>
+        <members>APTS_DQMDashBoardControllerTest</members>
+        <members>Apts_Edit_CLLA</members>
+        <members>Apts_Edit_CLLA_Test</members>
+        <members>APTS_EditHostIDLineItem</members>
+        <members>APTS_EditHostIDLineItemTest</members>
+        <members>AptsFileUploader</members>
+        <members>APTS_GenerateDocumentQueueable</members>
+        <members>APTS_GenerateDocumentQueueableTest</members>
+        <members>APTS_GenerateSignBlocksUtilityTest</members>
+        <members>APTS_GeoInstallHandler</members>
+        <members>APTS_GeoInstallHandlerTest</members>
+        <members>APTS_MultiRegionWANTriggerHandler</members>
+        <members>APTS_MultiRegionWANTriggerTest</members>
+        <members>Apts_NDA</members>
+        <members>APTS_PricingCallbackTest</members>
+        <members>APTS_ProductAvailabilityCtrl</members>
+        <members>APTS_ProductAvailabilityCtrlTest</members>
+        <members>APTS_ProposalUtility</members>
+        <members>APTS_QuoteExportBatch</members>
+        <members>APTS_QuoteExportBatchTest</members>
+        <members>APTS_QuoteExportTest</members>
+        <members>APTS_QuoteRateTableController</members>
+        <members>APTS_QuoteRateTableControllerTest</members>
+        <members>APTS_QuoteTriggerhandler</members>
+        <members>APTS_QuoteTriggerTest</members>
+        <members>APTS_RecallSignaturesController</members>
+        <members>APTS_RecallSignaturesControllerTest</members>
+        <members>APTS_RequestAddClauseExt</members>
+        <members>APTS_RequestAddClauseExtTest</members>
+        <members>APTS_SelectTransactionTypeCtrl</members>
+        <members>APTS_SelectTransactionTypeCtrlTest</members>
+        <members>APTS_SendforeSignatureController</members>
+        <members>APTS_SendforeSignatureControllerTest</members>
+        <members>APTS_SubmitforPricingDQMController</members>
+        <members>APTS_SubmitforPricingDQMControllerTest</members>
+        <members>APTS_ViewDiscountHierarchy</members>
+        <members>APTS_ViewDiscountHierarchyControllerTest</members>
+        <members>Apttus_Agreement_Attachments_Test</members>
+        <members>Apttus_Agreement_BeforeUpdateTest</members>
+        <members>Apttus_Agreement_File_AC</members>
+        <members>Apttus_Agreement_File_Test</members>
+        <members>Apttus_Cancel_Request</members>
+        <members>Apttus_Cancel_Request_Test</members>
+        <members>Apttus_DocuSign_EnvelopeTriggerHandler</members>
+        <members>ApttusDocuSignEnvelopeTriggerHandlerTest</members>
+        <members>ApttusUserSetup</members>
+        <members>ApttusUserSetupController</members>
+        <members>ApttusUserSetupController_Test</members>
+        <members>ApttusUserSetupTest</members>
+        <members>BaseDuplicateChecker</members>
+        <members>BatchEsignForGoalLetters</members>
+        <members>BatchEsignForGoalLettersTest</members>
+        <members>BatchEsignForUniversityRequests</members>
+        <members>BatchEsignForUniversityRequestsTest</members>
+        <members>bookingPackageContentTab_Controller_AC</members>
+        <members>BookingPackageTriggerHandler</members>
+        <members>CadenceApplicationhostrefScreenCtrl</members>
+        <members>CadenceAssociateEntitlementController</members>
+        <members>CadenceLoginHostidRefkeyController</members>
+        <members>ChangeOppOwnerExt_AC</members>
+        <members>ClmNDAFileHandler</members>
+        <members>ClmNDAFileHandlerTest</members>
+        <members>CloudProductDeleteController</members>
+        <members>CloudProductDeleteControllerTest</members>
+        <members>ContentDocumentTriggerHandler_AC</members>
+        <members>ContentRecordController</members>
+        <members>ContentVersionUtility</members>
+        <members>ContentVersionUtilityTest</members>
+        <members>CreateLegalCommitmentController</members>
+        <members>cs_ContentDocumentLinkTriggerTest</members>
+        <members>CustomEmailTemplate</members>
+        <members>CustomEmailTemplateforRef</members>
+        <members>CustomEmailTemplateForRefTest</members>
+        <members>CustomEmailTemplateTest</members>
+        <members>DocuSign_SendEnvelope_Queueable</members>
+        <members>DocuSign_SendEnvelope_QueueableTest</members>
+        <members>DocuSign_Service</members>
+        <members>DocuSign_ServiceTest</members>
+        <members>DocuSign_Utility</members>
+        <members>DocuSign_UtilityTest</members>
+        <members>EditLegalCommitmentController</members>
+        <members>EorEligibilityService</members>
+        <members>EorEligibilityServiceTest</members>
+        <members>ER_AddNamesFlow</members>
+        <members>ER_AddNamesFlowTest</members>
+        <members>ER_DocumentUpload</members>
+        <members>ER_DocumentUploadTest</members>
+        <members>ER_Employee_TriggerTest</members>
+        <members>ErRequestFlowAccess</members>
+        <members>ErRequestFlowAccessTest</members>
+        <members>ER_RequestFlow</members>
+        <members>ER_RequestFlowTest</members>
+        <members>ExternalFamilyToCountryAccessTest</members>
+        <members>GenerateLicenseExceptionUserList</members>
+        <members>GenerateLicenseExceptionUserListTest</members>
+        <members>GNDAActions</members>
+        <members>GNDAActions_Tst</members>
+        <members>GNDA_Noteandattachmentsclass</members>
+        <members>GNDA_Noteandattachmentsclass_Tst</members>
+        <members>GNDA_Purpose</members>
+        <members>GNDA_Purpose_Tst</members>
+        <members>GoalLetterAuthenticationController</members>
+        <members>GoalLetterAuthenticationControllerTest</members>
+        <members>GoalLetterDetailController</members>
+        <members>GoalLetterDetailControllerTest</members>
+        <members>GoalLetterListController</members>
+        <members>GoalLetterSearchController</members>
+        <members>GoalLetterSearchControllerTest</members>
+        <members>InLineVF_ProductGroup_Controller_AC</members>
+        <members>Intel_Runda_30_Day_Email</members>
+        <members>Intel_Runda_30_Day_Email_Tst</members>
+        <members>IntelRundaReport_AC</members>
+        <members>IntelRundaReport_Test</members>
+        <members>LegalCommitmentHelper</members>
+        <members>LightningUtility</members>
+        <members>LightningUtilityTest</members>
+        <members>listHostID</members>
+        <members>listhostID_Test</members>
+        <members>LWRext</members>
+        <members>LWRext_Test</members>
+        <members>ManageDQMVersionController</members>
+        <members>MigrateNotesAndAttachmentsBatch</members>
+        <members>MigrateNotesAndAttachmentsBatchTest</members>
+        <members>MigrateNotesAndAttachmentsController</members>
+        <members>MigrateNotesAndAttachmentsControllerTest</members>
+        <members>NDA_SearchController</members>
+        <members>NDA_Search_TestClass</members>
+        <members>NewOpptyIntermediateExtension_AC</members>
+        <members>Opportunities</members>
+        <members>OpportunitiesTriggerTest</members>
+        <members>OpptyContentRecordController</members>
+        <members>ParentAccountTeamPage_AC</members>
+        <members>productGroupConfig_Controller_AC</members>
+        <members>QueueableRetryDMLClass</members>
+        <members>QueueableRetryDMLClassTest</members>
+        <members>QuoteHeaderMessageExtTest</members>
+        <members>ReferenceKeySelector</members>
+        <members>ReferenceKeySelectorTest</members>
+        <members>ReferenceKeyService</members>
+        <members>ReferenceKeyServiceTest</members>
+        <members>Refrigeration_Process</members>
+        <members>Refrigeration_Process_Test</members>
+        <members>RequestPaymentTermController</members>
+        <members>RequestPaymentTermControllerTest</members>
+        <members>RestrictedEmployeeForm</members>
+        <members>RestrictedEmployeeFormTest</members>
+        <members>RundaHistoryClass</members>
+        <members>RundaNoteAttach_cls</members>
+        <members>RundaNoteAttach_clstst</members>
+        <members>RundaSigned</members>
+        <members>SendEmailPreProcessController</members>
+        <members>SendEmailPreProcessControllerTest</members>
+        <members>Send_GL_ForEsign_Controller</members>
+        <members>SendMailForAcknowledgementController</members>
+        <members>SendMailForAcknowledgementControllerTest</members>
+        <members>SNPS_Access_End_Flow_Test</members>
+        <members>SNPS_End_Flow</members>
+        <members>Termination</members>
+        <members>Termination_tst</members>
+        <members>TestAccountContentTabController</members>
+        <members>TEST_APTPSNDA_CadenceEmployees</members>
+        <members>TEST_APTPS_NDA</members>
+        <members>TEST_APTPS_NDA_DocumentUpload</members>
+        <members>TestbookingPackageContentTab_AC</members>
+        <members>TestBookingPackageTrigger</members>
+        <members>TestCadenceApplicationhostrefScreenCtrl</members>
+        <members>TestCadenceAssEntitlementController</members>
+        <members>TestCadenceLoginHostidRefkeyController</members>
+        <members>TestChangeOppOwnerExt_AC</members>
+        <members>TestContentDocumentLink</members>
+        <members>TestContentDocumentTrigger</members>
+        <members>TestContentDocumentUtility_AC</members>
+        <members>TestContentRecordController</members>
+        <members>TestCreateLegalCommitmentController</members>
+        <members>TestEditLegalCommitmentController</members>
+        <members>Test_FileUploader</members>
+        <members>TestInLineVF_ProductGroup_Controller_AC</members>
+        <members>TestLegalCommitmentHelper</members>
+        <members>TestManageDQMVersionController</members>
+        <members>TestNewOpptyIntermediate</members>
+        <members>TestOpptyContentRecordController</members>
+        <members>TestParentAccountTeamPage</members>
+        <members>TestplatformPage</members>
+        <members>TestproductGroupConfig_Controller_AC</members>
+        <members>TestRequestPaymentTermController</members>
+        <members>Test_RundaHistory</members>
+        <members>Test_RundaSigned</members>
+        <members>TestSend_GL_ForEsign_Controller</members>
+        <members>Test_Software</members>
+        <members>TestSurveyInvitationController</members>
+        <members>Test_UniversityRequestEditController</members>
+        <members>TestUrlRewriterClass</members>
+        <members>TestUtility_global_var</members>
+        <members>TestVarProfilePromoAccess</members>
+        <members>TSMCController</members>
+        <members>TSMCController_Tst</members>
+        <members>TSMC_PreventESignAgreementDelete_Tst</members>
+        <members>TSMC_Trigger_Handler</members>
+        <members>TSMC_Trigger_Test</members>
+        <members>TWRActions</members>
+        <members>TWRActions_Tst</members>
+        <members>TWRComponent_Tst</members>
+        <members>TWR_Error</members>
+        <members>TWR_Error_Tst</members>
+        <members>TWRNoteAtt_cls</members>
+        <members>TWRNoteAtt_tst</members>
+        <members>TWR_Review</members>
+        <members>TWRReview_Tst</members>
+        <members>UniversityRequestEditController</members>
+        <members>UploadNDAController</members>
+        <members>UploadNDAController_Tst</members>
+        <members>UrlRewriterClass</members>
+        <members>Utility_global_var</members>
+        <members>VarCountrySplitControllerTest</members>
+        <members>VarCustomLookupCtrl</members>
+        <members>VarCustomLookupCtrlTest</members>
+        <members>VarPaymentScheduleControllerTest</members>
+        <members>VarPortalControllerTest</members>
+        <members>VarPortalOrderActionTest</members>
+        <members>VarPortalProductPage</members>
+        <members>VarPortalProductPageTest</members>
+        <members>VarPortalUpgradeProductPageTest</members>
+        <members>VarProfileDiscountTriggerHandlerTest</members>
+        <members>VarProfileMarginTriggerHandlerTest</members>
+        <members>VarProfileProdAccessTriggerHandlerTest</members>
+        <members>VarProfileTriggerHandlerTest</members>
+        <members>VarProfileUtility</members>
+        <members>VarProfileUtilityTest</members>
+        <members>VarPromoProductsTest</members>
+        <members>VarWrapper</members>
+        <name>ApexClass</name>
+    </types>
+
+    <!-- Apex Triggers -->
+    <types>
+        <members>AgreementApexSharing</members>
+        <members>APTPS_AuthorizedEmployeesTrigger</members>
+        <members>APTS_ContentDocumentLinkTrigger</members>
+        <members>APTS_MultiRegionWANTrigger</members>
+        <members>Apttus_Agreement_BeforeUpdate</members>
+        <members>Apttus_DocuSign_EnvelopeTrigger</members>
+        <members>ContentDocumentLink_AT</members>
+        <members>ContentVersionTrigger_AT</members>
+        <members>cs_ContentDocumentLinkTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+
+    <!-- Lightning Web Components -->
+    <types>
+        <members>approval_RecordUnlocker</members>
+        <members>chevronStyleLoader</members>
+        <members>clm_AgreementAddComment</members>
+        <members>clm_apttusTwr</members>
+        <members>clm_apttusUserSetupPage</members>
+        <members>clm_CicSubmit</members>
+        <members>clm_ErAgreementEdit</members>
+        <members>clm_GNDANotesAttachment</members>
+        <members>clm_NdaEdit</members>
+        <members>clm_RestrictEmployeesLink</members>
+        <members>cloudProductDelete</members>
+        <members>cpq_DQMVersionManagerLink</members>
+        <members>createOpportunity</members>
+        <members>cs_Aes_FrequentLinks</members>
+        <members>cs_AesLegal</members>
+        <members>requestPaymentTerm_LWC</members>
+        <members>sales_UsefulLinks</members>
+        <members>seedOpportunity</members>
+        <members>transferAndShareOppty</members>
+        <members>tsmcCompleteAgreement</members>
+        <members>univ_UniversityRequestEditPage</members>
+        <members>var_MassUpload</members>
+        <name>LightningComponentBundle</name>
+    </types>
+
+    <!-- Visualforce pages -->
+    <types>
+        <members>AccountAgreementList_VP</members>
+        <members>AccountContentTab</members>
+        <members>AEAcknowledgementDetailPage</members>
+        <members>AEAckUploadPage</members>
+        <members>AgreementActivateNew</members>
+        <members>Agreement_Add_Comments</members>
+        <members>Agreement_Detail</members>
+        <members>AprReqList</members>
+        <members>AprReqts</members>
+        <members>Aptps_AgreementTypeSelection</members>
+        <members>APTPSCLLA</members>
+        <members>APTPSEDITCLLA</members>
+        <members>APTPS_EDIT</members>
+        <members>Aptps_LegacyNumbers</members>
+        <members>APTPSNDA_CadenceEmployees</members>
+        <members>APTPS_NDA_DocumentUpload</members>
+        <members>APTPS_NDA</members>
+        <members>APTPSSUBMITREQUEST</members>
+        <members>APTPS_TWR</members>
+        <members>APTS_AcceptOrder</members>
+        <members>AptsAgmtLineItemSubmit</members>
+        <members>APTS_CloudProductDelete</members>
+        <members>APTS_CloudProductFilter</members>
+        <members>APTS_CloudProductPage</members>
+        <members>APTS_CreateRampOnQuoteVF</members>
+        <members>Apts_CustomAgreementNumbersLookup</members>
+        <members>APTS_CustomDHLookup</members>
+        <members>APTS_CustomGenerate</members>
+        <members>Apts_CustomOpportunityLookup</members>
+        <members>APTS_CustomProducttLookup</members>
+        <members>APTS_DiscountHierarchy</members>
+        <members>APTS_DQMDashBoard</members>
+        <members>APTS_EditHostId</members>
+        <members>APTS_EditInExcelPage</members>
+        <members>Apts_FileUploader</members>
+        <members>APTS_ImportFromExcel</members>
+        <members>APTS_MakePrimaryPage</members>
+        <members>APTS_MarkQuoteSignedPage</members>
+        <members>APTS_PaymentSchedulePage</members>
+        <members>APTS_PresentPage</members>
+        <members>APTS_ProductAvailabilityVF</members>
+        <members>APTS_PullQuoteDataOnAgreement</members>
+        <members>APTS_QuoteAprReqsPage</members>
+        <members>APTS_QuoteConfigurePage</members>
+        <members>APTS_QuoteExportPage</members>
+        <members>APTS_QuotePricingAprReqsPage</members>
+        <members>APTS_QuoteRateTable</members>
+        <members>APTS_QuoteReOpenPage</members>
+        <members>APTS_QuoteToEOTContractExportPage</members>
+        <members>APTS_RecallFullySigned</members>
+        <members>APTS_RecallPricingDQMApproval_VF</members>
+        <members>APTS_RecallSignaturesPage</members>
+        <members>APTS_RecallSubmitforSFReviewPage</members>
+        <members>APTS_RecallTsAndCsApproval_VF</members>
+        <members>APTS_RelatedProposalsPage</members>
+        <members>APTS_RequestAdditionClause</members>
+        <members>APTS_RequestBaseAgreementPage</members>
+        <members>APTS_RunOnDemandBatchJobs</members>
+        <members>APTS_SelectTransactionTypeVF</members>
+        <members>APTS_SendforeSignaturePage</members>
+        <members>APTSSoftwareHardware</members>
+        <members>APTSSoftwareHardwareTempKey</members>
+        <members>APTS_SubmitforPricingDQMPage</members>
+        <members>APTS_SubmitforSFReview</members>
+        <members>APTS_SubmitTnCApprovalNCA</members>
+        <members>APTS_Synchronize_with_QuoteDQM</members>
+        <members>APTS_SyncWithOpportunity</members>
+        <members>APTS_UpdateParentProposalVF</members>
+        <members>APTS_ViewDiscountHierarchy</members>
+        <members>APTS_ViewReadOnlyConfigVFPage</members>
+        <members>Apttus_cancel_request</members>
+        <members>ApttusUserSetupPage</members>
+        <members>ARM_Access_End_Flow</members>
+        <members>ARM_TRS_End_Flow</members>
+        <members>ArticlesAdditionalDetailsPage</members>
+        <members>Authorized_Employee_HelpText</members>
+        <members>Booking_Package_Content_Tab</members>
+        <members>cadenceLoginHostidRefkeyScreen</members>
+        <members>ChangeOppOwner_VP</members>
+        <members>ContactRelatedEntitlementList_VF</members>
+        <members>COSCaseCreatePage</members>
+        <members>Coveo_CommunitySearch</members>
+        <members>CreateContentRecord</members>
+        <members>CreateLegalCommitment</members>
+        <members>CustApvl_HandleSubmitForApprovalVF</members>
+        <members>CustApvl_InlineApprovalInformationVF</members>
+        <members>CustomEmailTemplateForRef</members>
+        <members>CustomEmailTemplate</members>
+        <members>CustomLineItemsList</members>
+        <members>CustomLineItems</members>
+        <members>DeleteNDAAuthorizedEmployee</members>
+        <members>DeleteNDARefrigeratedEmployee</members>
+        <members>EditLegalCommitment</members>
+        <members>ER_AddNamesFlow</members>
+        <members>ER_DocumentUpload</members>
+        <members>ER_RequestFlow</members>
+        <members>ExhibitDTLA</members>
+        <members>FastTrackApproval_VP</members>
+        <members>generateIntelRundaExcelReport</members>
+        <members>generateIntelRundaReport</members>
+        <members>GNDA_Actions</members>
+        <members>GNDA_Family</members>
+        <members>GNDA_Notesandattachments</members>
+        <members>GNDA_Purpose</members>
+        <members>GoalLetterDetailLink</members>
+        <members>GoalLetterDetail</members>
+        <members>GoalLetterEditButton</members>
+        <members>GoalLetterList</members>
+        <members>GoalLetterManagerSearch</members>
+        <members>Goal_Letter</members>
+        <members>GoalLetterSearch</members>
+        <members>GoalLetterUploadPage</members>
+        <members>InLineVF_ProductGroup</members>
+        <members>IntelRundaReport_VF</members>
+        <members>LegalCommitmentAccountView</members>
+        <members>LegalCommitmentOpportunityView</members>
+        <members>ListDA</members>
+        <members>ListHostID</members>
+        <members>LWR</members>
+        <members>ManageDQM</members>
+        <members>MyCustomTaskListPage</members>
+        <members>NDANotification</members>
+        <members>NDASearch</members>
+        <members>NDAUpload</members>
+        <members>NewMessagePage</members>
+        <members>OpportunityContentTab</members>
+        <members>ParentAccountTeamPage_VP</members>
+        <members>productGroupConfiguration</members>
+        <members>QuoteHeaderMessagePage</members>
+        <members>Refrigerated_Employee_HelpText</members>
+        <members>RestrictedEmployeeForm</members>
+        <members>Royalty</members>
+        <members>RundaHistory</members>
+        <members>RundaNoteAttach</members>
+        <members>RundaSignedPage</members>
+        <members>secure_store_owner_help_text</members>
+        <members>SendEmailPreProcess</members>
+        <members>SendMailForAcknowledgementPage</members>
+        <members>SNPS_End_Flow</members>
+        <members>SNPS_Information_Inline</members>
+        <members>SubmitSolutionInternal</members>
+        <members>TSMC_BulkApproveVF</members>
+        <members>TSMC_BulkCompleteVF</members>
+        <members>TSMC_Detail</members>
+        <members>TSMC_Edit</members>
+        <members>TSMCError</members>
+        <members>TSMC_Note</members>
+        <members>TWR_Actions</members>
+        <members>TWR_Error</members>
+        <members>TWR_LMT</members>
+        <members>TWRNoteAtt</members>
+        <members>TWRreview</members>
+        <members>UploadNDA</members>
+        <name>ApexPage</name>
+    </types>
+
+    <!-- Custom Metadata records -->
+    <types>
+        <members>APTS_OA_TCV_Threshold.MS_TBLAsiaPacific</members>
+        <members>APTS_OA_TCV_Threshold.MS_TBLEMEA</members>
+        <members>APTS_OA_TCV_Threshold.MS_TBLIndia</members>
+        <members>APTS_OA_TCV_Threshold.MS_TBLJapan</members>
+        <members>APTS_OA_TCV_Threshold.MS_TBLKorea</members>
+        <members>APTS_OA_TCV_Threshold.MS_TBLNorth_America</members>
+        <members>APTS_OA_TCV_Threshold.TBLAsiaPacific</members>
+        <members>APTS_OA_TCV_Threshold.TBLEMEA</members>
+        <members>APTS_OA_TCV_Threshold.TBLIndia</members>
+        <members>APTS_OA_TCV_Threshold.TBLJapan</members>
+        <members>APTS_OA_TCV_Threshold.TBLKorea</members>
+        <members>APTS_OA_TCV_Threshold.TBLNorth_America</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule1</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule2</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule3</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule4</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule5</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule6</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule7</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.MSTBLRule8</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.TBLRule1</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.TBLRule2</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.TBLRule3</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.TBLRule4</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.TBLRule5</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.TBLRule6</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.TBLRule7</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules.TBLRule8</members>
+        <members>APTS_String_Constants.APTS_OA_Result_No_Match</members>
+        <members>APTS_String_Constants.APTS_Order_Out_for_Acceptance</members>
+        <members>APTS_String_Constants.APTS_Order_PO_Evaluation_Complete</members>
+        <members>APTS_String_Constants.APTS_Order_Template_Completed_PDF</members>
+        <members>APTS_String_Constants.APTS_Order_Template_MSTBL</members>
+        <members>APTS_String_Constants.APTS_Order_Template_TBL</members>
+        <members>APTS_String_Constants.APTS_PO_PDF</members>
+        <members>APTS_String_Constants.APTS_POPQ_NoMatch_Template</members>
+        <members>APTS_String_Constants.OM_Email_Group</members>
+        <members>APTS_String_Constants.PO_PQ_Comparison_EndPoint</members>
+        <members>APTS_String_Constants.PO_PQ_Comparison_Token</members>
+        <members>COS_Config.Tensilica_Neo_NPUHW5</members>
+        <members>COS_Field_Display_Property.COSFieldDisplayProperty_27</members>
+        <members>Univ_GL_Docusign_Reminder.GL_Env_Expiry</members>
+        <members>Univ_GL_Docusign_Reminder.GL_Env_Expiry_Reminder</members>
+        <members>Univ_GL_Docusign_Reminder.GL_Notification_Reminder_Bwn_Days</members>
+        <members>Univ_GL_Docusign_Reminder.GL_Notification_Reminder</members>
+        <members>Univ_GL_Docusign_Reminder.Univ_Env_Expiry</members>
+        <members>Univ_GL_Docusign_Reminder.Univ_Env_Expiry_Reminder</members>
+        <members>Univ_GL_Docusign_Reminder.Univ_Notification_Reminder_Bwn_Days</members>
+        <members>Univ_GL_Docusign_Reminder.Univ_Notification_Reminder</members>
+        <members>UserExceptionQuery.Query_45</members>
+        <members>UserProvision_Config.APTTUS_PROFILES</members>
+        <members>UserProvision_Config.EXCEPTION_PROFILES</members>
+        <members>UserProvision_Config.NON_SFDC_PROFILES</members>
+        <members>Var_Portal_Constant.AddProductOrExternalFamLabel</members>
+        <members>Var_Portal_Constant.BusinessModelErrLabel</members>
+        <members>Var_Portal_Constant.CustomLookupAllowedObj1</members>
+        <members>Var_Portal_Constant.DiscountLabel</members>
+        <members>Var_Portal_Constant.DupRecordWithSameExternalFam</members>
+        <members>Var_Portal_Constant.DupRecordWithSameProduct</members>
+        <members>Var_Portal_Constant.EnterExFamOrProdLabel</members>
+        <members>Var_Portal_Constant.ExFamANDProdDefinedOnAccessTypeNew</members>
+        <members>Var_Portal_Constant.ExFamANDProdDefinedOnAccessTypeOld</members>
+        <members>Var_Portal_Constant.ExternalFamErrLabel</members>
+        <members>Var_Portal_Constant.HostIdInvalidErrMsg</members>
+        <members>Var_Portal_Constant.HostIdRegExPattern</members>
+        <members>Var_Portal_Constant.HRCOpptyStatusClosed</members>
+        <members>Var_Portal_Constant.HRCOpptyStatusOpen</members>
+        <members>Var_Portal_Constant.InvalidBusinessModelLabel</members>
+        <members>Var_Portal_Constant.InvalidDiscountLabel</members>
+        <members>Var_Portal_Constant.InvalidExternalFamilyLabel</members>
+        <members>Var_Portal_Constant.InvalidMarginTypeLabel</members>
+        <members>Var_Portal_Constant.InvalidMarginValueMsg</members>
+        <members>Var_Portal_Constant.MarginLabel</members>
+        <members>Var_Portal_Constant.MarginTypeErrLabel</members>
+        <members>Var_Portal_Constant.MustEnterExFamOrProdOld</members>
+        <members>Var_Portal_Constant.OpportunityStatusInactive</members>
+        <members>Var_Portal_Constant.OpportunityStatusLost</members>
+        <members>Var_Portal_Constant.OpptyAllowedContExcpVal1</members>
+        <members>Var_Portal_Constant.OpptyAllowedContExcpVal2</members>
+        <members>Var_Portal_Constant.OpptyAllowedContExcpVal3</members>
+        <members>Var_Portal_Constant.OpptyAllowedContExcpVal4</members>
+        <members>Var_Portal_Constant.OpptyAllowedContExcpVal5</members>
+        <members>Var_Portal_Constant.OpptyAllowedContExcpVal6</members>
+        <members>Var_Portal_Constant.OpptyAllowedContExcpVal7</members>
+        <members>Var_Portal_Constant.SelectProductOrExternalFamLabel</members>
+        <name>CustomMetadata</name>
+    </types>
+
+    <!-- Custom Permissions -->
+    <types>
+        <members>ApttusUserSetup</members>
+        <members>DQM_Home_Page_Link</members>
+        <members>TSMCEsignAccess</members>
+        <members>TWRAccessAuth</members>
+        <name>CustomPermission</name>
+    </types>
+
+    <!-- Email Templates -->
+    <types>
+        <members>Apttus__ApttusEmailTemplates/APTS_Approval_Assignment_Template</members>
+        <members>Apttus__ApttusEmailTemplates/APTS_Approval_ReassignmentTemplate</members>
+        <members>Apttus__ApttusEmailTemplates/APTS_Approval_Recall_template</members>
+        <members>Apttus__ApttusEmailTemplates/APTS_Approval_Rejection_template_DQM</members>
+        <members>Apttus__ApttusEmailTemplates/APTS_Approval_Rejection_template</members>
+        <members>Apttus__ApttusEmailTemplates/APTS_Approved_Email_Template_DQM</members>
+        <members>Apttus__ApttusEmailTemplates/APTS_Approved_Email_Template</members>
+        <members>Apttus__ApttusEmailTemplates/APTS_PDQM_Auto_Approved_Email_VFTemplate</members>
+        <members>Apttus__ApttusEmailTemplates/NDA_Apttus_NWR_Email_New</members>
+        <members>Apttus__ApttusEmailTemplates/NDA_Apttus_NWR_Email_Requester</members>
+        <members>Apttus__ApttusEmailTemplates/POPQ_NoMatch_Template</members>
+        <members>Apttus_Config2__ApttusCPQEmailTemplates/APTS_Quote_Document_Generation_Notification</members>
+        <members>Surveys/SurveyReSendingVF</members>
+        <members>Surveys/SurveySendingVF</members>
+        <name>EmailTemplate</name>
+    </types>
+
+    <!-- FlexiPages -->
+    <types>
+        <members>Account_Lightning_Record_Page</members>
+        <members>AE_Ack_Flow_Record_Page</members>
+        <members>Agreement_Account_Sites_Record_Page</members>
+        <members>APTPS_TWR</members>
+        <members>APTS_Agreement_LegacyAgreementNumbers_Lightning</members>
+        <members>APTS_Agreement_Lightning_CIC_OF</members>
+        <members>APTS_Agreement_Lightning_CLLA_Legal</members>
+        <members>APTS_Agreement_Lightning_CLLA_OF</members>
+        <members>APTS_Agreement_Lightning_CLLA_Requester</members>
+        <members>APTS_Agreement_Lightning_CustomClause</members>
+        <members>APTS_Agreement_Lightning_GeneralNDA</members>
+        <members>APTS_Agreement_Lightning_GeneralNDA_Requester</members>
+        <members>APTS_Agreement_Lightning_NDA</members>
+        <members>APTS_Agreement_Lightning_NDA_Requester</members>
+        <members>APTS_Agreement_LWR_Lightning</members>
+        <members>APTS_Agreement_TWR_Lightning</members>
+        <members>Apttus_Release_Approver_Record_Page</members>
+        <members>ApttusUserSetupPage</members>
+        <members>ARM_Employee_Agreement_Relationship_Record_Page</members>
+        <members>ARM_TRS_Employee_Agreement_Relationship_Record_Page</members>
+        <members>Authorized_User_Agreement_Record_Page</members>
+        <members>Booking_Package_Lightning_Page</members>
+        <members>Cadence_Documents_Record_Page</members>
+        <members>Category_Hierarchy_Record_Page</members>
+        <members>Category_Record_Page</members>
+        <members>CC_Emails_Record_Page</members>
+        <members>Cloud_SaaS_Product_Record_Page</members>
+        <members>Contact_Lightning_Record_Page</members>
+        <members>Country_Usage_Record_Page</members>
+        <members>Cycle_Time_Field_Record_Page</members>
+        <members>Default_Home_Page</members>
+        <members>DQMAudit_Record_Page</members>
+        <members>GeoInstall_Record_Page</members>
+        <members>Intel_Owner_Info_Record_Page</members>
+        <members>Intel_Runda_30_Day_Email_Log_Record_Page</members>
+        <members>Intel_Signed_Document_Record_Page</members>
+        <members>Legal_Apttus_Home_Page</members>
+        <members>Line_Item_Record_Page</members>
+        <members>NDA_ARM_Cadence_Authorized_Employees_Record_Page</members>
+        <members>NDA_ARM_TRS_Cadence_Authorized_Employees_Record_Page</members>
+        <members>NDA_Cadence_Authorized_Employees_Record_Page</members>
+        <members>NDA_RUNDA_Cadence_Authorized_Employees_Record_Page2</members>
+        <members>NDA_RUNDA_Cadence_Employees_Refrigerated_Record_Page1</members>
+        <members>NDA_User_Source_Code_Access_Record_Page</members>
+        <members>Opportunity_Record_Page</members>
+        <members>Order_Managment_Home_Page</members>
+        <members>Order_Record_Page</members>
+        <members>Price_Dimension_Record_Page</members>
+        <members>Price_List_Item_Record_Page</members>
+        <members>Price_List_Record_Page</members>
+        <members>Product_Configuration_Record_Page</members>
+        <members>Product_Exception_Record_Page</members>
+        <members>Product_Filter_View_Record_Page</members>
+        <members>Proposal_Line_Item_Record_Page</members>
+        <members>Quote_Proposal_Record_Page</members>
+        <members>Quote_Rate_Table_Record_Page</members>
+        <members>R_D_Marketing_TFO_Home_Page</members>
+        <members>Restricted_Employee_Form_Record_Page</members>
+        <members>Sales_Finance_Corp_WFO_Home_Page</members>
+        <members>Sales_Managment_Home_Page</members>
+        <members>Summary_Group_Record_Page</members>
+        <members>Template_Record_Page</members>
+        <members>TSMC_Detail_Lightning_Admin</members>
+        <members>TSMC_Detail_Lightning_Detail</members>
+        <members>University_Program_Online_Application_Record_Page1</members>
+        <members>University_Program_Online_Application_Record_Page</members>
+        <members>Var_Profile_Record_Page</members>
+        <name>FlexiPage</name>
+    </types>
+
+    <!-- Flows -->
+    <types>
+        <members>Account_After_Create_Update_Event</members>
+        <members>Account_Before_Create_Update_Event</members>
+        <members>AsyncApex_Exception_After_Create_Event</members>
+        <members>Category_Hierarchy_Before_Create_Update_Event</members>
+        <members>Change_Integration_on_Opportunity_Update</members>
+        <members>Change_Last_Notification_Date</members>
+        <members>Docusign_Status_After_Create_Update_Event</members>
+        <members>Expected_Close_Quarter_After_Create_Update_Event</members>
+        <members>Forecast_After_Create_Update_Event</members>
+        <members>Forecast_Target_After_Create_Event</members>
+        <members>Goal_Letter_Before_Delete_Event</members>
+        <members>GSS_Index_Before_Create_Update_Event</members>
+        <members>Lead_After_Create_Update_Event</members>
+        <members>LineItem_Before_Create_Update_Event</members>
+        <members>Opportunity_After_Create_Update_Event</members>
+        <members>Opportunity_Before_Create_Update_Event</members>
+        <members>PO_PQ_Comparison_Result_After_Create_Update_Event</members>
+        <members>Quote_After_Create_Update</members>
+        <members>Quote_Before_Create_Update</members>
+        <members>Quote_Line_Item_Before_Create_Update_Event</members>
+        <members>Quote_Proposal_After_Create_Update_Event</members>
+        <members>Quote_Proposal_Before_Create_Update_Event</members>
+        <members>State_Region_After_Create_Update_Event</members>
+        <name>Flow</name>
+    </types>
+
+    <!-- Custom Labels -->
+    <types>
+        <members>CustomLabels</members>
+        <name>CustomLabels</name>
+    </types>
+
+    <!-- Layouts -->
+    <types>
+        <members>Account-Account Layout</members>
+        <members>Account-Account-OrderFulfillment</members>
+        <members>Account-Account-Sales</members>
+        <members>Account-Account-Sales-WithAcctOwner</members>
+        <members>Account-PAccount-Customer Master</members>
+        <members>Account-PAccount-OrderFulfillment</members>
+        <members>Account-PAccount-Sales</members>
+        <members>Account-PAccount-Sales-withAccOwner</members>
+        <members>Account-X-Account Admin</members>
+        <members>AE_Acknowledgement_Flow__c-AE Acknowledgement Flow Layout</members>
+        <members>APTPS_Agreement_Account_Sites__c-Agreement Account Sites Layout</members>
+        <members>APTPS_NDA_User_Source_Code_Access__c-NDA User Source Code Access Layout</members>
+        <members>APTS_Authorized_User_Agreement__c-Authorized User %28Agreement%29 Layout</members>
+        <members>APTS_Authorized_User__c-Authorized User Layout</members>
+        <members>APTS_CC_Email__c-CC Emails Layout</members>
+        <members>APTS_Cloud_Service_Product__c-Cloud Service Product Layout</members>
+        <members>APTS_DiscountHierarchy_BG_PG_Master_Data__c-Discount Hierarchy BG PG Master Data Layout</members>
+        <members>APTS_Discount_Hierarchy__c-Discount Hierarchy Layout</members>
+        <members>APTS_Discount_Hierarchy_Header__c-Discount Hierarchy Header Layout</members>
+        <members>APTS_Discount_Hierarchy_template__c-Discount Hierarchy template Layout</members>
+        <members>APTS_GeoInstall__c-GeoInstall Layout</members>
+        <members>APTS_Multi_Region_WAN__c-Multi-Region WAN Layout</members>
+        <members>APTS_OA_TCV_Threshold__mdt-APTS OA TCV Thresholds Layout</members>
+        <members>APTS_OpportunityQuoteMapping__c-OpportunityQuoteMapping Layout</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules__mdt-APTS Order Acceptance Fulfilment Rules Layout</members>
+        <members>APTS_Package_Addendum_Table__c-Package Addendum Table Layout</members>
+        <members>APTS_PL_DiscountHierarchy_Mapping__c-Discount Hierarchy Mapping Layout</members>
+        <members>APTS_PQ_Table_Agreement__c-PQ Table %28Agreement%29 Layout</members>
+        <members>APTS_Quote_Ramp__c-Quote Ramp Layout</members>
+        <members>APTS_Quote_Rate_Table_Agreement__c-Quote Rate Table %28Agreement%29 Layout</members>
+        <members>APTS_Related_Opportunity__c-Related Opportunity Layout</members>
+        <members>APTS_Sub_Family_Master__c-Sub Family Master Layout</members>
+        <members>Apttus__Agreement_Clause__c-Apttus__Agreement Clause Layout</members>
+        <members>Apttus__Agreement_Document__c-Apttus__Agreement Document Layout</members>
+        <members>Apttus__Agreement_Protection__c-Apttus__Agreement Protection Layout</members>
+        <members>Apttus_Approval__Approval_Request__c-Apttus_Approval__Approval Request Layout</members>
+        <members>Apttus_Approval__Approval_Request_History__c-Apttus_Approval__Approval Request History Layout</members>
+        <members>Apttus__APTS_Admin__c-Apttus__Admin Layout</members>
+        <members>Apttus__APTS_Agreement__c-CIC OF Layout</members>
+        <members>Apttus__APTS_Agreement__c-CIC Requestor Layout</members>
+        <members>Apttus__APTS_Agreement__c-CLLA Legacy Agreement Numbers</members>
+        <members>Apttus__APTS_Agreement__c-CLLA OF Layout</members>
+        <members>Apttus__APTS_Agreement__c-CLLA OF Layout Legal</members>
+        <members>Apttus__APTS_Agreement__c-CLLA Requester Layout</members>
+        <members>Apttus__APTS_Agreement__c-CLLA Special OF Layout</members>
+        <members>Apttus__APTS_Agreement__c-Custom Clause - AX</members>
+        <members>Apttus__APTS_Agreement__c-Custom Clause</members>
+        <members>Apttus__APTS_Agreement__c-General NDA Legal</members>
+        <members>Apttus__APTS_Agreement__c-General NDA non Legal</members>
+        <members>Apttus__APTS_Agreement__c-LWR  Agreement Layout</members>
+        <members>Apttus__APTS_Agreement__c-LWR Requester Layout</members>
+        <members>Apttus__APTS_Agreement__c-NDA Legal User</members>
+        <members>Apttus__APTS_Agreement__c-NDA Requester</members>
+        <members>Apttus__APTS_Agreement__c-TWR</members>
+        <members>Apttus_Base2__UIComponentProvider__c-Apttus_Base2__Apttus UI Component Provider Layout</members>
+        <members>Apttus_Config2__BatchJob__c-Apttus_Config2__Batch Job Layout</members>
+        <members>Apttus_Config2__ClassificationHierarchy__c-Apttus_Config2__Category Hierarchy Layout</members>
+        <members>Apttus_Config2__ClassificationName__c-Apttus_Config2__Category Layout</members>
+        <members>Apttus_Config2__LineItem__c-Apttus_Config2__Line Item Layout</members>
+        <members>Apttus_Config2__PriceDimension__c-Apttus_Config2__Price Dimension Layout</members>
+        <members>Apttus_Config2__PriceList__c-Apttus_Config2__Price List Layout</members>
+        <members>Apttus_Config2__PriceListCategory__c-Apttus_Config2__Price List Category Layout</members>
+        <members>Apttus_Config2__PriceListItem__c-Apttus_Config2__Price List Item Layout</members>
+        <members>Apttus_Config2__ProductClassification__c-Apttus_Config2__Product Classification Layout</members>
+        <members>Apttus_Config2__ProductConfiguration__c-Apttus_Config2__Product Configuration Layout</members>
+        <members>Apttus_Config2__ProductFilterView__c-Apttus_Config2__Product Filter View Layout</members>
+        <members>Apttus_Config2__ProductHierarchyView__c-Apttus_Config2__Product Hierarchy View Layout</members>
+        <members>Apttus_Config2__SummaryGroup__c-Apttus_Config2__Summary Group Layout</members>
+        <members>Apttus_Config2__UserView__c-Apttus_Config2__User View Layout</members>
+        <members>Apttus__CycleTimeField__c-Apttus__Cycle Time Field Layout</members>
+        <members>Apttus_Proposal__Proposal__c-eDA Card %2F VIP %2F MSSAC Layout Debug</members>
+        <members>Apttus_Proposal__Proposal__c-eDA Card %2F VIP Proposal Layout</members>
+        <members>Apttus_Proposal__Proposal__c-MS-SAC Layout</members>
+        <members>Apttus_Proposal__Proposal__c-MS-TBL Layout</members>
+        <members>Apttus_Proposal__Proposal__c-No Cost Amendment Layout</members>
+        <members>Apttus_Proposal__Proposal__c-Proposal %2F MSTBL Layout Debug</members>
+        <members>Apttus_Proposal__Proposal__c-TBL%2FSAM Layout</members>
+        <members>Apttus_Proposal__Proposal__c-Term Layout Debug</members>
+        <members>Apttus_Proposal__Proposal__c-Term Layout</members>
+        <members>Apttus_Proposal__Proposal_Document_Output_Format__c-Apttus_Proposal__Proposal Document Output Format Layout</members>
+        <members>Apttus_Proposal__Proposal_Line_Item__c-Apttus_Proposal__Proposal Line Item Layout</members>
+        <members>Apttus_Release_Approver__c-Apttus Release Approver Layout</members>
+        <members>Apttus__TemplateClauseReferenceVersion__c-Apttus__Template Clause Reference Version Layout</members>
+        <members>Apttus__TemplateDynamicSection__c-Apttus__Template Dynamic Section Layout</members>
+        <members>Apttus__TemplateDynamicSectionVersion__c-Apttus__Template Dynamic Section Version Layout</members>
+        <members>Apttus__TempObject__c-Apttus__Temp Object Layout</members>
+        <members>APXT_CMQM__QuickMerge_Link__c-APXT_CMQM__MassMerge Layout</members>
+        <members>APXT_CMQM__QuickMerge_Link__c-APXT_CMQM__PointMerge Layout</members>
+        <members>APXTConga4__Conga_Template__c-APXTConga4__Conga Template Layout</members>
+        <members>ARM_Employee_Agreement_Relationship__c-ARM Employee Agreement Relationship Layout</members>
+        <members>ARM_TRS_Employee_Agreement_Relationship__c-ARM TRS Employee Agreement Relationship Layout</members>
+        <members>Booking_Package__c-Booking Package Layout</members>
+        <members>Booking_Package__c-Prov Request Layout</members>
+        <members>Cadence_Documents__c-Cadence Documents Layout</members>
+        <members>Contact-Contact Layout</members>
+        <members>Contact-Contact Layout Sales OF</members>
+        <members>dfsle__EnvelopeStatus__c-dfsle__DocuSign Envelope Status Layout</members>
+        <members>DQMAudit__c-DQMAudit Layout</members>
+        <members>DQM_Product_SSP__c-DQM Product SSP Layout</members>
+        <members>ER_Agreement__c-Restricted Employee Form Layout</members>
+        <members>Goal_Letter__c-Goal Letter Layout</members>
+        <members>Goal_Letter__c-MBO Layout</members>
+        <members>Goal_Letter_Participant__c-Goal Letter Participant Layout</members>
+        <members>Intel_Runda_30_Day_Email_Log__c-Intel Runda 30 Day Email Log Layout</members>
+        <members>Intel_Signed_Document__c-Intel Signed Document Layout</members>
+        <members>NDA_ARM_Cadence_Authorized_Employees__c-NDA ARM Cadence Authorized Employees Layout</members>
+        <members>NDA_ARM_TRS_Cadence_Authorized_Employees__c-NDA ARM TRS Cadence Authorized Employees Layout</members>
+        <members>NDA_RUNDA_Cadence_Authorized_Employees__c-NDA RUNDA Cadence Authorized Employees Layout</members>
+        <members>NDA_RUNDA_Cadence_Employees_Refrigerated__c-NDA RUNDA Cadence Employees Refrigerated Layout</members>
+        <members>NDA_SNPS_Cadence_Authorized_Employees__c-NDA SNPS Cadence Authorized Employees Layout</members>
+        <members>Opportunity-Opportunity IP</members>
+        <members>Opportunity-Opportunity Main</members>
+        <members>Opportunity-Opportunity OrCAD Internal Layout</members>
+        <members>Order-Order Layout</members>
+        <members>Owner_Info__c-Intel Owner Info Layout</members>
+        <members>Product_Exclusion__c-Product Exception Layout</members>
+        <members>Product_Price_Type__c-Product Price Type Layout</members>
+        <members>SNPS_Employee_Agreement_Relationship__c-SNPS Employee Agreement Relationship Layout</members>
+        <members>TSMC_Agreement__c-Admin</members>
+        <members>TSMC_Agreement__c-Detail</members>
+        <members>TSMC_Agreement__c-TSMC Agreement Layout</members>
+        <members>TWR_Assignment__c-TWR Assignment Layout</members>
+        <members>University_Request__c-Onboarding Request Layout</members>
+        <members>University_Request__c-Renewal Request Layout</members>
+        <members>University_Request__c-Special Request Layout</members>
+        <members>Univ_GL_Docusign_Reminder__mdt-Univ GL Docusign Reminder Layout</members>
+        <name>Layout</name>
+    </types>
+
+    <!-- Objects (CustomObject) -->
+    <types>
+        <members>Account</members>
+        <members>APTPS_Agreement_Account_Sites__c</members>
+        <members>APTPS_NDA_User_Source_Code_Access__c</members>
+        <members>APTS_Authorized_User_Agreement__c</members>
+        <members>APTS_CC_Email__c</members>
+        <members>APTS_GeoInstall__c</members>
+        <members>APTS_Multi_Region_WAN__c</members>
+        <members>APTS_OA_TCV_Threshold__mdt</members>
+        <members>APTS_Order_Acceptance_Fullfilment_Rules__mdt</members>
+        <members>APTS_PO_PQ_Comparison_Result__c</members>
+        <members>Apttus__APTS_Agreement__c</members>
+        <members>Apttus_Config2__ClassificationHierarchy__c</members>
+        <members>Apttus_Config2__ClassificationName__c</members>
+        <members>Apttus_Config2__LineItem__c</members>
+        <members>Apttus_Config2__PriceDimension__c</members>
+        <members>Apttus_Config2__PriceList__c</members>
+        <members>Apttus_Config2__PriceListItem__c</members>
+        <members>Apttus_Config2__ProductConfiguration__c</members>
+        <members>Apttus_Config2__ProductFilterView__c</members>
+        <members>Apttus__CycleTimeField__c</members>
+        <members>Apttus_Proposal__Proposal__c</members>
+        <members>Apttus_Proposal__Proposal_Line_Item__c</members>
+        <members>Apttus_Release_Approver__c</members>
+        <members>ARM_Employee_Agreement_Relationship__c</members>
+        <members>ARM_TRS_Employee_Agreement_Relationship__c</members>
+        <members>Cadence_Documents__c</members>
+        <members>dfsle__EnvelopeStatus__c</members>
+        <members>ER_Agreement__c</members>
+        <members>Intel_Runda_30_Day_Email_Log__c</members>
+        <members>NDA_ARM_Cadence_Authorized_Employees__c</members>
+        <members>NDA_RUNDA_Cadence_Authorized_Employees__c</members>
+        <members>NDA_RUNDA_Cadence_Employees_Refrigerated__c</members>
+        <members>NDA_SNPS_Cadence_Authorized_Employees__c</members>
+        <members>Opportunity</members>
+        <members>Order</members>
+        <members>Owner_Info__c</members>
+        <members>Product_Exclusion__c</members>
+        <members>TSMC_Agreement__c</members>
+        <members>Univ_GL_Docusign_Reminder__mdt</members>
+        <name>CustomObject</name>
+    </types>
+
+    <!-- Permission Sets -->
+    <types>
+        <members>Apttus_requester_PS</members>
+        <members>Apttus_User_Setup_Page_PS</members>
+        <members>Betacae_objects</members>
+        <members>Cadence_Account_Executive</members>
+        <members>Cadence_CPQ_Read_Only_PS</members>
+        <members>Cadence_DQM_Data_Master_Admin</members>
+        <members>Cadence_Field_Order_Reps</members>
+        <members>Cadence_Legal_User</members>
+        <members>Cadence_Partner_Access</members>
+        <members>Cadence_Sales_Finance_User_New</members>
+        <members>Cadence_Sales_Ops_and_IT_Admin_User</members>
+        <members>Conga_CLM_Lightning_Access</members>
+        <members>Contract_Exception</members>
+        <members>DashboardCreateViewAllData</members>
+        <members>DIP_Mrktng</members>
+        <members>DQP_Edit_Right</members>
+        <members>GDPR_Admin</members>
+        <members>Goal_Letter_PS</members>
+        <members>Inside_Sales_Team</members>
+        <members>ITProdSupportModifyAll</members>
+        <members>IT_Schedule_Anonymous_Execute</members>
+        <members>LoginAsOtherUserPS</members>
+        <members>ManageConnectedApps</members>
+        <members>Manage_DQM_App_Permission</members>
+        <members>Manage_Products_For_Support</members>
+        <members>Marketing_Admin_PS</members>
+        <members>Modify_All_Cloned</members>
+        <members>Modify_All</members>
+        <members>Okta_Production_Support</members>
+        <members>Opportunity_Att_RU</members>
+        <members>Opportunity_CRU_SF</members>
+        <members>Opportunity_DMS_Admin_Override_Section_RW</members>
+        <members>Opportunity_DMS_HQ_Override_Sections_RW</members>
+        <members>Opportunity_DMS_Region_Override_Sections_RW</members>
+        <members>Opportunity_ModifyAll_ForLegal</members>
+        <members>Opportunity_Read_Only</members>
+        <members>Opportunity_Royalty_Target_Floor_Edit</members>
+        <members>Opportunity_View_All_Access</members>
+        <members>Partner_Portal_Access</members>
+        <members>Partner_PRM_Access</members>
+        <members>Quotes_CRU</members>
+        <members>Quote_View_All</members>
+        <members>Regional_Inside_Sales_Team</members>
+        <members>sfdcInternalInt__sfdc_a360_sfcrm_data_extract</members>
+        <members>System_Sales_Team</members>
+        <members>Technical_Campaign_RW_access</members>
+        <members>TSMC_Access</members>
+        <members>TSMC_Admin</members>
+        <members>TWR_PS</members>
+        <members>University_Access_Permission_Set</members>
+        <members>VAR_Managers</members>
+        <members>View_Event_Log_PS</members>
+        <name>PermissionSet</name>
+    </types>
+
+    <!-- Profiles -->
+    <types>
+        <members>2_1 - Inside Sales</members>
+        <members>2_1 - Inside Sales - Sales Insight</members>
+        <members>2_2 - AX_Clone</members>
+        <members>2_2 - AX</members>
+        <members>2_2 - AX - Sales Insight</members>
+        <members>2_3 - Account Directors</members>
+        <members>2_3 - Account Directors Sales Insight</members>
+        <members>2_4 - Regional Sales VPsClone</members>
+        <members>2_4 - Regional Sales VPs</members>
+        <members>2_5 - Sales OperationsClone</members>
+        <members>2_5 - Sales Operations</members>
+        <members>2_6 - AMT</members>
+        <members>2_6 - AMT Sales Insight</members>
+        <members>3_1 - Order Fulfillment - ManagerClone</members>
+        <members>3_2 %E2%80%93 Order Management Apttus SuperUser</members>
+        <members>3_2 - Order Fulfillment - User</members>
+        <members>3_3 AND 5_3-Order Fulfillmnet-AP PLUS AE</members>
+        <members>3_3 - Order Fulfillment - AP</members>
+        <members>3_4 - Order Management - AP</members>
+        <members>3_5 - Order Management Clone</members>
+        <members>3_5 - Order Management</members>
+        <members>4_1 - Sales Finance _Forecast_</members>
+        <members>4_2 - WFO</members>
+        <members>4_3 - Sales Finance</members>
+        <members>4_4 - Apttus Lightning</members>
+        <members>4_4 - Apttus Platform Profile</members>
+        <members>4_4 - Apttus Salesforce Profile</members>
+        <members>4_4 - LegalApttusClone</members>
+        <members>4_4 - Legal_Apttus</members>
+        <members>4_4 - Legal</members>
+        <members>4_5 - Credit</members>
+        <members>4_6 - Revenue Accounting</members>
+        <members>4_7 - BP Approvers</members>
+        <members>4_8 - WFO Nerve Center</members>
+        <members>4_8 - WFO Operations2</members>
+        <members>4_8 - WFO Operations</members>
+        <members>4_9 - Corp</members>
+        <members>5_1 - Data Steward</members>
+        <members>5_2_Support Administrator_NO_SSO</members>
+        <members>5_2_Support Administrator</members>
+        <members>5_3_Support Manager%2FAE Lightning</members>
+        <members>5_3_Support Manager%2FAE</members>
+        <members>5_4_Support TFO AE</members>
+        <members>5_4_Support TIP FAE</members>
+        <members>5_5_Support SSG Agent</members>
+        <members>6%2E1 - Marketing Administrator</members>
+        <members>7%2E0 %E2%80%93 R%26D</members>
+        <members>8%2E0 - TFO</members>
+        <members>Admin</members>
+        <members>Analytics Cloud Integration User</members>
+        <members>Analytics Cloud Security User</members>
+        <members>BP-CRUD-only</members>
+        <members>Cadence COS Integration Profile</members>
+        <members>Cadence CosLite Integration Profile</members>
+        <members>Cadence Data Sync Integration Profile</members>
+        <members>Cadence Echosign Integration Profile</members>
+        <members>Cadence Leandata Integration</members>
+        <members>Cadence Readonly Integration Profile</members>
+        <members>Cadence Splunk Integration Profile</members>
+        <members>Cadence VIP Integration Profile</members>
+        <members>CDNReadOnly</members>
+        <members>CDS Info Profile</members>
+        <members>ContractManager</members>
+        <members>COS Community Profile</members>
+        <members>CoveoLink</members>
+        <members>Customer Community Custom</members>
+        <members>General RPA Salesforce</members>
+        <members>Gold Partner User</members>
+        <members>Impartner PRM</members>
+        <members>Integration</members>
+        <members>MarketingProfile</members>
+        <members>Partner Community User Custom</members>
+        <members>Partner Community User</members>
+        <members>Read Only</members>
+        <members>ReadOnly</members>
+        <members>SalesforceIQ Integration User</members>
+        <members>Sales Insights Integration User</members>
+        <members>Sales - PRM</members>
+        <members>ServiceMax Admin</members>
+        <members>ServiceMax Production Manager</members>
+        <members>ServiceMax Repair Manager</members>
+        <members>ServiceMax Service User</members>
+        <members>SolutionManager</members>
+        <members>Standard</members>
+        <members>SVMX Customer Community Plus</members>
+        <members>System Administrator Custom</members>
+        <members>www Profile</members>
+        <name>Profile</name>
+    </types>
+
+    <!-- Quick Actions -->
+    <types>
+        <members>APTS_Cloud_Service_Product__c.Delete_Product</members>
+        <members>Apttus__APTS_Agreement__c.Add_Comments_LEX</members>
+        <members>Apttus__APTS_Agreement__c.Edit_Saved_NDA_LEX</members>
+        <members>Apttus__APTS_Agreement__c.Submit_Request_CIC</members>
+        <members>ER_Agreement__c.Edit_LEX</members>
+        <members>Opportunity.Request_Payment_Term_Lex</members>
+        <members>Opportunity.Seed_LEX</members>
+        <members>Opportunity.Transfer_and_Share_LEX</members>
+        <members>TSMC_Agreement__c.Complete_LEX</members>
+        <members>TSMC_Agreement__c.Edit_lightning_VF</members>
+        <name>QuickAction</name>
+    </types>
+
+    <!-- Reports -->
+    <types>
+        <members>unfiled$public/X3rdParty_Employee_RESTRICTIONS</members>
+        <name>Report</name>
+    </types>
+
+    <!-- Report Types -->
+    <types>
+        <members>Account_Details_With_Agreement</members>
+        <members>Agreement_Activity_History</members>
+        <members>Agreement_with_Agreement_Line_Items</members>
+        <members>Agreement_with_custom_names</members>
+        <members>Intel_RUNDA_DA_Expiration</members>
+        <members>NDA_RUNDA_Cadence_Authorized_Employees_with_Agmt</members>
+        <members>Opportunities_with_Agreements</members>
+        <members>Opportunity_with_without_Agreements</members>
+        <members>TKR_Report_Line_Item_Report</members>
+        <members>TSMC_Request</members>
+        <members>Users_with_Agreement_and_Lineitems</members>
+        <name>ReportType</name>
+    </types>
+
+    <!-- Static Resources -->
+    <types>
+        <members>APTPS_Common</members>
+        <members>APTS_AcceptOrder_Button</members>
+        <members>APTS_CadenceCustomCSS</members>
+        <members>APTS_Recall_OrderAcceptance_Button</members>
+        <members>Cadence_Coveo_UI</members>
+        <members>customLookupIcon</members>
+        <members>LightningExpJS</members>
+        <name>StaticResource</name>
+    </types>
+
+    <!-- Tabs -->
+    <types>
+        <members>ApttusUserSetupPage</members>
+        <name>CustomTab</name>
+    </types>
+
+    <!-- Workflows -->
+    <types>
+        <members>Account</members>
+        <members>Apttus_Approval__Backup_Approver__c</members>
+        <members>Apttus__APTS_Agreement__c</members>
+        <members>Apttus__APTS_Template__c</members>
+        <members>Apttus_Proposal__Proposal__c</members>
+        <members>Expected_Close_Quarter__c</members>
+        <members>Forecast__c</members>
+        <members>Forecast_Target__c</members>
+        <members>GSS_Index__c</members>
+        <members>GSS_Split__c</members>
+        <members>NDA_ARM_Cadence_Authorized_Employees__c</members>
+        <members>NDA_RUNDA_Cadence_Authorized_Employees__c</members>
+        <members>NDA_SNPS_Cadence_Authorized_Employees__c</members>
+        <members>OpportunityLineItem</members>
+        <members>Opportunity</members>
+        <members>QuoteLineItem</members>
+        <members>Quote</members>
+        <members>State__c</members>
+        <members>TSMC_Agreement__c</members>
+        <name>Workflow</name>
+    </types>
+
+    <!-- Version -->
+    <version>60.0</version>
+</Package>
