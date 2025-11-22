@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "format": "envsync-folder-normalization-json-rule",
+
+  "paths": {
+    "master_github_path": "/data/code/GitHub_SFDC/Master/SFDC",
+    "prod_dump_base": "/backup/PROD_DUMP"
+  },
+
+  "live_branch_detection": {
+    "bashrc_path": "~/.bashrc",
+    "aliases_to_read": ["sbx", "tst", "hfx"],
+    "alias_path_keywords": {
+      "sbx": "sfdc_deploySBX",
+      "tst": "sfdc_deployTST",
+      "hfx": "sfdc_deployHFX"
+    },
+    "branch_extract_method": "segment_before_SFDC"
+  },
+
+  "rename_maps": {
+    "branch_to_dump": {
+      "customLabel": "labels",
+      "customSettings": "CustomSettingData"
+    },
+    "dump_to_branch": {
+      "labels": "customLabel",
+      "CustomSettingData": "customSettings"
+    }
+  },
+
+  "custom_label_merge": {
+    "enabled": true,
+    "source_folder": "commonLabel",
+    "source_file": "CustomLabels.labels-meta.xml",
+    "target_folder": "labels",
+    "target_file": "CustomLabels.labels-meta.xml",
+    "xml_merge": {
+      "extract_node_name": "labels",
+      "insert_under_root": "CustomLabels",
+      "dedupe_by_text": true
+    }
+  },
+
+  "env_rules": {
+    "master_main_env": "prod",
+    "master_additional_envs": ["sbx", "tst", "hfx"],
+    "live_additional_envs": ["prod", "sbx", "tst", "hfx"]
+  }
+}
