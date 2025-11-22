@@ -10,10 +10,10 @@ Normalize Salesforce metadata folder structures:
 2) Dump -> Branch (rebuild branch env-style)
    python3.9 envsync_normalize.py -d <dump.zip> -type dump -o <org_env>
 
-Fixes included:
-- NO extra src/ folder kept in branch->dump.
-- customSettings rename works.
-- temp env folders match your naming for Master.
+Fixes included (per your feedback):
+- Branch->Dump has NO extra src/ folder.
+- customSettings -> CustomSettingData is renamed RECURSIVELY anywhere.
+- commonLabel CustomLabels merge is namespace-safe and deletes commonLabel.
 ------------------------------------------------------------
 """
 
@@ -75,12 +75,13 @@ def parse_bashrc_for_live_branches(rules):
         line = line.strip()
         for alias_name in aliases:
             if line.startswith(f"alias {alias_name}="):
-                # Ensure keyword matches (deploy area)
+
+                # Ensure keyword matches deploy area
                 keyword = keywords.get(alias_name)
                 if keyword and keyword not in line:
                     continue
 
-                # Extract branch name from path segment before "/SFDC/"
+                # Extract branch name = segment before "/SFDC/"
                 parts = line.split("/")
                 branch_name = None
                 for i, p in enumerate(parts):
@@ -101,7 +102,7 @@ def parse_bashrc_for_live_branches(rules):
                 live.append({
                     "name": branch_name,
                     "sandbox": alias_name,   # sbx/tst/hfx
-                    "path": branch_path      # absolute folder path
+                    "path": branch_path      # absolute path
                 })
 
     return live
@@ -131,32 +132,39 @@ def resolve_branch_info(branch_name: str, rules):
                 "branch_type": "live",
                 "branch_path": item["path"],
                 "main_env": item["sandbox"],  # sbx/tst/hfx
-                "tag": branch_name            # IMPORTANT: tag is branch name only
+                "tag": branch_name            # IMPORTANT: tag is branch name ONLY
             }
 
     die(f"Branch '{branch_name}' not found in ~/.bashrc aliases.")
 
 
 # ------------------------------------------------------------
-# Apply folder rename map in-place
+# Apply rename map RECURSIVELY (Fix-1)
 # ------------------------------------------------------------
 def apply_rename_map(base_path: str, rename_map: dict):
+    """
+    Recursively rename directories anywhere under base_path.
+    Example: customSettings -> CustomSettingData
+    """
     for old, new in rename_map.items():
-        old_path = os.path.join(base_path, old)
-        new_path = os.path.join(base_path, new)
+        # walk bottom-up so parent renames don't break traversal
+        for root, dirs, _ in os.walk(base_path, topdown=False):
+            for d in dirs:
+                if d == old:
+                    old_path = os.path.join(root, d)
+                    new_path = os.path.join(root, new)
 
-        if os.path.exists(old_path):
-            # If new already exists, merge content
-            if os.path.exists(new_path):
-                for item in os.listdir(old_path):
-                    shutil.move(os.path.join(old_path, item), new_path)
-                shutil.rmtree(old_path)
-            else:
-                shutil.move(old_path, new_path)
+                    # If target exists, merge content
+                    if os.path.exists(new_path):
+                        for item in os.listdir(old_path):
+                            shutil.move(os.path.join(old_path, item), new_path)
+                        shutil.rmtree(old_path)
+                    else:
+                        shutil.move(old_path, new_path)
 
 
 # ------------------------------------------------------------
-# Merge commonLabel labels into labels/CustomLabels file
+# Merge commonLabel labels -> labels/CustomLabels + delete commonLabel (Fix-2)
 # ------------------------------------------------------------
 def merge_custom_labels(base_path: str, rules):
     rule = rules["custom_label_merge"]
@@ -174,18 +182,27 @@ def merge_custom_labels(base_path: str, rules):
 
     os.makedirs(tgt_folder, exist_ok=True)
 
-    # Read source XML
+    # ---- helper to read namespace ----
+    def get_ns(tag):
+        return tag.split("}")[0].strip("{") if tag.startswith("{") else None
+
+    # ---- load source XML ----
     src_tree = ET.parse(src_file)
     src_root = src_tree.getroot()
+    ns = get_ns(src_root.tag)
 
-    node_name = rule["xml_merge"]["extract_node_name"]
-    src_nodes = src_root.findall(f".//{node_name}")
+    # Namespace-safe labels tag
+    labels_tag = f"{{{ns}}}labels" if ns else "labels"
+
+    # Extract ONLY <labels> blocks
+    src_nodes = src_root.findall(f".//{labels_tag}")
     if not src_nodes:
         return
 
     # Ensure target XML exists
     if not os.path.exists(tgt_file):
-        new_root = ET.Element(rule["xml_merge"]["insert_under_root"])
+        root_tag = f"{{{ns}}}CustomLabels" if ns else "CustomLabels"
+        new_root = ET.Element(root_tag)
         ET.ElementTree(new_root).write(tgt_file, encoding="utf-8", xml_declaration=True)
 
     tgt_tree = ET.parse(tgt_file)
@@ -194,7 +211,7 @@ def merge_custom_labels(base_path: str, rules):
     dedupe = rule["xml_merge"].get("dedupe_by_text", True)
     existing_blocks = set()
     if dedupe:
-        for node in tgt_root.findall(f".//{node_name}"):
+        for node in tgt_root.findall(f".//{labels_tag}"):
             existing_blocks.add(ET.tostring(node, encoding="unicode"))
 
     for node in src_nodes:
@@ -204,6 +221,10 @@ def merge_custom_labels(base_path: str, rules):
         tgt_root.append(node)
 
     tgt_tree.write(tgt_file, encoding="utf-8", xml_declaration=True)
+
+    # ✅ Delete commonLabel folder after merge
+    if rule["xml_merge"].get("delete_source_folder_after_merge", True):
+        shutil.rmtree(src_folder, ignore_errors=True)
 
 
 # ------------------------------------------------------------
@@ -224,11 +245,11 @@ def normalize_one_env(envname: str, source_env_base: str,
 
     src_env_folder = os.path.join(source_env_base, envname)
     if not os.path.exists(src_env_folder):
-        return  # may not exist, safe skip
+        return  # safe skip if missing
 
     shutil.copytree(src_env_folder, out_folder, dirs_exist_ok=True)
 
-    # Apply same renames inside these env folders
+    # Apply renames + label merge inside env folders too
     apply_rename_map(out_folder, rules["rename_maps"]["branch_to_dump"])
     merge_custom_labels(out_folder, rules)
 
@@ -252,18 +273,18 @@ def branch_to_dump(branch_name: str, rules):
     os.makedirs(tmp_root, exist_ok=True)
     os.makedirs(norm_dump_root, exist_ok=True)
 
-    # work_branch_root is the ROOT of normalized dump
+    # Root of normalized dump
     work_branch_root = os.path.join(tmp_root, tag)
     os.makedirs(work_branch_root, exist_ok=True)
 
-    # ✅ Copy src/ DIRECTLY into tmp/<TAG>/ (NO extra src folder)
+    # ✅ Copy src directly into tmp/<TAG>/
     src_from = os.path.join(branch_path, "src")
     if not os.path.exists(src_from):
         die(f"src folder not found: {src_from}")
 
     shutil.copytree(src_from, work_branch_root, dirs_exist_ok=True)
 
-    # Now env folder is directly inside tmp/<TAG>/env
+    # env is now tmp/<TAG>/env
     env_root = os.path.join(work_branch_root, "env")
     main_env_folder = os.path.join(env_root, main_env)
 
@@ -277,13 +298,13 @@ def branch_to_dump(branch_name: str, rules):
     # ✅ Remove env entirely
     shutil.rmtree(env_root, ignore_errors=True)
 
-    # ✅ Rename customLabel -> labels, customSettings -> CustomSettingData
+    # ✅ Recursive renames
     apply_rename_map(work_branch_root, rules["rename_maps"]["branch_to_dump"])
 
-    # ✅ Merge commonLabel's <labels> blocks into labels/CustomLabels...
+    # ✅ Merge + delete commonLabel
     merge_custom_labels(work_branch_root, rules)
 
-    # Normalize additional env folders
+    # Additional env normalization
     if branch_type == "master":
         additional_envs = rules["env_rules"]["master_additional_envs"]
         source_env_base = os.path.join(rules["paths"]["master_github_path"], "src", "env")
@@ -296,7 +317,7 @@ def branch_to_dump(branch_name: str, rules):
             continue
         normalize_one_env(envname, source_env_base, tmp_root, tag, branch_type, rules)
 
-    # Final output
+    # Final output copy
     out_path = os.path.join(norm_dump_root, tag)
     shutil.copytree(work_branch_root, out_path, dirs_exist_ok=True)
 
@@ -327,7 +348,6 @@ def dump_to_branch(dump_name: str, org_env_name: str, rules):
 
     dump_tag = f"Dump_{Path(dump_name).stem}"
 
-    # Unzip dump into tmp/<dump_tag>/
     work_dump_root = os.path.join(tmp_root, dump_tag)
     os.makedirs(work_dump_root, exist_ok=True)
 
@@ -351,7 +371,7 @@ def dump_to_branch(dump_name: str, org_env_name: str, rules):
     main_env_folder = os.path.join(env_root, main_env)
     os.makedirs(main_env_folder, exist_ok=True)
 
-    # Move all root metadata into env/<main_env>/
+    # Move all metadata root folders into env/<main_env>/
     for item in os.listdir(work_dump_root):
         if item == "src" or item.startswith("env_"):
             continue
