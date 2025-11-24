@@ -1,209 +1,231 @@
-Flow
 
+✅ ENV_SYNC Dashboard — Complete Algorithm (End-to-End Execution Logic)
+________________________________________
+1. LOGIN FLOW ( /login )
+Algorithm
+1.	User enters username + password.
+2.	Read conf/users.json.
+3.	Check:
+o	If username exists.
+o	If password matches hashed password.
+4.	If failure → return error UI.
+5.	If success:
+o	Create signed session cookie with expiry.
+o	Redirect to /dashboard.
+2. HOME Module (/dashboard)
+When Page Loads,
+The Summary of alerts/reminder/failures/success from all other module will be visible here.
+3. MASTER SYNC MODULE ( /master-sync )
+A. When Page Loads
+Algorithm
+1.	Read last 10 rows from DB table master_sync_runs.
+2.	Render:
+o	Buttons (Generate / Schedule)
+o	Latest report summary (from latest TS folder)
+o	History table.
+
+B. User Clicks: “Generate Master Sync Report”
+Step 1 — Ask Modal
+Take production dump? Yes/No
+C. If YES → Take Production Dump
+Algorithm
+1.	Read command from:
+conf/conf_path.json → prod_dump_command variable.
+2.	Execute using subprocess.
+3.	If return code != 0:
+Mark run as "FAILED_PROD_DUMP"
+Log stdout/stderr to DB + failure UI
+	Show the failure notification in /dashboard UI and /master_sync
+	Send a mail to conf/setup.json  email_cc variable’s recipient list. (use mutt command to send mail)
+STOP.
+D. Setup Timestamp Folder
+Algorithm
+1.	TS = current timestamp (YYYY_MM_DD_HH:MM:SS).
+2.	Create:
+conf/conf_path.json → base_report_directory_path variable (/data/public/ENV_SYNC/MasterSync/).
+BASE=$base_report_directory_path/{TS}
+mkdir -p $BASE
+3.	Create internal structure:
+BASE/tmp/
+BASE/logs/
+BASE/reports/
+BASE/sqlite.db
+E. MASTER FOLDER PREPARATION
+Step-by-step Algorithm
+1.	conf/conf_path.json → GitHub_Master_path variable
+GitHub_Master_path=/data/code/GitHub_SFDC/Master/SFDC/
+2.	Folder normalization:
+3.	Log "Master prepared".
+F. PROD DUMP EXTRACTION
+Algorithm
+1.	Identify latest zip inside /backup/PROD_DUMP/
+o	Sort by date inside filename.
+o	Pick highest date.
+2.	Unzip to:
+unzip latest.zip tmp/prod_xxx
+3.	Rename:
+mv tmp/prod_xxx tmp/PROD_DUMP
+G. FOLDER VALIDATION
+Algorithm
+1.	Read expected metadata types list:
+conf/conf_path.json  required_prod_components=/software/codedev/misc_script/SFDC/BCompareScript/component_main.list
+2.	Read metadata types from:
+tmp/PROD_DUMP/
+3.	Compare:
+•	Missing folder in PROD or missing folder in $required_prod_components
+•	Extra folder in PROD or Extra folder in $required_prod_components
+4.	If discrepancies:
+•	Mark run FAILED_FOLDER_VALIDATION
+•	Log stdout/stderr to DB + failure UI
+•	Show the failure notification in /dashboard UI and /master_sync
+•	Send a mail to conf/setup.json  email_cc variable’s recipient list. (use mutt command to send mail)
+•	STOP.
+3. DIFF ENGINE (MASTER vs PROD)
+Preparation
+Algorithm
+•	Move prepared folders into TS directory:
+mv tmp/Master $BASE/Master
+mv tmp/PROD_DUMP $BASE/PROD_DUMP
+	
+•	Now structure is:
+MasterSync/{TS}/Master/
+MasterSync/{TS}/PROD_DUMP/
+A. File List Acquisition
+Algorithm
+1.	Recursively list all files under:
+o	Master/
+o	PROD_DUMP/
+2.	Normalize paths into metadata-type-based structures.
+B. Categorize Files
+Algorithm
+For each file in PROD:
+•	If not in Master → ProdMissingMaster
+For each file in Master:
+•	If not in PROD → MasterMissingProd
+For each file present in both:
+•	Compare content:
+o	If different → CommonDiff
+o	Else ignore.
+Store each list in SQLite tables:
+•	prod_missing_master
+•	master_missing_prod
+•	common_diff
+C. Combined Changed + Missing
+Algorithm
+1.	Combine:
+o	CommonDiff
+o	ProdMissingMaster (because "missing in Master" = will be newly added in Master)
+2.	For each file in combined set:
+o	Run:
+sf metadata:info -m <metadata path>
+•	Extract:
+o	lastModifiedBy
+o	lastModifiedDate
+3.	Insert into table combined_changes.
+4. CODE COMPARISON (Beyond Compare)
+Algorithm
+1.	Run:
+bash codecompare.posix2.sh -d -m oo -o Master -o PROD_DUMP
+2.	Script generates:
+•	Diff folders
+•	HTML summary
+3.	Store link in DB and UI.
+5. CREATE /Master_Update_Files STRUCTURE
+Algorithm
+If Master Sync succeeded:
+1.	Create:
+mkdir BASE/Master_Update_Files
+2.	From:
+common_diff
+prod_missing_master
+3.	Recreate Master folder structure.
+4.	Copy relevant files from Master folder using relative path mapping.
+
+6. EMAIL NOTIFICATION
+Algorithm
+1.	Build email body:
+o	TS folder link
+o	Summary counts
+2.	Execute:
+echo "$BODY" | mutt -s "$SUBJECT" $EMAIL_LIST
+3.	Log email status.
+
+7. UPDATE DATABASE FOR UI
+Algorithm
+Insert into table master_sync_runs:
+•	timestamp
+•	success/fail
+•	prod dump name
+•	master summary counts
+•	folder validation status
+•	code compare link
+•	csv links
+•	execution duration
+
+
+8. UI RENDERING — MASTER SYNC PAGE
+Algorithm
+1.	Query master_sync_runs for:
+o	Latest run → Build cards
+o	Last 20 runs → Build history table
+2.	Render:
+o	Duration
+o	API Version (from prod dump)
+o	CSV download buttons
+o	Code Compare button
+o	Master Dump link
+o	Prod Dump link
+9. BRANCH SYNC MODULE
+A. Extract Live Branches (“sbx”, “tst”, “hfx”)
+Algorithm
+Read ~/.bashrc.
+Search lines matching:
+•	alias sbx=
+•	alias tst=
+•	alias hfx=
+Extract branch name from path:
+Example:
+/data/code/GitHub_SFDC/sfdc_deploySBX/<BRANCH>/SFDC/
+→ <BRANCH>
+Populate UI list.
+B. User Chooses Branch or “All Branches”
+Algorithm
+On submit:
+1.	For each selected branch:
+o	Run full diff vs Master Sync’s combined_changes.
+________________________________________
+C. Branch Diff Calculation
+Algorithm
+For selected branch:
+1.	Prepare branch folder:
+o	Copy from Git folder into TS/Branch folder.
+2.	Compare:
+o	Files in Master missing in Branch
+o	Files in Branch missing in Master
+o	Common files → content different
+3.	Determine Combined Changed + Missing:
+o	Union of all above
+o	For each:
+	Extract last 5 authors:
+git log -n 5 --pretty=format:"%an|%ad" -- <file>
+4.	Store into branch_sync_runs table.
+D. If “All Branches”
+Algorithm
+Run the above workflow 3 times:
+•	sbx branch
+•	tst branch
+•	hfx branch
+Render 3 report cards.
+________________________________________
+E. Branch Sync UI Rendering
+Algorithm
+1.	For each branch report:
+o	Show Duration
+o	Files missing in Master
+o	Files missing in Branch
+o	Common diff
+o	Combined changes list
+o	Author log list
+o	Code Compare links
+2.	History table from branch_sync_runs.
 
-ENV_SYNC Dashboard — Project Description
-
-
-
-1. What the Project Is
-
-A FastAPI-based internal dashboard for running, monitoring, and managing Salesforce metadata sync operations.
-It performs Master vs PROD comparisons, folder restructuring, diffs, Beyond Compare execution, error detection, report prep and email notifications.
-
-Master GitHub Codebase — /data/code/GitHub_SFDC/Master/SFDC/src
-
-Production Metadata Dumps — /backup/PROD_DUMP/
-Note: naming covension of prod dump.
-
-
-Output directory — /data/public/ENV_SYNC/
-
-
-
-2. Core Pages
-/login
-Single-user login (conf/users.json). Cookies used for session. FatApi based authentication.
-
-
-
-/master-sync
-Button: Start Master Sync
-Button: Schedule Master Sync
-Table of previous runs
-Displays success / failure summary after every run
-Note: Failure details.
-
-
-/branch-sync
-For branch-level comparisons.
-	Sub Page:-	/branch-sync/history
-		Shows historical runs.
-
-/run-reports
-Module for code and profile comparisons, object dumps, author logs.
-
-
-
-3. /master-sync
-
-In side Button: Start Master Sync Report.
-
-Two Buttons. 
-"Generate the Master Sync Report" and "Schedule the Master Sync Report."
-
-Master Sync Report – Exact Technical Flow
-Trigger
-
-User clicks "Generate the Master Sync Report"
-→ Modal: “Take production dump? Yes/No”
-
-If YES
-
-Run command from conf/master_sync.json:
-prod_dump_command: "python3.9 Export_SFDCMetadata_PosFix.py --dest /backup/PROD_DUMP/ --objects-dir force-app/main/default/objects/ prod"
-
-
-
-If No, do not take any prod dump.
-
-Folder Setup
-
-Timestamp folder:
-mkdir -p /data/public/ENV_SYNC/MasterSync/{TS}
-
-
-Master Folder Preparation
-
-Copy and restructure:
-cd /data/code/GitHub_SFDC/Master/SFDC/
-cp -r src/ tmp/src
-mv run/src tmp/Master
-mv tmp/Master/env/prod/* tmp/Master/
-rm -rf tmp/Master/env
-mv tmp/Master/customLabel tmp/Master/labels
-mv tmp/Master/customSettings tmp/Master/CustomSettingData
-
-unzip prod_xxx.zip tmp/prod_xxx
-Example prod dump is prod_62.0_5thNov2025_03:38:03.zip
-Note: Get the latest prod dump from the name of the file (time details is there) not the unix timestamp.
-
-Validate folders:
-If missing/extra folders compared to required_prod_folders, mark run failed.
-List of metadata in /software/codedev/misc_script/SFDC/BCompareScript/component_main.list should match with prod dumo metadata folder list.
-
-Diff Engine
-
-cd /data/public/ENV_SYNC/MasterSync/{Time Stamp}
-mv tmp/Master tmp/prod_xxx /data/public/ENV_SYNC/MasterSync/{Time Stamp}
-mv /data/public/ENV_SYNC/MasterSync/{Time Stamp}/prod_xxx /data/public/ENV_SYNC/MasterSync/{Time Stamp}/PROD_DUMP/
-Compare Master and Prod:
-Generate lists:
-
-
-
-In the latest report section,
-From the UI prospective these are buttons. The button will be called as below:
-
-
-File Comparison: Production vs. Master -- > This is Header Header
-Duration: Last Execution date to Current Execution date.
-Files in Prod Dump, missing in Master.
-Files in Master, missing in Prod Dump.
-Common in Production & Master: Content different.
-Combined Changed and Missing (Note: Not in Master: means New files in Master and Combined Changed) Files (with Author and Date).
-
-These are DBs. Light weight SQL.
-
-Combined Changed and Missing Files (with Author and Date). this DB will contain the "last modifying date" and last modifoied by information from production. You will have to take sf cli help. I have sf cli installed already and sfdc prod is linked with my sf cli already.
-By clicking on the links csv files will be downloaded.
-
-Code Compare
-Run Beyond Compare diff script:
-/data/public/ENV_SYNC/MasterSync/{TS}
-bash /software/codedev/misc_script/SFDC/BCompareScript/codecompare.posix2.sh -d -m oo -o Master -o PROD_DUMP
-
-All Paths come from config file.
-
-Now code comparison link will be shown.
-
-Email Notification
-Send via mutt:
-No attachments
-Only links to run folder
-Email addresses from config
-
-If everything is successfull then put the "Common in Production & Master: Content different" and "Files in Prod Dump, missing in Master" file list in a folder structure format Master has and put in a folder called /data/public/ENV_SYNC/MasterSync/{TS}/Master_Update_Files/.
-
-So the Start Master Sync Report page will have the follwoing things.
-
-Main Header (Middle)
-(LHS) Logo
-(RHS) Logout
-
-Then Two Buttons. 
-"Generate the Master Sync Report" and "Schedule the Master Sync Report."
-Then the latest report cards with below data:
-Duration: Last Execution date to Current Execution date.
-API Version.
-Files in Prod Dump, missing in Master.
-Files in Master, missing in Prod Dump.
-Common in Production & Master: Content different.
-Combined Changed and Missing Files (with Author and Date).
-Code Comparison Report
-Master Dump: {Last Execution date}
-Production Dump: {Production Dump date}
-
-Then /master-sync history table.
-
-4. Branch Sync:
-Main Header (Middle)
-(LHS) Logo
-(RHS) Logout
-
-List of Live Branches. (~/.bashrc file has all the paths. sbx, tst, and hfx alias paths are our deployment area. Now for example, alias sbx='cd /data/code/GitHub_SFDC/sfdc_deploySBX/2025-q4nov-release/SFDC/;pwd'  this sbx alias has the branch 2025-q4nov-release name in it)
-This lists will be GitHub link. GitHub branch link example: https://github.cadence.com/IT/SFDC/tree/2025-q4nov-release
-Other aliases
-alias tst='cd /data/code/GitHub_SFDC/sfdc_deployTST/2025-COS3.0_Dev-release/SFDC/;pwd'
-alias hfx='cd /data/code/GitHub_SFDC/sfdc_deployHFX/2026-lightningphase2-release/SFDC/;pwd'
-
-So, Live Branches are, 
-2025-COS3.0_Dev-release
-2026-lightningphase2-release
-2025-q4nov-release
-
-Means if someone clicks on 2025-q4nov-release listed branch in our UI, it will open the https://github.cadence.com/IT/SFDC/tree/2025-q4nov-release link.
-
-Then the,
-"Start the Branch Sync" button.
-When you click the button ---> Drop Down --> Live Branch List/All Branch
-Click the Branch name and then click on the Submit button.
-
-Branch Sync Report – Exact Technical Flow.
-
-File Comparison: Combined Changed and Missing from master sync data vs. Selected Live Branch
-
-Duration: Current Execution date.
-Files in Master, missing in Live Branch.
-Files in Live Branch, missing in Master.
-Common in Live Branch & Master: Content different.
-Combined Changed and Missing Files  (with Author and Date).  --- Note ---- Combine files from all the above file list.
-
-Then code comparison report.
-
-If someone click a single live branch only one card will be generated. If someone clicks on All branch then three card will be generated.
-
-Then Table of History of Branch Sync.
-
-
-
-
-/run-reports (I'll describe this later)
-
-Four sections:-
-Code Comparison Report
-Profile Comparison Report
-Object Dump Report
-Author Log
-
-
-Code Comparison Report/
