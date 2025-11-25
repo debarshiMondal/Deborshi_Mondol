@@ -14,7 +14,7 @@ o	Create signed session cookie with expiry.
 o	Redirect to /dashboard.
 2. HOME Module (/dashboard)
 When Page Loads,
-The Summary of alerts/reminder/failures/success from all other module will be visible here.
+The Summary of alerts/reminder/failures/success from all other modules will be visible here.
 3. MASTER SYNC MODULE ( /master-sync )
 A. When Page Loads
 Algorithm
@@ -31,6 +31,13 @@ C. If YES → Take Production Dump
 Algorithm
 1.	Read command from:
 conf/conf_path.json → prod_dump_command variable.
+conf/conf_path.json → below variables will be there in this file.
+prod_dump_path=/backup/PROD_DUMP/
+sbx_dump_path=/backup/SBX_DUMP/
+tst_dump_path=/backup/TST_DUMP/
+hfx_dump_path=/backup/HFX_DUMP/
+prod_dump_command=`python3.9 Export_SFDCMetadata_PosFix.py --dest /backup/<dump path>/ --objects-dir force-app/main/default/objects/ <org name>`
+As it is production dump, <dump path> will be $prod_dump_path and org name will be <prod>
 2.	Execute using subprocess.
 3.	If return code != 0:
 Mark run as "FAILED_PROD_DUMP"
@@ -55,53 +62,60 @@ Step-by-step Algorithm
 1.	conf/conf_path.json → GitHub_Master_path variable
 GitHub_Master_path=/data/code/GitHub_SFDC/Master/SFDC/
 2.	Folder normalization:
+Folder normalization script path will be there in conf/conf_path.json.
+conf/conf_path.json,
+branch_to_dump_normalization_command=`python3.9 /software/codedev/misc_script/SFDC/ENV_SYNC/envsync_normalize.py -b <branch> -dest $BASE/tmp/`
+-b is the required branch. In this case master branch.
+Then the script will be for example,
+`python3.9 envsync_normalize.py -b master -dest $BASE/tmp/`
 3.	Log "Master prepared".
 F. PROD DUMP EXTRACTION
 Algorithm
-1.	Identify latest zip inside /backup/PROD_DUMP/
+1.	Identify latest zip inside /backup/PROD_DUMP/. For example, a dump name is prod_62.0_24thNov2025_02:31:12.zip. Any dump gets downloaded gets the name as the following format <org-name>_<API version>_<Time stamp in format in example, 24thNov2025_02:31:12.zip>
 o	Sort by date inside filename.
 o	Pick highest date.
 2.	Unzip to:
-unzip latest.zip tmp/prod_xxx
+unzip latest.zip $BASE/tmp/prod_xxx
 3.	Rename:
-mv tmp/prod_xxx tmp/PROD_DUMP
+mv $BASE/tmp/prod_xxx  $BASE/tmp/PROD_DUMP
 G. FOLDER VALIDATION
 Algorithm
 1.	Read expected metadata types list:
-conf/conf_path.json  required_prod_components=/software/codedev/misc_script/SFDC/BCompareScript/component_main.list
+conf/conf_path.json  required_prod_components (from this var)
+required_prod_components =/software/codedev/misc_script/SFDC/BCompareScript/component_main.list
 2.	Read metadata types from:
-tmp/PROD_DUMP/
+$BASE/tmp/PROD_DUMP/
 3.	Compare:
-•	Missing folder in PROD or missing folder in $required_prod_components
+•	Missing folder in PROD Dump or missing folder in $required_prod_components
 •	Extra folder in PROD or Extra folder in $required_prod_components
 4.	If discrepancies:
 •	Mark run FAILED_FOLDER_VALIDATION
 •	Log stdout/stderr to DB + failure UI
 •	Show the failure notification in /dashboard UI and /master_sync
-•	Send a mail to conf/setup.json  email_cc variable’s recipient list. (use mutt command to send mail)
+•	Send a mail to conf/setup.json  email_cc variable’s recipient list. (use mutt command to send mail)
 •	STOP.
 3. DIFF ENGINE (MASTER vs PROD)
 Preparation
 Algorithm
 •	Move prepared folders into TS directory:
-mv tmp/Master $BASE/Master
+mv $BASE/tmp/Master $BASE/Master
 mv tmp/PROD_DUMP $BASE/PROD_DUMP
 	
 •	Now structure is:
-MasterSync/{TS}/Master/
-MasterSync/{TS}/PROD_DUMP/
+/data/public/MasterSync/{TS}/Master/
+/data/public/MasterSync/{TS}/PROD_DUMP/
 A. File List Acquisition
 Algorithm
 1.	Recursively list all files under:
 o	Master/
 o	PROD_DUMP/
-2.	Normalize paths into metadata-type-based structures.
+2.	Already Normalized paths into metadata-type-based structures.
 B. Categorize Files
 Algorithm
 For each file in PROD:
-•	If not in Master → ProdMissingMaster
+•	If not in Master only in Prod→ ProdMissingMaster
 For each file in Master:
-•	If not in PROD → MasterMissingProd
+•	If not in PROD only in Master→ MasterMissingProd
 For each file present in both:
 •	Compare content:
 o	If different → CommonDiff
@@ -110,22 +124,30 @@ Store each list in SQLite tables:
 •	prod_missing_master
 •	master_missing_prod
 •	common_diff
-C. Combined Changed + Missing
+A csv file can be downloaded for these info.
+C. Combine  CommonDiff + ProdMissingMaster
 Algorithm
 1.	Combine:
 o	CommonDiff
-o	ProdMissingMaster (because "missing in Master" = will be newly added in Master)
+o	ProdMissingMaster (because "missing in Master" = will be newly added in Master from prod dump)
+CommonDiff + ProdMissingMaster  combined_set file name (combined_set.csv).
 2.	For each file in combined set:
 o	Run:
-sf metadata:info -m <metadata path>
+Folder normalization script path will be there in conf/conf_path.json.
+conf/conf_path.json  
+org_metadata_info_command=`python3.9 /software/codedev/misc_script/SFDC/ENV_SYNC/org_metadata_info.py -s < combined_set.csv file path> -o <org name>
+Here org name will be prod
 •	Extract:
 o	lastModifiedBy
 o	lastModifiedDate
-3.	Insert into table combined_changes.
+3.	Insert into table combined_changes and generate the CommonDiff_in_Master_and_Prod_and_ProdMissingMaster.csv file. In this file, in DevOps comment section, put comments.
+CR-0000 related, SFDC Migration change (most likely ps support owns), manage package files, and unable to categorized.
 4. CODE COMPARISON (Beyond Compare)
 Algorithm
 1.	Run:
-bash codecompare.posix2.sh -d -m oo -o Master -o PROD_DUMP
+conf/conf_path.json  code_compare_script=~/misc_script/SFDC/BCompareScript/codecompare.posix2.sh
+
+bash $code_compare_script -d -m oo -o Master -o PROD_DUMP
 2.	Script generates:
 •	Diff folders
 •	HTML summary
@@ -134,12 +156,17 @@ bash codecompare.posix2.sh -d -m oo -o Master -o PROD_DUMP
 Algorithm
 If Master Sync succeeded:
 1.	Create:
-mkdir BASE/Master_Update_Files
+mkdir $BASE/Master_Update_Files
 2.	From:
 common_diff
 prod_missing_master
-3.	Recreate Master folder structure.
-4.	Copy relevant files from Master folder using relative path mapping.
+2.	Recreate Master folder structure.
+Run 
+conf/conf_path.json 
+dump_to_branch_normalization_command=`python3.9 /software/codedev/misc_script/SFDC/ENV_SYNC/envsync_normalize.py -o <org name> -dest $BASE/tmp/`
+
+3.	Copy relevant files and folders to $BASE/Master_Update_Files.
+
 
 6. EMAIL NOTIFICATION
 Algorithm
@@ -175,7 +202,9 @@ o	CSV download buttons
 o	Code Compare button
 o	Master Dump link
 o	Prod Dump link
-9. BRANCH SYNC MODULE
+
+
+9. BRANCH SYNC MODULE (/branch-sync)
 A. Extract Live Branches (“sbx”, “tst”, “hfx”)
 Algorithm
 Read ~/.bashrc.
@@ -196,7 +225,7 @@ o	Run full diff vs Master Sync’s combined_changes.
 ________________________________________
 C. Branch Diff Calculation
 Algorithm
-For selected branch:
+For selected branch (Folder mormalization):
 1.	Prepare branch folder:
 o	Copy from Git folder into TS/Branch folder.
 2.	Compare:
@@ -215,6 +244,19 @@ Run the above workflow 3 times:
 •	sbx branch
 •	tst branch
 •	hfx branch
+For every folder inside env folder will have a clear diff report shown (master vs branch).
+For customLabel/CustomLabels.labels-meta.xml RHS Master and LHS branch
+I need
+label name, Master (For example APTS_InstanceLexURL) find the same label name in branch. And show if the value is different.
+If a label is missing is either Master or branch highlight in red. 
+Do not show if equal value.
+Same for customSetting files.
+For example, if TSMC_Helper__c.csv file has NAME,VALUE__C
+You have to find each names in branch and opposite.
+In case if value mismatch show.
+In case of value match ignore.
+If a Name is missing in any customsetting file for either Master or branch highlight in red.
+
 Render 3 report cards.
 ________________________________________
 E. Branch Sync UI Rendering
@@ -227,5 +269,11 @@ o	Common diff
 o	Combined changes list
 o	Author log list
 o	Code Compare links
-2.	History table from branch_sync_runs.
+2.	Branch Sync History Module (/branch_sync_runs)
+History table from branch_sync_runs. All the branch report history will get saved in branch history table if a new branch report gets prepatred/triggered.
 
+So, all total for modules:
+/login
+/dashboard
+/master-sync
+/ branch_sync_runs
