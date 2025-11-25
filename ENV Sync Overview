@@ -1,0 +1,209 @@
+The ENV_SYNC Dashboard focuses on producing a small set of clear, technical outputs across four UI modules:
+
+1. /dashboard — Global Status Outputs
+
+Latest Master Sync summary card
+
+Last run timestamp and duration
+
+Status: Success / Failed (with short reason)
+
+API version from latest production dump
+
+Key counts:
+
+Files only in Prod
+
+Files only in Master
+
+Common files with content differences
+
+Latest Branch Sync summary
+
+Per-branch status snapshot (or “No recent branch sync”)
+
+High-level counts of changed/missing files per branch
+
+Alerts / Notifications
+
+Recent Master Sync failures (dump, validation, diff failures, etc.)
+
+Recent Branch Sync failures (per branch)
+
+Each alert provides a direct link to the detailed module view.
+
+2. /master-sync — Master vs PROD Outputs
+
+a) Control & Status Zone
+
+Buttons:
+
+Generate Master Sync Report
+
+Schedule Master Sync Report
+
+b) Latest Report Cards
+
+Outputs for the most recent run:
+
+Run metadata
+
+Run timestamp
+
+Duration (previous run → current run)
+
+API version (derived from dump name)
+
+File delta metrics
+
+Count + CSV link:
+
+Files in Prod dump missing in Master
+
+Files in Master missing in Prod
+
+Common files with content differences
+
+Combined Changed + Missing files
+
+CSV with file path, lastModifiedBy, lastModifiedDate, and DevOps comment bucket
+
+Artifacts / links
+
+Code Comparison HTML report (Beyond Compare)
+
+Master dump reference (previous execution)
+
+Production dump reference (current execution)
+
+Link to Master_Update_Files directory (deployment-ready subset)
+
+c) History Table
+
+Tabular output for multiple past runs:
+
+Timestamp
+
+Status (Success / FAILED_PROD_DUMP / FAILED_FOLDER_VALIDATION / etc.)
+
+Production dump name
+
+Key counts (Prod-only, Master-only, Diff files)
+
+Links:
+
+Run folder
+
+CSV exports
+
+Code compare report
+
+3. /branch-sync — Master vs Live Branch Outputs
+
+a) Input & Discovery Area
+
+Live Branch list derived from ~/.bashrc:
+
+Branch name (e.g. 2025-q4nov-release)
+
+GitHub link: https://github.cadence.com/IT/SFDC/tree/{branch}
+
+Controls:
+
+Mode: Single branch / All branches
+
+Branch dropdown (for single)
+
+Start Branch Sync button
+
+b) Branch Report Cards (per run)
+
+For each processed branch (1 or many):
+
+Branch name + sandbox alias
+
+Run timestamp and duration
+
+Metrics:
+
+Files in Master missing in Branch
+
+Files in Branch missing in Master
+
+Common files with content differences
+
+Combined Changed + Missing set size
+
+Author information:
+
+Summary of latest commit authors per file (e.g. “Top 5 authors involved”)
+
+Links:
+
+CSV exports for each file set
+
+Detailed diff views (labels, custom settings, file lists)
+
+Optional branch-level code compare report
+
+c) Detailed Diff Views
+
+Per branch:
+
+Custom Labels diff view
+
+Table of label names with:
+
+Master value
+
+Branch value
+
+Status: Different / Missing in Master / Missing in Branch
+
+Equal values are suppressed; mismatches and missing items are highlighted.
+
+Custom Settings diff view
+
+Table keyed by NAME (e.g. TSMC_Helper__c rows):
+
+Master VALUE__c
+
+Branch VALUE__c
+
+Status: Different / Missing in Master / Missing in Branch
+
+Equal rows are hidden; mismatches and missing keys highlighted.
+
+File-level lists
+
+Paginated tables and CSVs for:
+
+Master-only files
+
+Branch-only files
+
+Content-diff files
+
+4. /branch_sync_runs — Branch Sync History Outputs
+
+History table of all branch sync executions
+
+Timestamp
+
+Branch name
+
+Status (Success / Failure)
+
+Summary metrics (missing / changed file counts)
+
+Link to open that run’s branch-report view in /branch-sync
+
+Optional filters:
+
+By branch
+
+By status
+
+By date range
+
+This gives you a technical, UI-focused view of what the system surfaces: status cards, delta metrics, CSV exports, diff reports, and history tables—without any backend pipeline details.
