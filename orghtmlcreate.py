@@ -46,7 +46,7 @@ class Item:
     kind: str  # "Class" or "Trigger"
     name: str  # e.g. MyClass.cls, MyTrigger.trigger
     link: str  # e.g. MyClass.cls_orgpmd.html
-    git_log: str = ""
+    git_author: str = ""
     issues: List[Issue] = field(default_factory=list)
 
     @property
@@ -81,11 +81,14 @@ def get_git_branch_name() -> str:
     return run_git_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
 
 
-def get_git_log_for_path(src_path: Optional[str]) -> str:
+def get_git_author_for_path(src_path: Optional[str]) -> str:
+    """
+    Returns only the author name of the last commit touching this path.
+    """
     if not src_path:
         return "N/A"
     return run_git_command(
-        ["git", "log", "-1", "--pretty=format:%h | %an | %ad | %s", "--", src_path]
+        ["git", "log", "-1", "--pretty=format:%an", "--", src_path]
     )
 
 
@@ -128,12 +131,13 @@ def derive_display_and_link_for_trigger(fname: str):
 
 def parse_issue_line(line: str):
     """
-    Return: (pattern_name, message, line_no)
+    Parse one PMD issue line.
+    Returns: (pattern_name, message, line_no)
     """
     s = line.rstrip("\n")
 
-    # Common PMD style:
-    #   src/classes/Abc.cls:23: RULE_NAME: message
+    # Typical PMD format:
+    #   path/to/File.cls:23: RULE_NAME: message
     m = re.match(r"^[^:]+:(\d+)(?::\d+)?:\s*([^:]+):\s*(.*)$", s)
     if m:
         line_str = m.group(1)
@@ -145,7 +149,7 @@ def parse_issue_line(line: str):
         msg = m.group(3).strip()
         return pattern or "PMD Rule", msg or s, line_no
 
-    # Fallback: RULE: message  or [RULE] message
+    # Fallback formats: RULE: message  or [RULE] message
     m = re.match(r"^\s*\[?([^\]]+)\]?\s*[:-]\s*(.*)$", s)
     if m:
         pattern = m.group(1).strip()
@@ -168,7 +172,7 @@ def collect_items(pmd_dir: str,
                   kind: str,
                   high_patterns: List[str],
                   derive_fn,
-                  git_base_dir: str):
+                  git_base_dir: str) -> List[Item]:
     items: List[Item] = []
     seen = set()
 
@@ -205,14 +209,14 @@ def collect_items(pmd_dir: str,
         #   Class:   src/classes/<Name>.cls
         #   Trigger: src/triggers/<Name>.trigger
         git_path = os.path.join(git_base_dir, display) if git_base_dir else None
-        git_log = get_git_log_for_path(git_path)
+        git_author = get_git_author_for_path(git_path)
 
         items.append(
             Item(
                 kind=kind,
                 name=display,
                 link=link,
-                git_log=git_log,
+                git_author=git_author,
                 issues=issues,
             )
         )
@@ -243,7 +247,7 @@ def build_index_html(env: str,
                      now_str: str,
                      classes: List[Item],
                      triggers: List[Item],
-                     output_path: str):
+                     output_path: str) -> None:
     classes_rows = []
     triggers_rows = []
 
@@ -253,12 +257,13 @@ def build_index_html(env: str,
             css_class = "sev-warn"
         if item.high > 0:
             css_class = "sev-high"
-        git_short = truncate(item.git_log, 80)
+
+        git_short = truncate(item.git_author, 80)
         classes_rows.append(
             f'<tr data-total="{item.total}" data-high="{item.high}">'
             f'<td class="name"><a href="{html_escape(item.link)}" '
             f'class="{css_class}">{html_escape(item.name)}</a></td>'
-            f'<td class="git" title="{html_escape(item.git_log)}">'
+            f'<td class="git" title="{html_escape(item.git_author)}">'
             f'{html_escape(git_short)}</td>'
             f'<td class="num">{item.total}({item.high})</td>'
             f'</tr>'
@@ -270,12 +275,13 @@ def build_index_html(env: str,
             css_class = "sev-warn"
         if item.high > 0:
             css_class = "sev-high"
-        git_short = truncate(item.git_log, 80)
+
+        git_short = truncate(item.git_author, 80)
         triggers_rows.append(
             f'<tr data-total="{item.total}" data-high="{item.high}">'
             f'<td class="name"><a href="{html_escape(item.link)}" '
             f'class="{css_class}">{html_escape(item.name)}</a></td>'
-            f'<td class="git" title="{html_escape(item.git_log)}">'
+            f'<td class="git" title="{html_escape(item.git_author)}">'
             f'{html_escape(git_short)}</td>'
             f'<td class="num">{item.total}({item.high})</td>'
             f'</tr>'
@@ -468,8 +474,8 @@ def build_index_html(env: str,
       </div>
       <div class="filters">
         <button class="chip chip-active" data-filter="all">All</button>
-        <button class="chip" data-filter="high">With High</button>
-        <button class="chip" data-filter="nohigh">No High</button>
+        <button class="chip" data-filter="high">High</button>
+        <button class="chip" data-filter="low">Low</button>
       </div>
     </header>
 
@@ -512,7 +518,7 @@ def build_index_html(env: str,
           </a>
         </div>
         <table>
-          <thead><tr><th>Name</th><th>Git Author Log (last)</th><th style="text-align:right">PMD Issues</th></tr></thead>
+          <thead><tr><th>Name</th><th>Git Author</th><th style="text-align:right">PMD Issues</th></tr></thead>
           <tbody>
 {classes_rows_html}
           </tbody>
@@ -527,7 +533,7 @@ def build_index_html(env: str,
           </a>
         </div>
         <table>
-          <thead><tr><th>Name</th><th>Git Author Log (last)</th><th style="text-align:right">PMD Issues</th></tr></thead>
+          <thead><tr><th>Name</th><th>Git Author</th><th style="text-align:right">PMD Issues</th></tr></thead>
           <tbody>
 {triggers_rows_html}
           </tbody>
@@ -560,7 +566,7 @@ def build_index_html(env: str,
 
       if (activeFilter === 'high') {{
         matchFilter = high > 0;
-      }} else if (activeFilter === 'nohigh') {{
+      }} else if (activeFilter === 'low') {{
         matchFilter = (total > 0 && high === 0);
       }}
 
@@ -601,7 +607,7 @@ def build_detail_html(item: Item,
                       env: str,
                       branch: str,
                       now_str: str,
-                      output_dir: str):
+                      output_dir: str) -> None:
     rows_html = []
     for idx, issue in enumerate(item.issues, start=1):
         row_cls = "row-high" if issue.is_high else ""
@@ -687,7 +693,7 @@ def build_detail_html(item: Item,
         Generated: {html_escape(now_str)}
       </div>
       <div class="git-meta">
-        Git Author Log (last): {html_escape(item.git_log)}
+        Git Author: {html_escape(item.git_author)}
       </div>
       <div class="score">
         <span>Total issues: <strong>{item.total}</strong></span>
@@ -726,7 +732,9 @@ def build_detail_html(item: Item,
 # CSVs
 # --------------------------------------------------------------------
 
-def write_csvs(output_dir: str, classes: List[Item], triggers: List[Item]):
+def write_csvs(output_dir: str,
+               classes: List[Item],
+               triggers: List[Item]) -> None:
     combined_path = os.path.join(output_dir, "Original_Combined_PMD_Report.csv")
     classes_path = os.path.join(output_dir, "Original_Combined_PMD_Report_Classes.csv")
     triggers_path = os.path.join(output_dir, "Original_Combined_PMD_Report_Triggers.csv")
@@ -734,29 +742,29 @@ def write_csvs(output_dir: str, classes: List[Item], triggers: List[Item]):
     # Combined summary – one row per class/trigger
     with open(combined_path, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["Type", "Name", "Total_Issues", "High_Issues", "Link", "Git_Author_Log"])
+        w.writerow(["Type", "Name", "Total_Issues", "High_Issues", "Link", "Git_Author"])
         for item in classes + triggers:
-            w.writerow([item.kind, item.name, item.total, item.high, item.link, item.git_log])
+            w.writerow([item.kind, item.name, item.total, item.high, item.link, item.git_author])
 
     # Detailed classes – one row per issue
     with open(classes_path, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["Type", "Name", "Line", "Pattern", "Issue", "Severity", "Git_Author_Log"])
+        w.writerow(["Type", "Name", "Line", "Pattern", "Issue", "Severity", "Git_Author"])
         for item in classes:
             for iss in item.issues:
                 severity = "High" if iss.is_high else "Low"
                 line_val = iss.line_no if iss.line_no is not None else ""
-                w.writerow([item.kind, item.name, line_val, iss.pattern, iss.message, severity, item.git_log])
+                w.writerow([item.kind, item.name, line_val, iss.pattern, iss.message, severity, item.git_author])
 
-    # Detailed triggers
+    # Detailed triggers – one row per issue
     with open(triggers_path, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["Type", "Name", "Line", "Pattern", "Issue", "Severity", "Git_Author_Log"])
+        w.writerow(["Type", "Name", "Line", "Pattern", "Issue", "Severity", "Git_Author"])
         for item in triggers:
             for iss in item.issues:
                 severity = "High" if iss.is_high else "Low"
                 line_val = iss.line_no if iss.line_no is not None else ""
-                w.writerow([item.kind, item.name, line_val, iss.pattern, iss.message, severity, item.git_log])
+                w.writerow([item.kind, item.name, line_val, iss.pattern, iss.message, severity, item.git_author])
 
     print(f"✔ Wrote: {combined_path}")
     print(f"✔ Wrote: {classes_path}")
@@ -767,7 +775,7 @@ def write_csvs(output_dir: str, classes: List[Item], triggers: List[Item]):
 # Main
 # --------------------------------------------------------------------
 
-def main():
+def main() -> None:
     # Same semantics as your bash: ENV is required
     if len(sys.argv) < 2:
         prog = os.path.basename(sys.argv[0] or "generate_pmd_original_report.py")
@@ -789,10 +797,20 @@ def main():
     high_patterns = load_high_patterns(PMD_HIGH_PATTERNS_FILE)
     print(f"Loaded {len(high_patterns)} high patterns from {PMD_HIGH_PATTERNS_FILE}")
 
-    classes = collect_items(PMD_CLASSES_DIR, "Class", high_patterns,
-                            derive_display_and_link_for_class, GIT_CLASSES_DIR)
-    triggers = collect_items(PMD_TRIGGERS_DIR, "Trigger", high_patterns,
-                             derive_display_and_link_for_trigger, GIT_TRIGGERS_DIR)
+    classes = collect_items(
+        PMD_CLASSES_DIR,
+        "Class",
+        high_patterns,
+        derive_display_and_link_for_class,
+        GIT_CLASSES_DIR,
+    )
+    triggers = collect_items(
+        PMD_TRIGGERS_DIR,
+        "Trigger",
+        high_patterns,
+        derive_display_and_link_for_trigger,
+        GIT_TRIGGERS_DIR,
+    )
 
     classes.sort(key=lambda i: i.name.lower())
     triggers.sort(key=lambda i: i.name.lower())
