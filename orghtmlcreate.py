@@ -28,7 +28,7 @@ PMD_CLASSES_DIR = "PMDReport/orgpmdoutput/src/classes"
 PMD_TRIGGERS_DIR = "PMDReport/orgpmdoutput/src/triggers"
 PMD_HIGH_PATTERNS_FILE = "build/property/pmd_high_patterns.txt"
 
-# Real git-tracked paths
+# Git-tracked paths for real files
 GIT_CLASSES_DIR = "src/classes"
 GIT_TRIGGERS_DIR = "src/triggers"
 
@@ -44,7 +44,7 @@ class Issue:
 @dataclass
 class Item:
     kind: str  # "Class" or "Trigger"
-    name: str  # e.g. MyClass.cls, MyTrigger.trigger
+    name: str  # e.g. MyClass.cls
     link: str  # e.g. MyClass.cls_orgpmd.html
     git_author: str = ""
     issues: List[Issue] = field(default_factory=list)
@@ -168,11 +168,13 @@ def is_high_issue(line: str, pattern_name: str, high_patterns: List[str]) -> boo
     return False
 
 
-def collect_items(pmd_dir: str,
-                  kind: str,
-                  high_patterns: List[str],
-                  derive_fn,
-                  git_base_dir: str) -> List[Item]:
+def collect_items(
+    pmd_dir: str,
+    kind: str,
+    high_patterns: List[str],
+    derive_fn,
+    git_base_dir: str,
+) -> List[Item]:
     items: List[Item] = []
     seen = set()
 
@@ -205,9 +207,7 @@ def collect_items(pmd_dir: str,
                     )
                 )
 
-        # Map from display name to real git path:
-        #   Class:   src/classes/<Name>.cls
-        #   Trigger: src/triggers/<Name>.trigger
+        # Map display name to real git path (src/classes|triggers/<Name.ext>)
         git_path = os.path.join(git_base_dir, display) if git_base_dir else None
         git_author = get_git_author_for_path(git_path)
 
@@ -242,12 +242,14 @@ def truncate(s: str, max_len: int = 100) -> str:
 # INDEX HTML
 # --------------------------------------------------------------------
 
-def build_index_html(env: str,
-                     branch: str,
-                     now_str: str,
-                     classes: List[Item],
-                     triggers: List[Item],
-                     output_path: str) -> None:
+def build_index_html(
+    env: str,
+    branch: str,
+    now_str: str,
+    classes: List[Item],
+    triggers: List[Item],
+    output_path: str,
+) -> None:
     classes_rows = []
     triggers_rows = []
 
@@ -258,11 +260,13 @@ def build_index_html(env: str,
         if item.high > 0:
             css_class = "sev-high"
 
+        # Name label: MyClass.cls 36(3)
+        label = f"{item.name} {item.total}({item.high})"
         git_short = truncate(item.git_author, 80)
         classes_rows.append(
             f'<tr data-total="{item.total}" data-high="{item.high}">'
             f'<td class="name"><a href="{html_escape(item.link)}" '
-            f'class="{css_class}">{html_escape(item.name)}</a></td>'
+            f'class="{css_class}">{html_escape(label)}</a></td>'
             f'<td class="git" title="{html_escape(item.git_author)}">'
             f'{html_escape(git_short)}</td>'
             f'<td class="num">{item.total}({item.high})</td>'
@@ -276,11 +280,12 @@ def build_index_html(env: str,
         if item.high > 0:
             css_class = "sev-high"
 
+        label = f"{item.name} {item.total}({item.high})"
         git_short = truncate(item.git_author, 80)
         triggers_rows.append(
             f'<tr data-total="{item.total}" data-high="{item.high}">'
             f'<td class="name"><a href="{html_escape(item.link)}" '
-            f'class="{css_class}">{html_escape(item.name)}</a></td>'
+            f'class="{css_class}">{html_escape(label)}</a></td>'
             f'<td class="git" title="{html_escape(item.git_author)}">'
             f'{html_escape(git_short)}</td>'
             f'<td class="num">{item.total}({item.high})</td>'
@@ -421,7 +426,12 @@ def build_index_html(env: str,
     border-radius:999px; background:#0b2b1a; color:#86efac; border:1px solid #14532d;
   }}
 
-  table {{ width:100%; border-collapse:collapse; }}
+  /* Table layout: keep all 3 columns visible */
+  table {{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed;
+  }}
   thead th {{
     position:sticky; top:0;
     text-align:left; font-weight:700; color:#cbd5e1; font-size:11px;
@@ -429,6 +439,20 @@ def build_index_html(env: str,
     padding:8px 10px; background:#020617; border-bottom:1px solid var(--line);
     z-index:10;
   }}
+  th.col-name, td.name {{ width:52%; }}
+  th.col-git,  td.git  {{
+    width:28%;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }}
+  th.col-num,  td.num  {{
+    width:20%;
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+  }}
+
   tbody td {{
     padding:8px 10px; border-bottom:1px dashed #1b2437; vertical-align:middle;
   }}
@@ -442,7 +466,6 @@ def build_index_html(env: str,
   td.git {{
     font-size:11px; color:var(--ink-d);
   }}
-  td.num {{ text-align:right; font-variant-numeric:tabular-nums; }}
 
   footer {{
     margin-top:24px; background:#000; color:#fff;
@@ -518,7 +541,13 @@ def build_index_html(env: str,
           </a>
         </div>
         <table>
-          <thead><tr><th>Name</th><th>Git Author</th><th style="text-align:right">PMD Issues</th></tr></thead>
+          <thead>
+            <tr>
+              <th class="col-name">Name</th>
+              <th class="col-git">Git Author</th>
+              <th class="col-num">PMD Issues</th>
+            </tr>
+          </thead>
           <tbody>
 {classes_rows_html}
           </tbody>
@@ -533,7 +562,13 @@ def build_index_html(env: str,
           </a>
         </div>
         <table>
-          <thead><tr><th>Name</th><th>Git Author</th><th style="text-align:right">PMD Issues</th></tr></thead>
+          <thead>
+            <tr>
+              <th class="col-name">Name</th>
+              <th class="col-git">Git Author</th>
+              <th class="col-num">PMD Issues</th>
+            </tr>
+          </thead>
           <tbody>
 {triggers_rows_html}
           </tbody>
@@ -603,11 +638,13 @@ def build_index_html(env: str,
 # DETAIL HTML
 # --------------------------------------------------------------------
 
-def build_detail_html(item: Item,
-                      env: str,
-                      branch: str,
-                      now_str: str,
-                      output_dir: str) -> None:
+def build_detail_html(
+    item: Item,
+    env: str,
+    branch: str,
+    now_str: str,
+    output_dir: str,
+) -> None:
     rows_html = []
     for idx, issue in enumerate(item.issues, start=1):
         row_cls = "row-high" if issue.is_high else ""
@@ -732,9 +769,11 @@ def build_detail_html(item: Item,
 # CSVs
 # --------------------------------------------------------------------
 
-def write_csvs(output_dir: str,
-               classes: List[Item],
-               triggers: List[Item]) -> None:
+def write_csvs(
+    output_dir: str,
+    classes: List[Item],
+    triggers: List[Item],
+) -> None:
     combined_path = os.path.join(output_dir, "Original_Combined_PMD_Report.csv")
     classes_path = os.path.join(output_dir, "Original_Combined_PMD_Report_Classes.csv")
     triggers_path = os.path.join(output_dir, "Original_Combined_PMD_Report_Triggers.csv")
@@ -776,7 +815,7 @@ def write_csvs(output_dir: str,
 # --------------------------------------------------------------------
 
 def main() -> None:
-    # Same semantics as your bash: ENV is required
+    # Match bash usage semantics: ENV is required
     if len(sys.argv) < 2:
         prog = os.path.basename(sys.argv[0] or "generate_pmd_original_report.py")
         print(f"Usage: {prog} <ENV>")
