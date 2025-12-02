@@ -260,8 +260,8 @@ def build_index_html(
         if item.high > 0:
             css_class = "sev-high"
 
-        # Name label: MyClass.cls 36(3)
-        label = f"{item.name} {item.total}({item.high})"
+        # Name label: only the class name
+        label = item.name
         git_short = truncate(item.git_author, 80)
         classes_rows.append(
             f'<tr data-total="{item.total}" data-high="{item.high}">'
@@ -280,7 +280,7 @@ def build_index_html(
         if item.high > 0:
             css_class = "sev-high"
 
-        label = f"{item.name} {item.total}({item.high})"
+        label = item.name
         git_short = truncate(item.git_author, 80)
         triggers_rows.append(
             f'<tr data-total="{item.total}" data-high="{item.high}">'
@@ -459,6 +459,9 @@ def build_index_html(
   tbody tr:hover {{ background:rgba(79,70,229,.08); }}
   td.name a {{
     color:#e5e7eb; text-decoration:none; font-weight:600;
+    display:inline-block;
+    max-width:100%;
+    overflow-wrap:anywhere;   /* allow long class names to wrap to next line */
   }}
   td.name a:hover {{ text-decoration:underline; }}
   td.name a.sev-warn {{ color:var(--warn); }}
@@ -678,6 +681,7 @@ def build_detail_html(
     margin:0; padding:0; background:var(--bg); color:var(--ink);
     font:14px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
   }}
+  .wrap {{ max_width:960px; margin:0 auto; padding:20px; }}
   .wrap {{ max-width:960px; margin:0 auto; padding:20px; }}
   header {{ border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:12px; }}
   .crumbs a {{ color:#93c5fd; font-size:12px; text-decoration:none; }}
