@@ -612,17 +612,17 @@ CodeAnalyser()
 
 rm /tmp/CodeAnalysisReport.txt
 
-	if [ -d changeSetDeploy/force-app/main/default/classes  -o  -d changeSetDeploy/force-app/main/default/triggers ]
-	then
-		
-		bash build/script/currpmd.sh
-		bash build/script/createpmdhtml.sh $SFDC_ORG
+        if [ -d changeSetDeploy/force-app/main/default/classes  -o  -d changeSetDeploy/force-app/main/default/triggers ]
+        then
 
-	else
-	
-	echo "'classes/' or 'triggers/' not exist. Codebase will not appear." >> /tmp/CodeAnalysisReport.txt
+                bash build/script/currpmd.sh
+                bash build/script/createpmdhtml.sh $SFDC_ORG
+
+        else
+
+        echo "'classes/' or 'triggers/' not exist. Codebase will not appear." >> /tmp/CodeAnalysisReport.txt
 fi
-	
+
 }
 
 CustomLabels_Prep()
@@ -715,19 +715,25 @@ aura_Prep()
 {
 
 if [ -d changeSetDeploy/force-app/main/default/aura ]
-
-
 then
-	cd changeSetDeploy/force-app/main/default/aura
-	printf '%s\n' */ | while read line
-	do	
-		echo "$line"
-		cp -r ../../../../../src/aura/$line .
-		pwd
-	done
-	cd ../../../../../
-else	
-		echo "No aura in changeset"
+    cd changeSetDeploy/force-app/main/default/aura
+    # Enable nullglob if using bash to make */ vanish if no match, 
+    # otherwise verify the file exists inside the loop.
+    
+    for dir in */; do
+        # Check if the glob failed to expand (is it literal '*/'?) or isn't a directory
+        [ -d "$dir" ] || continue
+
+        # Remove trailing slash for cleaner paths
+        line=${dir%/}
+        
+        echo "$line"
+        cp -r "../../../../../src/aura/$line" .
+        pwd
+    done
+    cd ../../../../../
+else
+    echo "No aura in changeset"
 fi
 	
 }
@@ -738,19 +744,25 @@ lwc_Prep()
 {
 
 if [ -d changeSetDeploy/force-app/main/default/lwc ]
-
-
 then
-        cd changeSetDeploy/force-app/main/default/lwc
-        printf '%s\n' */ | while read line
-        do
-                echo "$line"
-                cp -r ../../../../../src/lwc/$line .
-                pwd
-        done
-        cd ../../../../../
+    cd changeSetDeploy/force-app/main/default/lwc
+    # Enable nullglob if using bash to make */ vanish if no match, 
+    # otherwise verify the file exists inside the loop.
+    
+    for dir in */; do
+        # Check if the glob failed to expand (is it literal '*/'?) or isn't a directory
+        [ -d "$dir" ] || continue
+
+        # Remove trailing slash for cleaner paths
+        line=${dir%/}
+        
+        echo "$line"
+        cp -r "../../../../../src/lwc/$line" .
+        pwd
+    done
+    cd ../../../../../
 else
-                echo "No lwc in changeset"
+    echo "No lwc in changeset"
 fi
 
 }
